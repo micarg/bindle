@@ -94,7 +94,18 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .bp{font-size:11.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .bbar{height:2px;background:var(--rule);position:relative}.bbar i{position:absolute;inset:0 auto 0 0;background:var(--ink)}
 .bk[aria-current="true"] .cv{outline:2px solid var(--ink);outline-offset:2px}
-.rm{position:absolute;top:-8px;right:-8px;min-height:28px;min-width:28px;padding:0 8px;border-radius:14px;background:var(--paper);font-size:12px;z-index:1;justify-content:center}
+.rm{position:absolute;top:-8px;right:-8px;min-height:30px;padding:0 10px;border-radius:15px;background:var(--paper);border:1px solid #b5483a;color:#b5483a;font:500 12px var(--font-ui);z-index:1;display:inline-flex;align-items:center;justify-content:center}
+.rm.sure{background:#b5483a;color:#fff}
+.bk{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.bk img{-webkit-user-drag:none;pointer-events:none}
+.libhint{font-size:13px;color:var(--ink-soft);margin:0}
+#splash{position:fixed;inset:0;z-index:50;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;transition:opacity .7s ease}
+#splash.out{opacity:0;pointer-events:none}
+.spc{width:min(58vw,260px);aspect-ratio:2/3;border-radius:4px;overflow:hidden;background:var(--chip);border:1px solid var(--rule);display:flex;align-items:flex-end;animation:spin .5s ease-out}
+.spc img{width:100%;height:100%;object-fit:cover;display:block}
+.spc .ph{padding:16px 14px;font:500 20px/1.25 var(--font-read);color:var(--ink);width:100%;border-top:4px solid var(--ink-soft)}
+.spt{font:500 14px/1.4 var(--font-ui);color:var(--ink-soft);text-align:center;max-width:80vw}
+@keyframes spin{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 .bml .acts{display:flex;gap:2px}
 .sumbtn{font-size:12px;border:1px solid var(--rule)!important;color:var(--ink)!important;min-height:32px}
 .sumtext{font-family:var(--font-read);font-size:calc(var(--fs) * .92);line-height:1.65;font-weight:300}
@@ -119,6 +130,7 @@ img{max-width:100%}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="spc" id="spCover"></div><div class="spt" id="spTitle"></div></div>
 <div class="app">
   <header class="bar" id="bar">
     <button id="titleBtn" class="tbtn" aria-expanded="false" aria-controls="menu"><span class="t" id="title">Bindle</span><span class="car" aria-hidden="true">▾</span></button>
@@ -154,9 +166,10 @@ img{max-width:100%}
     <div class="sheet full" id="lib" hidden>
       <div class="ddmenu" id="libMenu" hidden>
         <label class="mi">Προσθήκη EPUB<input id="file2" type="file" accept=".epub,application/epub+zip"></label>
-        <button id="editLib" class="mi">Επεξεργασία</button>
+        <button id="editLib" class="mi">Διαγραφή βιβλίων</button>
       </div>
       <p class="err" id="libErr" hidden></p>
+      <p class="libhint" id="libHint" hidden>Πάτα «Διαγραφή» στο βιβλίο που θέλεις να σβήσεις.</p>
       <div class="lib" id="libGrid"></div>
     </div>
     <div class="sheet full" id="sum" hidden>
@@ -492,7 +505,9 @@ let editing=false;
 async function buildLib(){
   const g=$('libGrid');g.innerHTML='';coverUrls.forEach(URL.revokeObjectURL);coverUrls=[];
   const lib=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0));
-  const all=[...lib,{id:'sample',title:SAMPLE.title,author:SAMPLE.author,chars:SAMPLE.chars,cover:false}];
+  const all=store.get('hideSample',false)?lib:[...lib,{id:'sample',title:SAMPLE.title,author:SAMPLE.author,chars:SAMPLE.chars,cover:false}];
+  $('libHint').hidden=!editing;
+  if(!all.length){g.innerHTML='<p class="libhint">Η βιβλιοθήκη σου είναι άδεια. Πρόσθεσε ένα EPUB από το μενού «Βιβλιοθήκη ▾».</p>';return}
   for(const e of all){
     const pos=store.get('pos:'+e.id,null),T=totalPages(e.chars),Xp=pos&&pos.read?Math.min(T,Math.max(1,Math.round(pos.read/cpp))):0;
     const pct=pos&&pos.read?Math.min(100,pos.read/(sum(e.chars)||1)*100):0;
@@ -503,13 +518,25 @@ async function buildLib(){
     const p=document.createElement('div');p.className='bp';p.textContent=pct>=99.5?'Διαβάστηκε · 100%':Xp?`${Math.max(1,Math.round(pct))}% διαβασμένο`:'Αδιάβαστο · 0%';
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
     card.append(cv,t,p,bar);
-    card.onclick=async()=>{if(editing)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
-    if(editing&&e.id!=='sample'){const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.tabIndex=0;rm.textContent='Αφαίρεση';
-      rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){setLib(getLib().filter(x=>x.id!==e.id));idbDel('books',e.id);if(book&&book.id===e.id)openBook(SAMPLE);buildLib()}else{rm.dataset.sure=1;rm.textContent='Σίγουρα;'}};card.append(rm)}
+    let lp,lpFired=false;
+    card.addEventListener('pointerdown',()=>{lpFired=false;clearTimeout(lp);if(!editing)lp=setTimeout(()=>{lpFired=true;setEditing(true)},550)});
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>card.addEventListener(ev,()=>clearTimeout(lp)));
+    card.addEventListener('contextmenu',ev=>ev.preventDefault());
+    card.onclick=async()=>{if(editing||lpFired)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
+    if(editing){const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.tabIndex=0;rm.textContent='Διαγραφή';
+      rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){deleteBook(e.id)}else{rm.dataset.sure=1;rm.classList.add('sure');rm.textContent='Σίγουρα;'}};card.append(rm)}
     g.append(card);
     if(e.cover){idbGet('books',e.id).then(r=>{if(r&&r.cover){const u=URL.createObjectURL(r.cover);coverUrls.push(u);const im=document.createElement('img');im.alt='';im.src=u;im.onload=()=>{cv.innerHTML='';cv.append(im)}}})}
   }
 }
+async function deleteBook(id){
+  if(id==='sample')store.set('hideSample',true);
+  else{setLib(getLib().filter(x=>x.id!==id));await idbDel('books',id)}
+  for(const k of ['pos:','bm:','dg:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
+  if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
+  buildLib();
+}
+function setEditing(on){editing=on;$('editLib').textContent=on?'Τέλος διαγραφής':'Διαγραφή βιβλίων';setLibMenu(false);buildLib()}
 function showLibErr(m){$('libErr').textContent=m;$('libErr').hidden=!m}
 
 async function handleFile(e){
@@ -534,8 +561,8 @@ libDD.onclick=()=>setLibMenu($('libMenu').hidden);
 $('file2').addEventListener('click',()=>setLibMenu(false));
 $('bmToggle').onclick=()=>{closeAll();toggleBm()};
 $('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
-$('libBtn').onclick=()=>{closeAll();editing=false;$('editLib').textContent='Επεξεργασία';setLibMenu(false);showLibErr('');buildLib();$('lib').hidden=false};
-$('editLib').onclick=()=>{editing=!editing;$('editLib').textContent=editing?'Τέλος επεξεργασίας':'Επεξεργασία';setLibMenu(false);buildLib()};
+$('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);$('lib').hidden=false};
+$('editLib').onclick=()=>setEditing(!editing);
 const closeAll=()=>{let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
@@ -559,14 +586,29 @@ $('apiKey').value=store.get('apikey','');
 $('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 /* ---------- start ---------- */
+async function splashFor(id){
+  const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
+  $('spTitle').textContent=e?e.title+(e.author?' · '+e.author:''):'Bindle';
+  const c=$('spCover');c.innerHTML='';const ph=document.createElement('div');ph.className='ph';ph.textContent=e?e.title:'Bindle';c.append(ph);
+  if(e&&e.cover){const r=await idbGet('books',id);if(r&&r.cover){const im=new Image();im.alt='';im.src=URL.createObjectURL(r.cover);await new Promise(res=>{im.onload=res;im.onerror=res;setTimeout(res,1500)});if(im.naturalWidth){c.innerHTML='';c.append(im)}}}
+}
+const LAST=store.get('lastId','sample');
 applyVars();
 openBook(SAMPLE);
+store.set('lastId',LAST);
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>layout());
 (async()=>{
-  const old=await idbGet('b','last');
-  if(old){try{const b=await parseEpub(old);if(!getLib().some(x=>x.id===b.id)){const l=getLib();l.unshift({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:Date.now()});setLib(l);await idbPut('books',b.id,{buf:old,cover:b.cover})}store.set('lastId',b.id)}catch(e){}idbDel('b','last')}
-  const last=store.get('lastId','sample');
-  if(last&&last!=='sample'){try{await openFromLib(last)}catch(e){}}
+  let last=LAST;
+  try{
+    await splashFor(last);
+    const t0=Date.now();
+    const old=await idbGet('b','last');
+    if(old){try{const b=await parseEpub(old);if(!getLib().some(x=>x.id===b.id)){const l=getLib();l.unshift({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:Date.now()});setLib(l);await idbPut('books',b.id,{buf:old,cover:b.cover})}last=b.id}catch(e){}idbDel('b','last')}
+    if(last&&last!=='sample'){try{await openFromLib(last)}catch(e){store.set('lastId','sample')}}
+    if(document.fonts)await document.fonts.ready;layout();
+    await new Promise(r=>setTimeout(r,Math.max(0,1500-(Date.now()-t0))));
+  }catch(e){}
+  const sp=$('splash');sp.classList.add('out');setTimeout(()=>sp.remove(),900);
 })();
 </script>
 </body>
