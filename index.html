@@ -98,6 +98,9 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .rm.sure{background:#b5483a;color:#fff}
 .bk{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .bk img{-webkit-user-drag:none;pointer-events:none}
+.radio svg{flex:none}
+.radio.loading{animation:pulse 1.4s ease-in-out infinite}
+#radioDot{display:inline-flex;align-items:center;gap:4px}
 .libhint{font-size:13px;color:var(--ink-soft);margin:0}
 #splash{position:fixed;inset:0;z-index:50;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;transition:opacity .7s ease}
 #splash.out{opacity:0;pointer-events:none}
@@ -160,6 +163,7 @@ img{max-width:100%}
       <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
       <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
       <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button></div></div>
+      <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
       <div class="row"><span>Κλειδί Claude API (για τις περιλήψεις)</span></div>
       <div class="row keyrow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."><button id="apiSave">Αποθήκευση</button></div>
       <p class="hint" id="apiHint">Το κλειδί το φτιάχνεις στο console.anthropic.com → API Keys. Μένει μόνο σε αυτό το κινητό και χρησιμοποιείται μόνο για τις περιλήψεις.</p>
@@ -182,7 +186,7 @@ img{max-width:100%}
     </div>
   </main>
   <footer class="foot" id="foot">
-    <span id="chap">—</span><div class="prog"><i id="pbar" style="width:0"></i></div><span id="pct">0%</span>
+    <span id="chap">—</span><span id="radioDot" hidden aria-label="Παίζει Classic FM">♪</span><div class="prog"><i id="pbar" style="width:0"></i></div><span id="pct">0%</span>
   </footer>
 </div>
 
@@ -589,6 +593,22 @@ $('apiKey').value=store.get('apikey','');
 $('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+/* ---------- radio ---------- */
+const STREAMS=['https://ice-the.musicradio.com/ClassicFMMP3','https://media-ssl.musicradio.com/ClassicFM','https://media-the.musicradio.com/ClassicFM'];
+let radio=null,radioState='off';
+function setRadio(st,msg){radioState=st;const b=$('radioBtn');b.setAttribute('aria-pressed',st==='on');b.classList.toggle('loading',st==='loading');
+  $('radioLbl').textContent=st==='on'?'Classic FM · Σταμάτημα':st==='loading'?'Σύνδεση…':msg||'Classic FM';$('radioDot').hidden=st!=='on'}
+function playStream(i){
+  if(i>=STREAMS.length){stopRadio('Δεν συνδέθηκε. Ξαναδοκίμασε');return}
+  if(!radio){radio=new Audio();radio.preload='none';radio.addEventListener('playing',()=>setRadio('on'));radio.addEventListener('pause',()=>{if(radioState==='on')setRadio('off')})}
+  radio.onerror=()=>{if(radioState==='loading')playStream(i+1)};
+  radio.src=STREAMS[i];
+  radio.play().catch(()=>{if(radioState==='loading')playStream(i+1)});
+}
+function startRadio(){setRadio('loading');playStream(0);
+  if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:'Classic FM',artist:'Ζωντανά',album:'Bindle',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}catch(e){}}}
+function stopRadio(msg){if(radio){radio.pause();radio.removeAttribute('src');radio.load()}setRadio('off',msg)}
+$('radioBtn').onclick=()=>{radioState==='off'?startRadio():stopRadio()};
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
