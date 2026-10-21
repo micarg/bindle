@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#ebe9e3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -122,12 +122,13 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body{margin:0}
 [hidden]{display:none!important}
+html,body{touch-action:manipulation}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input{-webkit-user-select:text;user-select:text}
 img{max-width:100%}
 *,*::before,*::after{-webkit-text-size-adjust:100%}
 .app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-.keyrow input{flex:1;min-width:0;font:400 14px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
+.keyrow input{flex:1;min-width:0;font:400 16px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
 .hint a{color:var(--ink)}
 </style>
 </head>
@@ -587,6 +588,8 @@ let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>
 $('apiKey').value=store.get('apikey','');
 $('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+let lastTouchEnd=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTouchEnd<350&&!e.target.closest('input'))e.preventDefault();lastTouchEnd=n},{passive:false});
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
