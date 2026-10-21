@@ -122,6 +122,8 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body{margin:0}
 [hidden]{display:none!important}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input{-webkit-user-select:text;user-select:text}
 img{max-width:100%}
 *,*::before,*::after{-webkit-text-size-adjust:100%}
 .app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
