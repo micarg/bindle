@@ -110,6 +110,9 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 @keyframes pulse{50%{opacity:.4}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+*,*::before,*::after{-webkit-text-size-adjust:100%}
 .app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .keyrow input{flex:1;min-width:0;font:400 14px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
 .hint a{color:var(--ink)}
