@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ebe9e3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bindle">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Bindle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,200..800;1,7..72,200..800&family=Noto+Serif:ital,wght@0,100..800;1,100..800&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Slab:wght@100..800&family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Didact+Gothic&family=Commissioner:wght@400;500&display=swap">
+<style>
+/* Layout: one-screen e-ink reader — slim top bar, paginated column page, footer with progress */
+:root{
+  --paper:#ebe9e3; --ink:#1d1c1a; --ink-soft:#5d5b56; --rule:#d2cfc7; --chip:#dfdcd5; --accent:#2f4a5a;
+  --font-read:"Literata", "Bookerly", Georgia, "Noto Serif", serif;
+  --font-ui:"Commissioner", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:18px; --lh:1.75; --bold:700; --rest:300; --align:left;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);overflow:hidden;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper);z-index:10}
+.app{height:100%;display:flex;flex-direction:column;max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar{display:flex;justify-content:center;padding-block:6px 0;position:relative}
+.bm{position:absolute;right:-6px;top:2px;border:0;min-height:36px;padding:6px 8px;color:var(--ink-soft)}
+.bm svg path{fill:transparent;transition:fill .2s}
+.bm[aria-pressed="true"]{background:transparent;color:var(--ink)}
+.bm[aria-pressed="true"] svg path{fill:currentColor}
+.bml{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--rule)}
+.bml a{flex:1;border:0}
+.bml button{border:0;color:var(--ink-soft)}
+.empty{font-size:14px;color:var(--ink-soft);padding:8px 4px}
+.xrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font:500 13px var(--font-ui);color:var(--ink-soft);letter-spacing:.03em}
+#menu .xrow{padding:2px 6px 2px 16px;border-bottom:1px solid var(--rule)}
+.xrow button{border:0;min-height:40px;min-width:40px;justify-content:center;font-size:18px;color:var(--ink)}
+.tbtn{border:0;min-height:28px;padding:4px 8px;max-width:85%;font:400 12px var(--font-ui);color:var(--ink-soft);letter-spacing:.03em;gap:5px}
+.tbtn .t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn .car{font-size:10px;transition:transform .2s}
+.tbtn[aria-expanded="true"] .car{transform:rotate(180deg)}
+#menu.menu{display:flex;flex-direction:column;gap:0;left:0;right:0;margin:0 auto;width:min(300px,100%);height:auto;padding:4px 0;overflow:hidden;animation:drop .18s ease-out}
+#menu .mi,.ddmenu .mi{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;height:48px;min-height:0;margin:0;padding:0 16px;border:0;border-radius:0;background:transparent;color:var(--ink);font:400 15px var(--font-ui);text-align:left;cursor:pointer;overflow:hidden}
+#menu .mi+.mi,.ddmenu .mi+.mi{border-top:1px solid var(--rule)}
+#menu .mi input,.ddmenu .mi input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+button,.filebtn{font:500 13px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:7px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:34px}
+button:focus-visible,.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px}
+.stage{flex:1;position:relative;overflow:hidden;margin-block:10px 8px;min-height:0}
+#page{height:100%;column-fill:auto;font-family:var(--font-read);font-size:var(--fs);line-height:var(--lh);hyphens:manual;-webkit-hyphens:manual;text-align:var(--align);font-weight:300;transition:transform .0s}
+#page p{margin:0 0 .9em;text-indent:0}
+#page p.first,#page h1+p,#page h2+p,#page h3+p,#page hr+p{text-indent:0}
+#page h1,#page h2,#page h3{font-weight:500;text-align:center;line-height:1.25;text-wrap:balance;margin:1.2em 0 1em;break-after:avoid}
+#page h1{font-size:1.45em}#page h2{font-size:1.25em}#page h3{font-size:1.08em}
+#page blockquote{margin:.6em 1.2em;font-style:italic}
+#page hr{border:0;text-align:center;margin:1em 0}#page hr::after{content:"⁂";color:var(--ink-soft)}
+#page img{max-width:100%;max-height:70vh;display:block;margin:.8em auto;break-inside:avoid}
+#page li{margin-left:1.2em}
+#page b.bn{font-weight:var(--bold)}
+#page .bnr{font-weight:var(--rest);color:color-mix(in srgb,var(--ink) 68%,var(--paper))}
+#page b.bn{color:var(--ink)}
+.zone{position:absolute;top:0;bottom:0;z-index:2;cursor:pointer}
+.zone.l{left:0;width:30%}.zone.c{left:30%;width:40%}.zone.r{right:0;width:30%}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:6px 12px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.prog{flex:1;height:2px;background:var(--rule);position:relative}.prog i{position:absolute;inset:0 auto 0 0;background:var(--ink-soft)}
+.sheet{position:absolute;left:0;right:0;top:0;z-index:5;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:14px;align-content:start;max-height:100%;overflow:auto}
+.ddmenu{display:flex;flex-direction:column;width:min(240px,100%);border:1px solid var(--rule);border-radius:8px;overflow:hidden;animation:drop .18s ease-out}
+.libdd{font-size:15px;color:var(--ink);padding-left:0;max-width:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.row>span{font-size:13px;color:var(--ink-soft)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.toc a{display:block;padding:10px 4px;border-bottom:1px solid var(--rule);color:var(--ink);text-decoration:none;font-family:var(--font-read);font-size:16px}
+.toc a[aria-current="true"]{font-weight:600}
+.hint{font-size:12px;color:var(--ink-soft);line-height:1.5}
+.err{color:#a3392b;font-size:13px}
+.sheet.full{bottom:0}
+.libtools{display:flex;gap:8px;flex-wrap:wrap}
+.libtools label{position:relative}
+.libtools input{position:absolute;opacity:0;width:1px;height:1px}
+.lib{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 14px;align-content:start}
+.bk{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:6px;border:0;padding:0;min-height:0;text-align:left;background:transparent;border-radius:0}
+.cv{aspect-ratio:2/3;width:100%;max-width:100%;border-radius:3px;overflow:hidden;background:var(--chip);border:1px solid var(--rule);display:flex;align-items:flex-end}
+.cv img{width:100%;height:100%;object-fit:cover;display:block}
+.cv .ph{padding:10px 8px;font:500 13px/1.25 var(--font-read);color:var(--ink);text-wrap:balance;width:100%;border-top:3px solid var(--ink-soft)}
+.bt{font:500 12.5px/1.3 var(--font-ui);color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bp{font-size:11.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.bbar{height:2px;background:var(--rule);position:relative}.bbar i{position:absolute;inset:0 auto 0 0;background:var(--ink)}
+.bk[aria-current="true"] .cv{outline:2px solid var(--ink);outline-offset:2px}
+.rm{position:absolute;top:-8px;right:-8px;min-height:28px;min-width:28px;padding:0 8px;border-radius:14px;background:var(--paper);font-size:12px;z-index:1;justify-content:center}
+.bml .acts{display:flex;gap:2px}
+.sumbtn{font-size:12px;border:1px solid var(--rule)!important;color:var(--ink)!important;min-height:32px}
+.sumtext{font-family:var(--font-read);font-size:calc(var(--fs) * .92);line-height:1.65;font-weight:300}
+.sumtext p{margin:0 0 .8em}
+.sumtext ul{margin:0 0 1.1em;padding-left:1.1em}
+.sumtext li{margin:.3em 0;padding-left:.2em}
+.sumtext li::marker{color:var(--ink-soft)}
+.sumtext b.bn{font-weight:var(--bold);color:var(--ink)}
+.sumtext .bnr{font-weight:var(--rest);color:color-mix(in srgb,var(--ink) 68%,var(--paper))}
+.sumtext .lab{font-family:var(--font-ui);font-size:12px;letter-spacing:.05em;color:var(--ink-soft);display:block;margin-bottom:2px}
+.summeta{font-size:12.5px;color:var(--ink-soft);line-height:1.4}
+.thinking{font-size:14px;color:var(--ink-soft);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+body{margin:0}
+.app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.keyrow input{flex:1;min-width:0;font:400 14px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
+.hint a{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="bar" id="bar">
+    <button id="titleBtn" class="tbtn" aria-expanded="false" aria-controls="menu"><span class="t" id="title">Bindle</span><span class="car" aria-hidden="true">▾</span></button>
+    <button id="bmToggle" class="bm" aria-pressed="false" aria-label="Σελιδοδείκτης"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
+  </header>
+  <main class="stage" id="stage">
+    <div id="page" lang="el" aria-live="polite"></div>
+    <div class="zone l" id="zl" aria-hidden="true"></div>
+    <div class="zone c" id="zc" aria-hidden="true"></div>
+    <div class="zone r" id="zr" aria-hidden="true"></div>
+    <div class="sheet menu" id="menu" hidden>
+      <button id="libBtn" class="mi">Βιβλιοθήκη</button>
+      <button id="tocBtn" class="mi">Περιεχόμενα</button>
+      <label class="mi">Άνοιγμα EPUB<input id="file" type="file" accept=".epub,application/epub+zip"></label>
+      <button id="bmBtn" class="mi">Σελιδοδείκτες</button>
+      <button id="setBtn" class="mi">Ρυθμίσεις</button>
+    </div>
+    <div class="sheet toc" id="bms" hidden></div>
+    <div class="sheet" id="settings" hidden>
+      <div class="row"><span>Bionic reading</span><button id="bnBtn" aria-pressed="true">Ενεργή</button></div>
+      <div class="row"><span>Ένταση</span><div class="seg" id="bnLvl"><button data-v="0.4">Ήπια</button><button data-v="0.5">Μέτρια</button><button data-v="0.6">Δυνατή</button></div></div>
+      <div class="row"><span>Γραμματοσειρά</span><div class="seg" id="ffSeg"><button data-v="Times" style="font-family:'Times New Roman',Tinos,serif">Times New Roman</button><button data-v="Futura" style="font-family:Futura,'Didact Gothic',sans-serif">Futura</button><button data-v="System" style="font-family:system-ui,sans-serif">Συστήματος</button><button data-v="Literata" style="font-family:Literata,serif">Literata</button><button data-v="Noto Serif" style="font-family:'Noto Serif',serif">Noto Serif</button><button data-v="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button><button data-v="Roboto Slab" style="font-family:'Roboto Slab',serif">Roboto Slab</button></div></div>
+      <div class="row"><span>Μέγεθος γραμμάτων</span><div class="seg"><button id="fsDown" aria-label="Μικρότερα">A−</button><button id="fsUp" aria-label="Μεγαλύτερα">A+</button></div></div>
+      <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
+      <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
+      <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button></div></div>
+      <div class="row"><span>Κλειδί Claude API (για τις περιλήψεις)</span></div>
+      <div class="row keyrow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."><button id="apiSave">Αποθήκευση</button></div>
+      <p class="hint" id="apiHint">Το κλειδί το φτιάχνεις στο console.anthropic.com → API Keys. Μένει μόνο σε αυτό το κινητό και χρησιμοποιείται μόνο για τις περιλήψεις.</p>
+      <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού.</p>
+    </div>
+    <div class="sheet toc" id="toc" hidden></div>
+    <div class="sheet full" id="lib" hidden>
+      <div class="ddmenu" id="libMenu" hidden>
+        <label class="mi">Προσθήκη EPUB<input id="file2" type="file" accept=".epub,application/epub+zip"></label>
+        <button id="editLib" class="mi">Επεξεργασία</button>
+      </div>
+      <p class="err" id="libErr" hidden></p>
+      <div class="lib" id="libGrid"></div>
+    </div>
+    <div class="sheet full" id="sum" hidden>
+      <div class="summeta" id="sumMeta"></div>
+      <div class="sumtext" id="sumBody"></div>
+      <div class="libtools"><button id="sumStop" hidden>Διακοπή</button><button id="sumAgain" hidden>Νέα περίληψη</button></div>
+    </div>
+  </main>
+  <footer class="foot" id="foot">
+    <span id="chap">—</span><div class="prog"><i id="pbar" style="width:0"></i></div><span id="pct">0%</span>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const page=$('page'),stage=$('stage');
+const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
+let S=Object.assign({bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
+if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
+if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
+let book=null,ci=0,pi=0,pages=1,blobUrls=[],coverUrls=[];
+let cpp=store.get('cpp',1300);
+
+const SAMPLE={title:'Το φως στη Μονή',author:'Δείγμα',id:'sample',lang:'el',chapters:[
+{title:'Α΄. Το λιμάνι',html:`<h2>Α΄. Το λιμάνι</h2><p>Το πρωί που έφτασε η Ελένη στο νησί, ο αέρας μύριζε αλάτι και πεύκο. Το καράβι έδεσε αργά, σαν να μην ήθελε να ταράξει τους ψαράδες που μάζευαν τα δίχτυα τους στην άκρη του μόλου.</p><p>Κρατούσε μια βαλίτσα κι ένα σημειωματάριο γεμάτο λίστες. Η πρώτη λίστα είχε τίτλο «Πράγματα που πρέπει να τελειώσω». Η δεύτερη ήταν άδεια, με τίτλο «Πράγματα που θέλω».</p><p>Η θεία της την περίμενε κάτω από την ακακία, με τα χέρια σταυρωμένα και ένα χαμόγελο που δεν χρειαζόταν λόγια. «Άργησες δέκα χρόνια», της είπε, και την αγκάλιασε πριν προλάβει να απαντήσει.</p><p>Ανέβηκαν μαζί το καλντερίμι. Τα σπίτια ήταν άσπρα, τα παράθυρα μπλε, και από κάθε αυλή κρεμόταν μια γλάστρα με βασιλικό. Η Ελένη μετρούσε τα σκαλιά χωρίς να το καταλαβαίνει, όπως έκανε και στην πόλη με τα μηνύματα, τα email και τις ώρες που έμεναν μέχρι το βράδυ.</p><p>Στο σαράντα τρία σταμάτησε. Από εκεί φαινόταν όλος ο κόλπος, και πέρα από τον κόλπο η Μονή, μικρή σαν σπιρτόκουτο πάνω στον βράχο. Η θεία της ακολούθησε το βλέμμα της.</p><p>«Εκεί πάνω ο χρόνος περπατάει πιο αργά», είπε. «Θα δεις.»</p><hr><p>Το βράδυ έγραψε στη δεύτερη λίστα την πρώτη της λέξη. Ήταν μόνο μία: «Ανάσα».</p>`},
+{title:'Β΄. Ο δρόμος για τη Μονή',html:`<h2>Β΄. Ο δρόμος για τη Μονή</h2><p>Ξεκίνησε πριν βγει ο ήλιος. Το μονοπάτι περνούσε μέσα από ελαιώνες και ξερολιθιές, και κάθε τόσο ένας τζίτζικας άρχιζε το τραγούδι του πολύ νωρίτερα από ό,τι έπρεπε.</p><p>Στην αρχή περπατούσε γρήγορα, με το κεφάλι σκυμμένο, σαν να είχε ραντεβού. Μετά από μισή ώρα κουράστηκε και κάθισε σε μια πέτρα. Τότε μόνο πρόσεξε τις μέλισσες στο θυμάρι, τη σκιά μιας σαύρας, το πώς άλλαζε το χρώμα της θάλασσας καθώς ανέβαινε το φως.</p><p>Σκέφτηκε πως είχε χρόνια να κοιτάξει κάτι χωρίς να θέλει να το φωτογραφίσει. Έβγαλε το κινητό από την τσέπη, το κοίταξε για λίγο και το ξανάβαλε μέσα.</p><p>Η πόρτα της Μονής ήταν ανοιχτή. Μέσα, ένας ηλικιωμένος καλόγερος σκούπιζε την αυλή με κινήσεις τόσο ήρεμες, που έμοιαζε να ζωγραφίζει. Δεν σήκωσε το κεφάλι όταν μπήκε.</p><p>«Ήρθατε για τη θέα;» ρώτησε τελικά.</p><p>«Δεν ξέρω ακόμα για τι ήρθα», απάντησε η Ελένη.</p><p>Εκείνος ακούμπησε τη σκούπα στον τοίχο και της έδειξε ένα παγκάκι στη σκιά. «Τότε κάθισε. Κάποια πράγματα τα βρίσκεις μόνο όταν σταματήσεις να τα ψάχνεις.»</p><p>Κάθισε. Η θάλασσα από κάτω ήταν ακίνητη σαν γυαλί, και για πρώτη φορά μετά από πολύ καιρό, το ίδιο και το μυαλό της.</p>`}
+]};
+const htmlText=h=>{const d=document.createElement('div');d.innerHTML=h;return d.textContent.replace(/\s+/g,' ').trim()};
+SAMPLE.chars=SAMPLE.chapters.map(c=>htmlText(c.html).length);
+
+function applyVars(){
+  const r=document.documentElement.style;
+  r.setProperty('--fs',S.fs+'px');r.setProperty('--lh',S.lh);r.setProperty('--align',S.align);
+  r.setProperty('--font-read',S.font==='Futura'?'Futura, "Futura PT", "Didact Gothic", sans-serif':S.font==='Times'?'"Times New Roman", Times, Tinos, serif':S.font==='System'?'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif':`"${S.font}", ${S.font==='Open Sans'?'system-ui, sans-serif':'Georgia, serif'}`);
+  if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
+  $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
+  for(const [seg,key] of [['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+    $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
+  store.set('settings',S);
+}
+
+const WORD=/[\p{L}\p{M}\p{N}]+/gu;
+function bionic(root){
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+  while(w.nextNode())nodes.push(w.currentNode);
+  for(const n of nodes){
+    if(n.parentElement&&n.parentElement.closest('.lab'))continue;
+    const t=n.nodeValue;if(!t.trim())continue;
+    const f=document.createDocumentFragment();let last=0;
+    for(const m of t.matchAll(WORD)){
+      const word=m[0],chars=[...word];
+      if(m.index>last)f.append(t.slice(last,m.index));
+      const L=chars.length;
+      const k=L<=3?1:L===4?2:Math.min(L-1,Math.ceil(L*S.lvl));
+      const b=document.createElement('b');b.className='bn';b.textContent=chars.slice(0,k).join('');
+      f.append(b);
+      if(chars.length>k){const s=document.createElement('span');s.className='bnr';s.textContent=chars.slice(k).join('');f.append(s)}
+      last=m.index+word.length;
+    }
+    if(last<t.length)f.append(t.slice(last));
+    n.replaceWith(f);
+  }
+}
+
+/* ---------- pages ---------- */
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const totalPages=chars=>Math.max(1,Math.ceil(sum(chars)/cpp));
+function readChars(){const c=book.chars[ci]||0;return sum(book.chars.slice(0,ci))+c*(pi+1)/pages}
+function measureCpp(){const c=book.chars[ci]||0;if(pages>=3&&c>1500){const v=Math.round(c/(pages-0.5));if(Math.abs(v-cpp)>20){cpp=v;store.set('cpp',cpp)}}}
+
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function layout(keep,anim){
+  const W=stage.clientWidth,gap=48;
+  page.style.columnWidth=W+'px';page.style.columnGap=gap+'px';page.style.width=W+'px';
+  pages=Math.max(1,Math.ceil((page.scrollWidth+gap-2)/(W+gap)));
+  if(keep==='end')pi=pages-1;
+  pi=Math.min(Math.max(0,pi),pages-1);
+  page.style.transition=anim&&!RM?'transform .38s cubic-bezier(.25,.8,.25,1)':'none';
+  page.style.transform=`translateX(${-pi*(W+gap)}px)`;
+  measureCpp();
+  updateFoot();
+}
+
+function renderChapter(keep,fade){
+  if(fade&&!RM&&page.animate)page.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'});
+  const ch=book.chapters[ci];
+  page.innerHTML=ch.html;
+  if(S.bionic)bionic(page);
+  const imgs=[...page.querySelectorAll('img')];
+  layout(keep);
+  imgs.forEach(im=>{if(!im.complete)im.addEventListener('load',()=>layout(),{once:true})});
+}
+
+function updateFoot(){
+  const total=sum(book.chars)||1,rc=readChars();
+  const T=totalPages(book.chars),X=Math.min(T,Math.max(1,Math.round(rc/cpp)));
+  $('chap').textContent=`σελ. ${X} από ${T}`;
+  $('pct').textContent=Math.round(rc/total*100)+'%';
+  $('pbar').style.width=(rc/total*100).toFixed(1)+'%';
+  store.set('pos:'+book.id,{ci,frac:pages>1?pi/(pages-1):0,read:rc});
+  updBm();
+}
+
+/* ---------- bookmarks ---------- */
+const getBms=()=>store.get('bm:'+book.id,[]);
+const onThis=b=>b.ci===ci&&Math.round(b.frac*(pages-1))===pi;
+function updBm(){const on=getBms().some(onThis);$('bmToggle').setAttribute('aria-pressed',on);$('bmToggle').setAttribute('aria-label',on?'Αφαίρεση σελιδοδείκτη':'Προσθήκη σελιδοδείκτη')}
+function pageSnippet(){const W=stage.clientWidth;for(const el of page.querySelectorAll('p,h1,h2,h3')){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.right>s.left+4&&r.left<s.left+W-4)return el.textContent.trim().slice(0,70)}return ''}
+function toggleBm(){let l=getBms();if(l.some(onThis))l=l.filter(b=>!onThis(b));else l.push({ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()});l.sort((a,b)=>a.ci-b.ci||a.frac-b.frac);store.set('bm:'+book.id,l);updBm()}
+function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σελιδοδείκτες');
+  if(!l.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις σελιδοδείκτες ακόμα. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις μια σελίδα.</p>');return}
+  l.forEach((b,i)=>{const row=document.createElement('div');row.className='bml';const a=document.createElement('a');a.href='#';
+    a.innerHTML=`<span style="display:block;font-size:13px;color:var(--ink-soft);font-family:var(--font-ui)"></span><span></span>`;a.children[0].textContent=b.title+' · '+b.pct;a.children[1].textContent=b.snip?b.snip+'…':'';
+    a.onclick=e=>{e.preventDefault();ci=b.ci;renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout();t.hidden=true};
+    const acts=document.createElement('div');acts.className='acts';
+    if(sampleFn||hasDigest()){const s=document.createElement('button');s.className='sumbtn';s.textContent='Περίληψη';s.onclick=()=>openSummary(i);acts.append(s)}
+    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Διαγραφή');x.onclick=()=>{const n=getBms();n.splice(i,1);store.set('bm:'+book.id,n);updBm();buildBms()};
+    acts.append(x);row.append(a,acts);t.append(row)})}
+
+/* ---------- summaries: Claude reads the book once, then every bookmark summary is built locally ---------- */
+let sampleFn=null,sumCtl=null,sumIdx=-1,dgRun=null;
+const MODEL='claude-haiku-5-5';
+function parseLooseJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw {code:'invalid_json',text:t}}
+async function callClaude(prompt,signal){
+  let res;
+  try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal,headers:{'content-type':'application/json','x-api-key':store.get('apikey',''),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:8000,messages:[{role:'user',content:prompt}]})})}
+  catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
+  if(!res.ok){let m='';try{m=(await res.json()).error.message}catch(e){}throw {code:res.status===401||res.status===403?'bad_key':res.status===429?'rate_limited':res.status===529?'overloaded':res.status===400&&/credit/i.test(m)?'no_credit':'upstream_error',message:m}}
+  const j=await res.json();const t=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+  if(!t.trim())throw {code:'empty_completion'};
+  return t;
+}
+function makeSample(){if(!store.get('apikey',''))return null;const f=async(p,o={})=>({text:await callClaude(p,o.signal)});f.json=async(p,o={})=>parseLooseJSON(await callClaude(p,o.signal));return f}
+sampleFn=makeSample();
+const SEG=3000,CHUNK=45000;
+function segmentBook(b){
+  const segs=[];
+  b.chapters.forEach((c,i)=>{const t=htmlText(c.html);let s=0,k=0;
+    while(s<t.length){let e=Math.min(t.length,s+SEG);if(e<t.length){const cut=Math.max(t.lastIndexOf('. ',e),t.lastIndexOf('» ',e),t.lastIndexOf('; ',e));if(cut>s+SEG/2)e=cut+1}
+      segs.push({id:i+'.'+k,ci:i,end:e,text:t.slice(s,e).trim()});s=e;k++}});
+  return segs;
+}
+function chunksOf(segs){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>CHUNK&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
+const getDg=id=>store.get('dg:'+id,null);
+const setDg=(id,d)=>store.set('dg:'+id,d);
+function digestState(b){const segs=segmentBook(b),chunks=chunksOf(segs),dd=getDg(b.id),d=dd&&dd.v===2?dd:{v:2,done:0,segs:{},chap:{}};return {segs,chunks,d}}
+
+function chunkPrompt(b,chunk,d){
+  const lastSeg={};for(const s of segmentBook(b))lastSeg[s.ci]=s.id;
+  const ending=[...new Set(chunk.filter(s=>lastSeg[s.ci]===s.id).map(s=>s.ci))];
+  const carried=ending.map(ci=>{const prev=Object.entries(d.segs).filter(([k,v])=>+k.split('.')[0]===ci&&v&&!chunk.some(s=>s.id===k)).map(([,v])=>v);return prev.length?`Κεφάλαιο ${ci}: τα προηγούμενα τμήματά του (από προηγούμενο κομμάτι) λένε: ${prev.join(' ')}`:''}).filter(Boolean);
+  let body='',lastCi=-1;
+  for(const s of chunk){if(s.ci!==lastCi){body+=`\n\n=== Κεφάλαιο ${s.ci}: ${b.chapters[s.ci].title} ===`;lastCi=s.ci}body+=`\n[${s.id}] ${s.text}`}
+  return `Διαβάζεις ένα κομμάτι από το βιβλίο «${b.title}»${b.author?' ('+b.author+')':''}. Το κείμενο είναι χωρισμένο σε τμήματα με ετικέτες όπως [3.0], όπου ο πρώτος αριθμός είναι το κεφάλαιο.
+
+Οι σημειώσεις θα εμφανιστούν ως σύντομες κουκκίδες, για να θυμηθεί ο αναγνώστης μόνο τα πιο σημαντικά. Να είσαι πολύ σύντομος.
+1. Για ΚΑΘΕ τμήμα: αν συμβαίνει κάτι σημαντικό για την ιστορία, γράψε στα ελληνικά ΜΙΑ σύντομη φράση (έως 12 λέξεις) με αυτό που γίνεται ΜΟΝΟ μέσα σε εκείνο το τμήμα. Αν δεν γίνεται κάτι σημαντικό (περιγραφές, δευτερεύοντες διάλογοι, σελίδα τίτλου, πνευματικά δικαιώματα, περιεχόμενα), γράψε "". Μη χρησιμοποιείς πληροφορίες από επόμενα τμήματα.
+2. Για τα κεφάλαια ${ending.length?ending.join(', '):'(κανένα)'} γράψε ΜΙΑ πρόταση (έως 18 λέξεις) με το πιο σημαντικό που γίνεται στο κεφάλαιο (ή "" αν δεν έχει ιστορία).${carried.length?'\n'+carried.join('\n'):''}
+
+Απάντησε μόνο με JSON αυτής της μορφής: {"segments":{"${chunk[0].id}":"..."},"chapters":{${ending.length?'"'+ending[0]+'":"..."':''}}}
+Βάλε ένα κλειδί για κάθε ετικέτα τμήματος.
+---${body}`;
+}
+
+async function runDigest(b){
+  if(dgRun||!sampleFn)return;
+  const {chunks,d}=digestState(b);
+  dgRun={id:b.id,total:chunks.length,ctl:new AbortController()};
+  showSumSheet();
+  try{
+    for(let c=d.done;c<chunks.length;c++){
+      dgRun.at=c;showSumSheet();
+      const r=await sampleFn.json(chunkPrompt(b,chunks[c],d),{modelTier:'quick',signal:dgRun.ctl.signal});
+      const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
+      for(const s of chunks[c])d.segs[s.id]=typeof segs[s.id]==='string'?segs[s.id]:'';
+      for(const k in chap)if(typeof chap[k]==='string')d.chap[k]=chap[k];
+      d.done=c+1;setDg(b.id,d);
+    }
+    dgRun=null;showSumSheet();
+  }catch(e){
+    const code=e&&e.code;const msg=code==='cancelled'?'Η ανάγνωση σταμάτησε. Μπορείς να τη συνεχίσεις από εκεί που έμεινε.':['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(code)?'Δεν δόθηκε άδεια στη σελίδα να χρησιμοποιήσει το Claude, οπότε οι περιλήψεις δεν είναι διαθέσιμες.':(sumErr[code]||'Κάτι πήγε στραβά. Ό,τι διαβάστηκε έχει κρατηθεί, και μπορείς να συνεχίσεις.');
+    dgRun=null;showSumSheet(msg);
+  }
+}
+const sumErr={bad_key:'Το κλειδί API δεν δουλεύει. Έλεγξέ το στις Ρυθμίσεις.',no_credit:'Δεν υπάρχει υπόλοιπο στον λογαριασμό σου στο Claude API. Πρόσθεσε χρέωση στο console.anthropic.com.',offline:'Δεν υπάρχει σύνδεση στο ίντερνετ. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε όταν συνδεθείς.',overloaded:'Το Claude είναι φορτωμένο αυτή τη στιγμή. Συνέχισε σε λίγο.',rate_limited:'Έγιναν πολλά αιτήματα στο Claude. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε σε λίγο.',refused:'Το Claude δεν δέχτηκε να διαβάσει ένα κομμάτι αυτού του βιβλίου.',prompt_too_large:'Ένα κομμάτι του βιβλίου ήταν πολύ μεγάλο.',session_expired:'Συνδέσου ξανά στο Claude και συνέχισε.',invalid_json:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.',empty_completion:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.'};
+const hasDigest=()=>{const d=book&&getDg(book.id);return !!(d&&d.v===2&&d.done>0)};
+function bullets(items){const ul=document.createElement('ul');items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.append(li)});return ul}
+
+function bmPoint(b){const len=htmlText(book.chapters[b.ci].html).length;const cf=b.cf!=null?b.cf:Math.min(1,b.frac+0.05);return Math.round(len*cf)}
+function summaryFor(b){
+  const {segs,d}=digestState(book),pt=bmPoint(b);
+  const need=segs.filter(s=>s.ci<b.ci||(s.ci===b.ci&&s.end<=pt));
+  const ready=need.every(s=>s.id in d.segs)&&[...Array(b.ci).keys()].every(ci=>(ci in d.chap)||segs.filter(s=>s.ci===ci).every(s=>s.id in d.segs));
+  if(!ready)return null;
+  const earlier=[];for(let ci=0;ci<b.ci;ci++){let t=d.chap[ci];if(t==null)t=segs.filter(s=>s.ci===ci).map(s=>d.segs[s.id]).filter(Boolean).join(' ');if(t)earlier.push({title:book.chapters[ci].title,text:t})}
+  const now=need.filter(s=>s.ci===b.ci).map(s=>d.segs[s.id]).filter(Boolean);
+  return {earlier,now};
+}
+function para(lab,text){const p=document.createElement('p');if(lab){const s=document.createElement('span');s.className='lab';s.textContent=lab;p.append(s)}p.append(text);return p}
+
+function showSumSheet(msg){
+  if(sumIdx<0||!book)return;
+  const b=getBms()[sumIdx];if(!b)return;
+  const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
+  body.innerHTML='';again.hidden=true;stop.hidden=true;
+  $('sumMeta').textContent=`Μέχρι: ${b.title} · ${b.pct}`;
+  const {chunks,d}=digestState(book);
+  const running=dgRun&&dgRun.id===book.id;
+  const s=summaryFor(b);
+  if(s){
+    if(!s.earlier.length&&!s.now.length)body.append(para('','Είσαι ακόμα στην αρχή του βιβλίου, δεν υπάρχει κάτι να συνοψιστεί.'));
+    if(s.earlier.length){const h=document.createElement('span');h.className='lab';h.textContent='Μέχρι τώρα';body.append(h,bullets(s.earlier.map(e=>e.text)))}
+    const h2=document.createElement('span');h2.className='lab';h2.textContent='Σε αυτό το κεφάλαιο';body.append(h2);
+    body.append(s.now.length?bullets(s.now):para('','Μόλις ξεκίνησες αυτό το κεφάλαιο.'));
+    if(S.bionic)bionic(body);
+    if(running){body.append(para('',`Το Claude συνεχίζει να διαβάζει το υπόλοιπο βιβλίο (μέρος ${dgRun.at+1} από ${dgRun.total}).`));stop.hidden=false}
+    return;
+  }
+  if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το Claude διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}`;body.append(p);
+    body.append(para('','Μπορείς να κλείσεις αυτό το παράθυρο και να συνεχίσεις να διαβάζεις. Η περίληψη θα είναι έτοιμη μόλις διαβαστεί το σημείο του σελιδοδείκτη.'));stop.hidden=false;return}
+  if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
+  if(!sampleFn){body.append(para('','Για τις περιλήψεις, βάλε πρώτα το κλειδί σου για το Claude API στις Ρυθμίσεις.'));return}
+  const left=chunks.length-d.done;
+  body.append(para('',d.done?`Το Claude έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου. Συνέχισε για να φτάσει ως τον σελιδοδείκτη.`:`Για να μην χρεώνεσαι σε κάθε περίληψη, το Claude διαβάζει μία φορά όλο το βιβλίο (${chunks.length} ${chunks.length===1?'μέρος':'μέρη'}). Μετά, η περίληψη για κάθε σελιδοδείκτη βγαίνει αμέσως και χωρίς νέα χρέωση.`));
+  again.textContent=d.done?`Συνέχεια (${left} ${left===1?'μέρος':'μέρη'})`:'Ανάγνωση βιβλίου';again.hidden=false;
+}
+function openSummary(i){sumIdx=i;closeAll();$('sum').hidden=false;showSumSheet()}
+$('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
+$('sumAgain').onclick=()=>{if(book)runDigest(book)};
+
+/* ---------- navigation ---------- */
+function next(){if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
+function prev(){if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
+
+function openBook(b){
+  book=b;$('title').textContent=b.title;page.lang=b.lang||'el';
+  store.set('lastId',b.id);
+  const lib=getLib(),e=lib.find(x=>x.id===b.id);if(e){e.opened=Date.now();setLib(lib)}
+  const pos=store.get('pos:'+b.id,null);ci=0;pi=0;
+  if(pos&&pos.ci<b.chapters.length){ci=pos.ci;renderChapter();pi=Math.round(pos.frac*(pages-1));layout()}else renderChapter();
+  buildToc();
+}
+
+function buildToc(){
+  const t=$('toc');t.innerHTML='';
+  book.chapters.forEach((c,i)=>{const a=document.createElement('a');a.href='#';a.textContent=c.title;a.setAttribute('aria-current',i===ci);
+    a.onclick=e=>{e.preventDefault();ci=i;pi=0;renderChapter();t.hidden=true;buildToc()};t.append(a)});
+  if(typeof addX==='function')addX('toc','Περιεχόμενα');
+}
+
+/* ---------- EPUB ---------- */
+const KEEP=new Set(['P','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','EM','I','STRONG','B','BR','UL','OL','LI','HR','IMG','SUP','SUB','SPAN','A','DIV','SECTION','ARTICLE','SMALL']);
+function resolve(base,href){const parts=(base.split('/').slice(0,-1).join('/')+'/'+href).split('/'),out=[];for(const p of parts){if(p==='..')out.pop();else if(p&&p!=='.')out.push(p)}return out.join('/')}
+async function clean(node,base,zip,out){
+  for(const c of [...node.childNodes]){
+    if(c.nodeType===3){out.append(c.nodeValue);continue}
+    if(c.nodeType!==1)continue;
+    const tag=c.tagName.toUpperCase().replace(/^.*:/,'');
+    if(['SCRIPT','STYLE','HEAD','TITLE'].includes(tag))continue;
+    if(tag==='IMG'||tag==='IMAGE'){
+      const src=c.getAttribute('src')||c.getAttribute('xlink:href')||c.getAttribute('href');
+      const f=src&&zip.file(resolve(base,decodeURIComponent(src.split('#')[0])));
+      if(f){const u=URL.createObjectURL(await f.async('blob'));blobUrls.push(u);const im=document.createElement('img');im.src=u;im.alt=c.getAttribute('alt')||'';out.append(im)}
+      continue;
+    }
+    if(!KEEP.has(tag)){await clean(c,base,zip,out);continue}
+    const el=document.createElement(['DIV','SECTION','ARTICLE','A','SMALL'].includes(tag)?(tag==='DIV'||tag==='SECTION'||tag==='ARTICLE'?'div':'span'):tag.toLowerCase());
+    await clean(c,base,zip,el);out.append(el);
+  }
+}
+const IMGT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp',svg:'image/svg+xml'};
+async function parseEpub(buf){
+  const zip=await JSZip.loadAsync(buf);
+  const X=s=>new DOMParser().parseFromString(s,'application/xml');
+  const cont=X(await zip.file('META-INF/container.xml').async('string'));
+  const opfPath=cont.getElementsByTagName('rootfile')[0].getAttribute('full-path');
+  const opf=X(await zip.file(opfPath).async('string'));
+  const tag=n=>(opf.getElementsByTagName('dc:'+n)[0]||opf.getElementsByTagName(n)[0]||{}).textContent||'';
+  const title=tag('title').trim()||'Βιβλίο',author=tag('creator').trim();
+  const items={};for(const it of opf.getElementsByTagName('item'))items[it.getAttribute('id')]={href:it.getAttribute('href'),type:it.getAttribute('media-type')||'',props:it.getAttribute('properties')||''};
+  const isImg=i=>i&&(i.type.startsWith('image')||/\.(jpe?g|png|gif|webp)$/i.test(i.href));
+  let cov=Object.values(items).find(i=>i.props.split(/\s+/).includes('cover-image'));
+  if(!isImg(cov)){const m=[...opf.getElementsByTagName('meta')].find(m=>m.getAttribute('name')==='cover');cov=m?items[m.getAttribute('content')]:null}
+  if(!isImg(cov))cov=(Object.entries(items).find(([k,i])=>/cover/i.test(k+' '+i.href)&&isImg(i))||[])[1];
+  let cover=null;
+  if(isImg(cov)){const f=zip.file(resolve(opfPath,decodeURIComponent(cov.href)));if(f){const ext=(cov.href.split('.').pop()||'').toLowerCase();cover=new Blob([await f.async('arraybuffer')],{type:cov.type||IMGT[ext]||'image/jpeg'})}}
+  const chapters=[],chars=[];
+  for(const ir of opf.getElementsByTagName('itemref')){
+    const it=items[ir.getAttribute('idref')];if(!it)continue;
+    const path=resolve(opfPath,decodeURIComponent(it.href));const f=zip.file(path);if(!f)continue;
+    const src=await f.async('string');
+    let doc=new DOMParser().parseFromString(src,'application/xhtml+xml');
+    if(doc.getElementsByTagName('parsererror').length)doc=new DOMParser().parseFromString(src,'text/html');
+    const body=doc.getElementsByTagName('body')[0];if(!body)continue;
+    const box=document.createElement('div');await clean(body,path,zip,box);
+    const txt=box.textContent.replace(/\s+/g,' ').trim();
+    if(!txt&&!box.querySelector('img'))continue;
+    const h=box.querySelector('h1,h2,h3');
+    chapters.push({title:(h?h.textContent:txt).trim().slice(0,60)||('Ενότητα '+(chapters.length+1)),html:box.innerHTML});
+    chars.push(Math.max(txt.length,box.querySelector('img')?400:0));
+  }
+  if(!chapters.length)throw new Error('empty');
+  return {lang:(tag('language')||'el').trim(),title,author,id:title+':'+buf.byteLength,chapters,chars,cover};
+}
+
+/* ---------- storage: IndexedDB for book files, localStorage for the shelf ---------- */
+function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('xartireader',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('b'))d.createObjectStore('b');if(!d.objectStoreNames.contains('books'))d.createObjectStore('books')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
+async function idbPut(st,k,v){try{const d=await idb();await new Promise((r,j)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=r;t.onerror=()=>j(t.error)});return true}catch(e){return false}}
+async function idbGet(st,k){try{const d=await idb();return await new Promise(r=>{const q=d.transaction(st).objectStore(st).get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}catch(e){return null}}
+async function idbDel(st,k){try{const d=await idb();d.transaction(st,'readwrite').objectStore(st).delete(k)}catch(e){}}
+const getLib=()=>store.get('lib',[]);
+const setLib=l=>store.set('lib',l);
+
+async function addBookFile(f){
+  const buf=await f.arrayBuffer();blobUrls.forEach(URL.revokeObjectURL);blobUrls=[];
+  const b=await parseEpub(buf);
+  const lib=getLib().filter(x=>x.id!==b.id);
+  lib.unshift({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:Date.now()});
+  setLib(lib);
+  await idbPut('books',b.id,{buf,cover:b.cover});
+  openBook(b);return b;
+}
+async function openFromLib(id){
+  if(id==='sample'){openBook(SAMPLE);return}
+  const rec=await idbGet('books',id);if(!rec||!rec.buf)throw new Error('missing');
+  blobUrls.forEach(URL.revokeObjectURL);blobUrls=[];
+  openBook(await parseEpub(rec.buf));
+}
+
+let editing=false;
+async function buildLib(){
+  const g=$('libGrid');g.innerHTML='';coverUrls.forEach(URL.revokeObjectURL);coverUrls=[];
+  const lib=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0));
+  const all=[...lib,{id:'sample',title:SAMPLE.title,author:SAMPLE.author,chars:SAMPLE.chars,cover:false}];
+  for(const e of all){
+    const pos=store.get('pos:'+e.id,null),T=totalPages(e.chars),Xp=pos&&pos.read?Math.min(T,Math.max(1,Math.round(pos.read/cpp))):0;
+    const pct=pos&&pos.read?Math.min(100,pos.read/(sum(e.chars)||1)*100):0;
+    const card=document.createElement('button');card.className='bk';card.setAttribute('aria-current',book&&book.id===e.id);
+    const cv=document.createElement('div');cv.className='cv';
+    const ph=document.createElement('div');ph.className='ph';ph.textContent=e.title;cv.append(ph);
+    const t=document.createElement('div');t.className='bt';t.textContent=e.title;
+    const p=document.createElement('div');p.className='bp';p.textContent=pct>=99.5?'Διαβάστηκε · 100%':Xp?`${Math.max(1,Math.round(pct))}% διαβασμένο`:'Αδιάβαστο · 0%';
+    const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
+    card.append(cv,t,p,bar);
+    card.onclick=async()=>{if(editing)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
+    if(editing&&e.id!=='sample'){const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.tabIndex=0;rm.textContent='Αφαίρεση';
+      rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){setLib(getLib().filter(x=>x.id!==e.id));idbDel('books',e.id);if(book&&book.id===e.id)openBook(SAMPLE);buildLib()}else{rm.dataset.sure=1;rm.textContent='Σίγουρα;'}};card.append(rm)}
+    g.append(card);
+    if(e.cover){idbGet('books',e.id).then(r=>{if(r&&r.cover){const u=URL.createObjectURL(r.cover);coverUrls.push(u);const im=document.createElement('img');im.alt='';im.src=u;im.onload=()=>{cv.innerHTML='';cv.append(im)}}})}
+  }
+}
+function showLibErr(m){$('libErr').textContent=m;$('libErr').hidden=!m}
+
+async function handleFile(e){
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  const inLib=!$('lib').hidden;
+  if(!inLib)page.innerHTML='<p style="text-align:center;color:var(--ink-soft)">Φόρτωση βιβλίου…</p>';
+  try{await addBookFile(f);showLibErr('');if(inLib)buildLib();else closeAll()}
+  catch(err){const m='Δεν άνοιξε αυτό το αρχείο. Βεβαιώσου ότι είναι EPUB χωρίς DRM (τα βιβλία του Kindle Store δεν ανοίγουν) και δοκίμασε ξανά.';
+    if(inLib)showLibErr(m);else{page.innerHTML=`<p class="err">${m}</p>`;setTimeout(()=>book&&renderChapter(),4000)}}
+}
+$('file').addEventListener('change',handleFile);
+$('file2').addEventListener('change',handleFile);
+
+/* ---------- controls ---------- */
+const sheets=['menu','settings','toc','bms','lib','sum'];
+function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
+addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');
+const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
+$('lib').querySelector('.xrow span').replaceWith(libDD);
+const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
+libDD.onclick=()=>setLibMenu($('libMenu').hidden);
+$('file2').addEventListener('click',()=>setLibMenu(false));
+$('bmToggle').onclick=()=>{closeAll();toggleBm()};
+$('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
+$('libBtn').onclick=()=>{closeAll();editing=false;$('editLib').textContent='Επεξεργασία';setLibMenu(false);showLibErr('');buildLib();$('lib').hidden=false};
+$('editLib').onclick=()=>{editing=!editing;$('editLib').textContent=editing?'Τέλος επεξεργασίας':'Επεξεργασία';setLibMenu(false);buildLib()};
+const closeAll=()=>{let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
+const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
+$('titleBtn').onclick=openMenu;
+$('zr').onclick=()=>{if(!closeAll())next()};$('zl').onclick=()=>{if(!closeAll())prev()};
+$('zc').onclick=()=>{if(!closeAll())openMenu()};
+document.addEventListener('keydown',e=>{if(sheets.some(s=>!$(s).hidden)){if(e.key==='Escape')closeAll();return}if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}});
+let sx=null;stage.addEventListener('touchstart',e=>{sx=sheets.some(s=>!$(s).hidden)?null:e.touches[0].clientX},{passive:true});
+stage.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>50){dx<0?next():prev()}});
+$('setBtn').onclick=()=>{closeAll();$('settings').hidden=false};
+$('tocBtn').onclick=()=>{closeAll();buildToc();$('toc').hidden=false};
+const refresh=()=>{const f=pages>1?pi/(pages-1):0;applyVars();renderChapter();pi=Math.round(f*(pages-1));layout()};
+$('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
+$('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
+$('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
+$('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
+for(const [seg,key,num] of [['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+  $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
+
+$('apiKey').value=store.get('apikey','');
+$('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+/* ---------- start ---------- */
+applyVars();
+openBook(SAMPLE);
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>layout());
+(async()=>{
+  const old=await idbGet('b','last');
+  if(old){try{const b=await parseEpub(old);if(!getLib().some(x=>x.id===b.id)){const l=getLib();l.unshift({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:Date.now()});setLib(l);await idbPut('books',b.id,{buf:old,cover:b.cover})}store.set('lastId',b.id)}catch(e){}idbDel('b','last')}
+  const last=store.get('lastId','sample');
+  if(last&&last!=='sample'){try{await openFromLib(last)}catch(e){}}
+})();
+</script>
+</body>
+</html>
