@@ -240,6 +240,12 @@ button,.filebtn{border-radius:14px}
 .stat{border-radius:18px}
 details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;padding:0 14px;margin-bottom:8px}
 .xrow button{border-radius:999px}
+
+/* covers with depth */
+.cv{border:0!important;border-radius:5px 9px 9px 5px!important;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.22),0 12px 22px -8px rgba(0,0,0,.45)}
+.cv::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.14) 70%,transparent);z-index:1;pointer-events:none}
+.cv .ph{border-top:0!important;color:#f3ede2!important;font-size:13.5px!important;padding:12px 10px!important}
+.bk[aria-current="true"] .cv{outline-offset:3px}
 </style>
 </head>
 <body>
@@ -881,6 +887,8 @@ async function openFromLib(id){
 }
 
 let editing=false;
+const COVERTINTS=['#2f4a63,#16263a','#4f6b45,#24361f','#4b3b6b,#1d1630','#9a6a24,#5a3a0e','#7c2f22,#3d140d','#2f5d5a,#143230','#5a4636,#2b2019','#3c4a6e,#1a2138'];
+function coverTint(t){let h=0;for(const c of String(t||''))h=(h*31+c.charCodeAt(0))>>>0;return 'linear-gradient(160deg,'+COVERTINTS[h%COVERTINTS.length]+')'}
 async function buildLib(){
   const g=$('libGrid');g.innerHTML='';coverUrls.forEach(URL.revokeObjectURL);coverUrls=[];
   const lib=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0));
@@ -892,7 +900,7 @@ async function buildLib(){
     const pct=pos&&pos.read?Math.min(100,pos.read/(sum(e.chars)||1)*100):0;
     const card=document.createElement('button');card.className='bk';card.setAttribute('aria-current',book&&book.id===e.id);
     const cv=document.createElement('div');cv.className='cv';
-    const ph=document.createElement('div');ph.className='ph';ph.textContent=e.title;cv.append(ph);
+    const ph=document.createElement('div');ph.className='ph';ph.textContent=e.title;cv.append(ph);cv.style.background=coverTint(e.title);
     const t=document.createElement('div');t.className='bt';t.textContent=e.title;
     const p=document.createElement('div');p.className='bp';p.textContent=pct>=99.5?'Διαβάστηκε · 100%':Xp?`${Math.max(1,Math.round(pct))}% διαβασμένο`:'Αδιάβαστο · 0%';
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
