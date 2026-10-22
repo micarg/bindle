@@ -120,7 +120,7 @@ details.grp[open] summary .chev{transform:rotate(180deg)}
 .askf{display:flex;gap:8px;position:sticky;bottom:-16px;background:var(--paper);padding-block:8px}
 .askf input{flex:1;min-width:0;font:400 16px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:18px;padding:9px 14px;-webkit-user-select:text;user-select:text}
 .askf button{border-radius:18px}
-.tblur{position:absolute;top:0;bottom:0;left:0;width:100%;z-index:1;pointer-events:none;will-change:transform}
+.tblur{position:absolute;top:-8px;bottom:-8px;left:0;width:100%;z-index:1;pointer-events:none;will-change:transform;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 40px,#000 calc(100% - 40px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 40px,#000 calc(100% - 40px),transparent 100%)}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);transform:translate(-50%,12px);max-width:calc(100% - 48px);background:var(--ink);color:var(--paper);font:500 14px/1.35 var(--font-ui);padding:10px 16px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:60;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast.tap{pointer-events:auto;cursor:pointer}
@@ -398,11 +398,12 @@ function measureCpp(){const c=book.chars[ci]||0;if(pages>=3&&c>1500){const v=Mat
 
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let turnAnim=null,shownPi=0,tOver=[];
+function sizeOv(o){const G=geom(),F=40;o.style.left=(G.m-G.colGap/2-F/2)+'px';o.style.width=(G.step+F)+'px'}
 function setBlur(o,k){const f=`blur(${(k*8).toFixed(1)}px)`;o.style.backdropFilter=f;o.style.webkitBackdropFilter=f;o.style.backgroundColor=`color-mix(in srgb, var(--paper) ${Math.round(k*50)}%, transparent)`}
 function carousel(dir){
   tOver.forEach(o=>o.remove());tOver=[];
   const {step}=geom(),D=0.44,ease='cubic-bezier(.25,.8,.25,1)';
-  const mk=(x0,x1,b0,b1)=>{const o=document.createElement('div');o.className='tblur';o.style.transform=`translateX(${x0}px)`;setBlur(o,b0);stage.append(o);tOver.push(o);return {o,x1,b1}};
+  const mk=(x0,x1,b0,b1)=>{const o=document.createElement('div');o.className='tblur';sizeOv(o);o.style.transform=`translateX(${x0}px)`;setBlur(o,b0);stage.append(o);tOver.push(o);return {o,x1,b1}};
   const L=[mk(0,-dir*step,0,1),mk(dir*step,0,1,0)];
   void stage.offsetWidth;
   requestAnimationFrame(()=>{
@@ -902,7 +903,7 @@ function dragTo(dx){
   const eff=edge?dx*0.25:dx;
   page.style.transform=`translateX(${-pi*step+eff}px)`;
   if(S.turn==='slide'||RM)return;
-  if(!dragOv){const mk=()=>{const o=document.createElement('div');o.className='tblur';stage.append(o);return o};dragOv={a:mk(),b:mk()}}
+  if(!dragOv){const mk=()=>{const o=document.createElement('div');o.className='tblur';sizeOv(o);stage.append(o);return o};dragOv={a:mk(),b:mk()}}
   const k=Math.min(1,Math.abs(eff)/W);
   dragOv.a.style.transform=`translateX(${eff}px)`;setBlur(dragOv.a,k*0.9);
   dragOv.b.style.transform=`translateX(${dir*step+eff}px)`;setBlur(dragOv.b,1-k*0.9);
