@@ -225,9 +225,9 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
       <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
       <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
-      <div class="row"><span>Κλειδί Claude API (προαιρετικό)</span></div>
-      <div class="row keyrow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."><button id="apiSave">Αποθήκευση</button></div>
-      <p class="hint" id="apiHint">Οι περιλήψεις, τα πρόσωπα και το «Πού είχες μείνει» δουλεύουν δωρεάν και χωρίς κλειδί. Με κλειδί από το console.anthropic.com γίνονται πιο έξυπνα, με χρέωση στον λογαριασμό σου εκεί. Το κλειδί μένει μόνο σε αυτό το κινητό.</p>
+      <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
+      <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
+      <p class="hint" id="apiHint"></p>
       <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
       <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις. Τα ίδια τα βιβλία δεν μπαίνουν: σε νέο κινητό τα ξαναπροσθέτεις και η πρόοδός τους επανέρχεται.</p>
       <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
@@ -275,10 +275,11 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
+if(S.ai==null)S.ai=store.get('apikey','')?'claude':'';
 let book=null,ci=0,pi=0,pages=1,blobUrls=[],coverUrls=[];
 let cpp=store.get('cpp',1300);
 
@@ -296,7 +297,7 @@ function applyVars(){
   if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
   $('guideBtn').setAttribute('aria-pressed',!!S.guide);$('guideBtn').textContent=S.guide?'Ενεργός':'Ανενεργός';
-  for(const [seg,key] of [['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  for(const [seg,key] of [['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -415,7 +416,34 @@ async function callClaude(prompt,signal,maxTok=8000){
   if(!t.trim())throw {code:'empty_completion'};
   return t;
 }
-function makeSample(){if(!store.get('apikey',''))return null;const f=async(p,o={})=>({text:await callClaude(p,o.signal)});f.json=async(p,o={})=>parseLooseJSON(await callClaude(p,o.signal));return f}
+const aiName=()=>S.ai==='gemini'?'Gemini':'Claude';
+const aiKeyName=()=>S.ai==='gemini'?'gkey':'apikey';
+const sleep=(ms,signal)=>new Promise((r,j)=>{const t=setTimeout(r,ms);if(signal)signal.addEventListener('abort',()=>{clearTimeout(t);j({code:'cancelled'})},{once:true})});
+const GMODELS=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-2.5-flash'];
+async function callGemini(prompt,signal,maxTok=8192,json=false){
+  const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null;
+  for(const model of models){
+    for(let attempt=0;attempt<4;attempt++){
+      let res;
+      try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},json?{responseMimeType:'application/json'}:{})})})}
+      catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
+      if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
+        if(!t.trim())throw {code:j.promptFeedback&&j.promptFeedback.blockReason?'refused':'empty_completion'};
+        store.set('gmodel',model);return t}
+      let m='',delay=0;try{const j=await res.json();m=(j.error&&j.error.message)||'';const ri=((j.error&&j.error.details)||[]).find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0}catch(e){}
+      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){await sleep(Math.min(70,delay||20)*1000+500,signal);continue}throw {code:'rate_limited',message:m}}
+      if(res.status===404||(/model/i.test(m)&&/not found|not supported|not available|unsupported/i.test(m))){lastErr={code:'upstream_error',message:m};break}
+      if(/location|region|country/i.test(m))throw {code:'region',message:m};
+      if(res.status===400&&/api key/i.test(m)||res.status===401||res.status===403)throw {code:'bad_key',message:m};
+      if(res.status>=500&&attempt<2){await sleep(3000,signal);continue}
+      throw {code:'upstream_error',message:m};
+    }
+  }
+  throw lastErr||{code:'upstream_error'};
+}
+function callAI(prompt,signal,maxTok,json){return S.ai==='gemini'?callGemini(prompt,signal,maxTok||8192,json):callClaude(prompt,signal,maxTok||8000)}
+function makeSample(){if(!S.ai||!store.get(aiKeyName(),''))return null;const f=async(p,o={})=>({text:await callAI(p,o.signal)});f.json=async(p,o={})=>parseLooseJSON(await callAI(p,o.signal,0,true));return f}
 sampleFn=makeSample();
 const SEG=3000,CHUNK=45000;
 function segmentBook(b){
@@ -471,7 +499,7 @@ async function runDigest(b){
     dgRun=null;digestChanged(msg);
   }
 }
-const sumErr={bad_key:'Το κλειδί API δεν δουλεύει. Έλεγξέ το στις Ρυθμίσεις.',no_credit:'Δεν υπάρχει υπόλοιπο στον λογαριασμό σου στο Claude API. Πρόσθεσε χρέωση στο console.anthropic.com.',offline:'Δεν υπάρχει σύνδεση στο ίντερνετ. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε όταν συνδεθείς.',overloaded:'Το Claude είναι φορτωμένο αυτή τη στιγμή. Συνέχισε σε λίγο.',rate_limited:'Έγιναν πολλά αιτήματα στο Claude. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε σε λίγο.',refused:'Το Claude δεν δέχτηκε να διαβάσει ένα κομμάτι αυτού του βιβλίου.',prompt_too_large:'Ένα κομμάτι του βιβλίου ήταν πολύ μεγάλο.',session_expired:'Συνδέσου ξανά στο Claude και συνέχισε.',invalid_json:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.',empty_completion:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.'};
+const sumErr={quota_day:'Έφτασες το δωρεάν ημερήσιο όριο του Gemini. Ό,τι διαβάστηκε έχει κρατηθεί. Συνέχισε αύριο.',region:'Η Google δεν δίνει το Gemini από αυτή τη χώρα.',bad_key:'Το κλειδί δεν δουλεύει. Έλεγξέ το στις Ρυθμίσεις.',no_credit:'Δεν υπάρχει υπόλοιπο στον λογαριασμό σου στο Claude API. Πρόσθεσε χρέωση στο console.anthropic.com.',offline:'Δεν υπάρχει σύνδεση στο ίντερνετ. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε όταν συνδεθείς.',overloaded:'Η τεχνητή νοημοσύνη είναι φορτωμένη αυτή τη στιγμή. Συνέχισε σε λίγο.',rate_limited:'Έγιναν πολλά αιτήματα σε λίγο χρόνο. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε σε λίγο.',refused:'Η τεχνητή νοημοσύνη δεν δέχτηκε να διαβάσει ένα κομμάτι αυτού του βιβλίου.',prompt_too_large:'Ένα κομμάτι του βιβλίου ήταν πολύ μεγάλο.',session_expired:'Συνδέσου ξανά στο Claude και συνέχισε.',invalid_json:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.',empty_completion:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.'};
 const hasDigest=()=>{const d=book&&getDg(book.id);return !!(d&&d.v===3&&d.done>0)};
 function bullets(items){const ul=document.createElement('ul');items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.append(li)});return ul}
 
@@ -482,13 +510,18 @@ const isCapL=c=>!!c&&/\p{Lu}/u.test(c);
 function splitSentences(t){return t.match(/[^.!?;…]+(?:[.!?;…]+[»"”’)]*|$)/g)||[]}
 function words(t){return (fold(t).match(/[\p{L}\p{N}]{3,}/gu)||[]).filter(w=>!STOP.has(w))}
 function shortSent(s){s=s.replace(/\s+/g,' ').trim();const w=s.split(' ');if(w.length<=30)return s;let cut=w.slice(0,26).join(' ');const k=cut.lastIndexOf(',');if(k>cut.length*0.55)cut=cut.slice(0,k);return cut.replace(/[,;:·—–-]+$/,'')+'…'}
+const META=/isbn|©|copyright|εκδοσει|εκδοτικ|εκδοτησ|τιτλοσ πρωτοτυπου|πρωτοτυπο|μεταφραση|μεταφρασ|επιμελεια|διορθωσ|σελιδοποιηση|τυπογραφ|εκτυπωση|βιβλιοδεσ|εξωφυλλο|www\.|https?:|@|τηλ\.|fax|all rights|πνευματικ|απαγορευεται|2121\/1993|δικαιωματ|πρωτη εκδοση|ανατυπωση|ηλεκτρονικη εκδοση|e-?book/;
+function frontMatterEnd(b){if(b._fs!=null)return b._fs;let fs=0;
+  for(let c=0;c<b.chapters.length;c++){const t=chapTxt(c),sents=splitSentences(t),meta=sents.filter(x=>META.test(fold(x))).length;
+    if(t.length>=3000&&meta/Math.max(1,sents.length)<0.08){fs=c;break}if(c===b.chapters.length-1)fs=0}
+  b._fs=fs;return fs}
 function localDigest(b){
   if(b._local)return b._local;
-  const segs=segmentBook(b),df=new Map(),segW=[];
+  const segs=segmentBook(b),df=new Map(),segW=[],fs=frontMatterEnd(b);
   for(const s of segs){const ws=words(s.text);segW.push(ws);for(const w of new Set(ws))df.set(w,(df.get(w)||0)+1)}
   const N=Math.max(1,segs.length),idf=w=>Math.log(1+N/(df.get(w)||1));
   const seen=new Map();for(const s of segs)for(const se of splitSentences(s.text)){const k=fold(se).replace(/\s+/g,' ').trim();seen.set(k,(seen.get(k)||0)+1)}
-  const score=(sent,tf)=>{const ws=words(sent),n=sent.split(/\s+/).length;if(n<6||ws.length<3)return 0;
+  const score=(sent,tf)=>{const ws=words(sent),n=sent.split(/\s+/).length;if(n<6||ws.length<3||META.test(fold(sent)))return 0;
     let v=0;for(const w of new Set(ws)){const i=idf(w);v+=i*i*Math.log(1+(tf.get(w)||0))}v=v/Math.pow(ws.length,0.5);
     const t=sent.trim();if(/^[«"“—–-]/.test(t))v*=0.5;if(n>40)v*=0.5;
     if(/[\s«]\p{Lu}\p{Ll}+/u.test(t.slice(1)))v*=1.6;
@@ -497,16 +530,16 @@ function localDigest(b){
   const out={segs:{},chap:{},best:{}};
   segs.forEach((s,i)=>{const tf=tfOf(segW[i]);let bst='',bv=0;
     for(const se of splitSentences(s.text)){const v=score(se,tf);if(v>bv){bv=v;bst=se}}
-    out.segs[s.id]=bst?shortSent(bst):'';out.best[s.id]=bv});
+    out.segs[s.id]=bst&&s.ci>=fs?shortSent(bst):'';out.best[s.id]=bv});
   const byCh=new Map();segs.forEach((s,i)=>{if(!byCh.has(s.ci))byCh.set(s.ci,[]);byCh.get(s.ci).push(i)});
   for(const [c,idx] of byCh){const tf=tfOf(idx.flatMap(i=>segW[i]));let bst='',bv=0;
     for(const i of idx)for(const se of splitSentences(segs[i].text)){const v=score(se,tf);if(v>bv){bv=v;bst=se}}
-    out.chap[c]=bst?shortSent(bst):''}
+    out.chap[c]=bst&&c>=fs?shortSent(bst):''}
   out.score=score;out.tfOf=tfOf;b._local=out;return out;
 }
 function summaryFrom(b,d){
   const segs=segmentBook(book),pt=bmPoint(b);
-  const need=segs.filter(s=>s.ci<b.ci||(s.ci===b.ci&&s.end<=pt));
+  const need=segs.filter(s=>s.ci<b.ci||(s.ci===b.ci&&(s.end<=pt||(!d.score&&s.start<pt&&(pt-s.start)/Math.max(1,s.end-s.start)>=0.6))));
   const ready=need.every(s=>s.id in d.segs)&&[...Array(b.ci).keys()].every(c=>(c in d.chap)||segs.filter(s=>s.ci===c).every(s=>s.id in d.segs));
   if(!ready)return null;
   const earlier=[];for(let c=0;c<b.ci;c++){let t=d.chap[c];if(t==null)t=segs.filter(s=>s.ci===c).map(s=>d.segs[s.id]).filter(Boolean).join(' ');if(t)earlier.push({title:book.chapters[c].title,text:t})}
@@ -526,7 +559,8 @@ function summaryFor(b){
 function thin(list,keepEnd,keepStart){if(list.length<=keepEnd+keepStart)return list;const head=list.slice(0,list.length-keepEnd),out=[];for(let i=0;i<keepStart;i++)out.push(head[Math.floor(i*head.length/keepStart)]);return [...out,...list.slice(-keepEnd)]}
 function deacc(t){let o='';for(let i=0;i<t.length;i++){const c=t[i];const f=c.normalize('NFD').charAt(0);o+=f.length===1?f:c}return o}
 function localPeople(pt){
-  let txt='';for(let c=0;c<ci;c++)txt+=' '+chapTxt(c);txt+=' '+chapTxt(ci).slice(0,pt);
+  const fs=frontMatterEnd(book);if(ci<fs)return [];let txt='';for(let c=fs;c<ci;c++)txt+=' '+chapTxt(c);txt+=' '+chapTxt(ci).slice(0,pt);
+  txt=splitSentences(txt).filter(x=>!META.test(fold(x))).join(' ');
   const cnt=new Map(),re=/(\p{Lu}[\p{Ll}\p{M}]+(?:[ -]\p{Lu}[\p{Ll}\p{M}]+){0,2})/gu;let m;
   while((m=re.exec(txt))){
     let j=m.index-1;while(j>=0&&/\s/.test(txt[j]))j--;
@@ -566,10 +600,13 @@ function showSumSheet(msg){
   body.append(now.length?bullets(now):para('','Μόλις ξεκίνησες αυτό το κεφάλαιο.'));
   if(S.bionic)bionic(body);
   const note=document.createElement('p');note.className='summeta';
-  note.textContent=s.ai?'Περίληψη από το Claude.':'Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου. Δεν χρειάζεται ίντερνετ ούτε χρέωση.';
+  note.textContent=s.ai?`Περίληψη από το ${aiName()}.`:'Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου. Δεν χρειάζεται ίντερνετ ούτε χρέωση.';
   body.append(note);
-  if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το Claude διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}`;body.append(p);stop.hidden=false;return}
-  if(!s.ai&&sampleFn){again.onclick=()=>{if(book)runDigest(book)};again.textContent=d.done?`Συνέχεια ανάγνωσης από το Claude (${chunks.length-d.done} μέρη)`:'Πιο έξυπνη περίληψη με Claude (με χρέωση)';again.hidden=false}
+  if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}. Μπορείς να κλείσεις το παράθυρο και να συνεχίσεις το διάβασμα.`;body.append(p);stop.hidden=false;return}
+  if(!s.ai&&sampleFn){
+    if(S.ai==='gemini'&&!msg){runDigest(book);return}
+    again.onclick=()=>{if(book)runDigest(book)};again.textContent=d.done?`Συνέχεια ανάγνωσης από το ${aiName()} (${chunks.length-d.done} μέρη)`:S.ai==='gemini'?'Κανονική περίληψη με Gemini':'Κανονική περίληψη με Claude (με χρέωση)';again.hidden=false}
+  else if(!s.ai&&!sampleFn){again.textContent='Κανονική περίληψη με τεχνητή νοημοσύνη';again.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};again.hidden=false}
 }
 function openSummary(i){sumIdx=i;closeAll();$('sum').hidden=false;showSumSheet()}
 $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
@@ -752,12 +789,19 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
-$('apiKey').value=store.get('apikey','');
-$('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
+function aiUI(){const k=$('apiKey'),row=$('keyRow'),h=$('apiHint');row.hidden=!S.ai;k.value=S.ai?store.get(aiKeyName(),''):'';
+  k.placeholder=S.ai==='gemini'?'AIza...':'sk-ant-...';h.innerHTML='';
+  const add=(t,href)=>{if(href){const a=document.createElement('a');a.href=href;a.target='_blank';a.rel='noopener';a.textContent=t;h.append(a)}else h.append(t)};
+  if(!S.ai)add('Οι περιλήψεις, τα πρόσωπα και το «Πού είχες μείνει» φτιάχνονται δωρεάν μέσα στο κινητό, από φράσεις του ίδιου του βιβλίου.');
+  else if(S.ai==='gemini'){add('Δωρεάν κλειδί: άνοιξε το ');add('aistudio.google.com/apikey','https://aistudio.google.com/apikey');add(', συνδέσου με λογαριασμό Google, πάτα «Create API key» και κάνε επικόλληση εδώ. Δεν χρειάζεται κάρτα. Το Gemini διαβάζει κάθε βιβλίο μία φορά και μετά οι περιλήψεις βγαίνουν αμέσως. Το κλειδί μένει μόνο σε αυτό το κινητό.')}
+  else{add('Κλειδί από το ');add('console.anthropic.com','https://console.anthropic.com/settings/keys');add(' → API Keys. Χρεώνεται στον λογαριασμό σου στο Claude API. Το κλειδί μένει μόνο σε αυτό το κινητό.')}}
+$('aiSeg').addEventListener('click',()=>setTimeout(()=>{sampleFn=makeSample();aiUI()},0));
+$('apiSave').onclick=()=>{if(!S.ai)return;store.set(aiKeyName(),$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
+aiUI();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 /* ---------- geometry and text helpers ---------- */
@@ -922,7 +966,7 @@ async function define(word,sent){
   const lang=((book&&book.lang)||'el').slice(0,2),key=lang+'|'+word.toLowerCase(),cache=store.get('dict',{});
   if(cache[key])return cache[key];
   let out=null;
-  if(sampleFn){try{const t=await callClaude(`Δώσε σύντομο ορισμό στα ελληνικά της λέξης «${word}» όπως χρησιμοποιείται σε αυτή την πρόταση ενός βιβλίου: «${sent.slice(0,600)}».
+  if(sampleFn){try{const t=await callAI(`Δώσε σύντομο ορισμό στα ελληνικά της λέξης «${word}» όπως χρησιμοποιείται σε αυτή την πρόταση ενός βιβλίου: «${sent.slice(0,600)}».
 Γράψε ακριβώς δύο γραμμές, χωρίς markdown:
 1η γραμμή: η βασική μορφή της λέξης και το μέρος του λόγου, π.χ. «βράζω (ρήμα)».
 2η γραμμή: τι σημαίνει εδώ, σε έως 25 λέξεις. Αν είναι όνομα προσώπου ή τόπου, πες το απλά.`,null,200);out={src:'Claude',text:t.trim().replace(/\*\*/g,'')}}catch(e){}}
@@ -992,8 +1036,9 @@ function buildPeople(msg){
     const list=localPeople(bmPoint(curPoint()));
     note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα που διαβάζεις, με την πρώτη φράση όπου εμφανίστηκαν. Πάτα ένα όνομα για να το βρεις στο βιβλίο.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
     for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc;b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
-    if(running)note(`Το Claude διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}.`);
-    else if(sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Περιγραφές με Claude (με χρέωση)';b.onclick=()=>runDigest(book);w.append(b);el.append(w)}
+    if(!running&&sampleFn&&S.ai==='gemini'&&!msg){runDigest(book);return}
+    if(running)note(`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}.`);
+    else if(sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Περιγραφές με '+aiName()+(S.ai==='claude'?' (με χρέωση)':'');b.onclick=()=>runDigest(book);w.append(b);el.append(w)}
     return}
   const pt=bmPoint(curPoint()),idx={};segs.forEach((s,i)=>idx[s.id]=i);
   const ok=new Set(segs.filter(s=>s.ci<ci||(s.ci===ci&&s.end<=pt)).map(s=>s.id));
@@ -1004,8 +1049,8 @@ function buildPeople(msg){
   if(!list.length)note('Δεν έχουν εμφανιστεί ακόμα σημαντικά πρόσωπα μέχρι το σημείο που διαβάζεις.');
   else note('Μόνο όσα ξέρεις μέχρι τη σελίδα που διαβάζεις. Πάτα ένα όνομα για να το βρεις στο βιβλίο.');
   for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc||'';b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
-  if(d.done<chunks.length){note(running?`Το Claude συνεχίζει να διαβάζει (μέρος ${dgRun.at+1} από ${dgRun.total}).`:`Το Claude έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου.`);
-    if(!running&&sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Συνέχεια ανάγνωσης από το Claude';b.onclick=()=>runDigest(book);w.append(b);el.append(w)}}
+  if(d.done<chunks.length){note(running?`Το ${aiName()} συνεχίζει να διαβάζει (μέρος ${dgRun.at+1} από ${dgRun.total}).`:`Το ${aiName()} έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου.`);
+    if(!running&&sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Συνέχεια ανάγνωσης από το '+aiName();b.onclick=()=>runDigest(book);w.append(b);el.append(w)}}
 }
 function digestChanged(msg){showSumSheet(msg);if(!$('people').hidden)buildPeople(msg)}
 $('peopleBtn').onclick=()=>{closeAll();buildPeople();$('people').hidden=false};
