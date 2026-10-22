@@ -78,6 +78,8 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 #page .hd-end::after{content:"";display:block;width:2.2em;height:2px;background:var(--ink-soft);opacity:.6;margin:1em auto 0}
 #page blockquote{margin:.6em 1.2em;font-style:italic}
 #page hr{border:0;text-align:center;margin:1em 0}#page hr::after{content:"⁂";color:var(--ink-soft)}
+#page .kb{break-before:column;-webkit-column-break-before:always}
+#page i.ks{display:block;height:0;break-before:column;-webkit-column-break-before:always}
 #page img{max-width:100%;max-height:70vh;display:block;margin:.8em auto;break-inside:avoid}
 #page li{margin-left:1.2em}
 #page b.bn{font-weight:var(--bold)}
@@ -424,6 +426,7 @@ function focusTurn(){
 function layout(keep,anim){
   const {m,cw,pw,colGap,step}=geom();
   page.style.marginLeft=m+'px';page.style.width=pw+'px';page.style.columnWidth=cw+'px';page.style.columnGap=colGap+'px';
+  keepLines(cw,colGap);
   pages=Math.max(1,Math.ceil((page.scrollWidth+colGap-2)/step));
   if(keep==='end')pi=pages-1;
   pi=Math.min(Math.max(0,pi),pages-1);
@@ -437,6 +440,37 @@ function layout(keep,anim){
   updateGuide();
 }
 
+/* ---------- no lonely lines: a paragraph never leaves just one line at the bottom or top of a page ---------- */
+function lineStarts(el,left0,colW){
+  const out=[],rg=document.createRange(),tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,lastTop=null,lastCol=-1;
+  while((n=tw.nextNode())){const re=/\S+/g;let m;
+    while((m=re.exec(n.data))){rg.setStart(n,m.index);rg.setEnd(n,m.index+1);const r=rg.getClientRects()[0];if(!r||!r.height)continue;
+      const col=Math.floor((r.left-left0+1)/colW);
+      if(col!==lastCol||r.top>lastTop+r.height*0.5){out.push({n,off:m.index,col})}
+      lastCol=col;lastTop=r.top}}
+  return out;
+}
+function splitBefore(el,n,off){let ref=off>0?n.splitText(off):n;
+  while(ref.parentNode!==el&&ref.parentNode.firstChild===ref&&/^(B|SPAN|EM|I|STRONG|A|MARK|SMALL|U)$/.test(ref.parentNode.tagName))ref=ref.parentNode;
+  const k=document.createElement('i');k.className='ks';ref.parentNode.insertBefore(k,ref)}
+let fontGen=0;if(document.fonts&&document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',()=>{fontGen++;if(typeof book!=='undefined'&&book)layout()});
+function keepLines(cw,colGap){
+  const f=page.firstElementChild;if(!f)return;
+  const cs=getComputedStyle(page),sig=[cw,colGap,stage.clientHeight,cs.fontSize,cs.lineHeight,cs.fontFamily,S.bionic,S.lvl,S.align,S.lh,fontGen,[...page.querySelectorAll('img')].filter(i=>i.complete).length].join('|');
+  if(f._kl===sig)return;f._kl=sig;
+  page.querySelectorAll('.kb').forEach(e=>e.classList.remove('kb'));page.querySelectorAll('i.ks').forEach(e=>e.remove());
+  const blocks=[...page.querySelectorAll('p,li,blockquote,div,dd,dt,pre')].filter(el=>!el.classList.contains('hd')&&!el.querySelector('p,li,blockquote,div,dd,dt,pre,img,table'));
+  const colW=cw+colGap,t0=performance.now();
+  for(let i=0;i<blocks.length;i++){
+    if(performance.now()-t0>1500)break;
+    const el=blocks[i],r=el.getBoundingClientRect();if(r.width<=cw+2)continue;
+    const L=lineStarts(el,page.getBoundingClientRect().left,colW);if(L.length<2)continue;
+    const c0=L[0].col,c1=L[L.length-1].col;if(c0===c1)continue;
+    const first=L.filter(x=>x.col===c0).length,last=L.filter(x=>x.col===c1).length;
+    if(first<2||(last<2&&L.length<=3)){el.classList.add('kb');continue}
+    if(last<2){const k=L.findIndex(x=>x.col===c1)-1;if(k>0)splitBefore(el,L[k].n,L[k].off)}
+  }
+}
 function markHeads(root){
   const blocks=[...root.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,blockquote,li')].filter(el=>!el.querySelector('p,div,h1,h2,h3,h4,h5,h6,blockquote,li'));
   const marked=[];let titles=0;
