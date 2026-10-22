@@ -430,7 +430,7 @@ function dgText(){if(!dgRun)return '';const sec=Math.round((Date.now()-(dgRun.t0
 function updDgStat(){document.querySelectorAll('.dgstat').forEach(e=>e.textContent=dgText())}
 setInterval(()=>{if(dgRun)updDgStat()},1000);
 const sleep=(ms,signal)=>new Promise((r,j)=>{const t=setTimeout(r,ms);if(signal)signal.addEventListener('abort',()=>{clearTimeout(t);j({code:'cancelled'})},{once:true})});
-const GMODELS=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-2.5-flash'];
+const GMODELS=['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-3.1-flash-lite','gemini-flash-lite-latest','gemini-2.5-flash','gemini-2.5-flash-lite'];
 async function callGemini(prompt,signal,maxTok=8192,json=false){
   const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null;
   for(const model of models){
@@ -445,9 +445,13 @@ async function callGemini(prompt,signal,maxTok=8192,json=false){
       if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
         if(!t.trim())throw {code:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion'};
         store.set('gmodel',model);dgNote('');return t}
-      let m='',delay=0;try{const j=await res.json();m=(j.error&&j.error.message)||'';const ri=((j.error&&j.error.details)||[]).find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0}catch(e){}
+      let m='',delay=0,qinfo='';try{const j=await res.json();m=(j.error&&j.error.message)||'';const det=(j.error&&j.error.details)||[];const ri=det.find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0;qinfo=JSON.stringify(det)}catch(e){}
       if(res.status===400&&/thinking/i.test(m)&&store.get('gthink',true)){store.set('gthink',false);attempt--;continue}
-      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){const w=Math.min(70,delay||20);dgNote(`Το δωρεάν Gemini δέχεται λίγα αιτήματα ανά λεπτό. Περιμένω ${Math.round(w)}″ και συνεχίζω μόνο του.`);await sleep(w*1000+500,signal);dgNote('');continue}throw {code:'rate_limited',message:m}}
+      if(res.status===429){
+        const all=m+' '+qinfo,zero=/limit:\s*0\b|"quotaValue":"0"/.test(all),day=/per ?day|perday|daily/i.test(all);
+        if(zero||day){lastErr={code:day&&!zero?'quota_day':'rate_limited',message:m};if(store.get('gmodel','')===model)store.set('gmodel','');dgNote('Δοκιμάζω άλλο δωρεάν μοντέλο του Gemini…');break}
+        if(attempt===0&&(delay||15)<=40){const w=delay||15;dgNote(`Το δωρεάν Gemini δέχεται λίγα αιτήματα ανά λεπτό. Περιμένω ${Math.round(w)}″ και συνεχίζω μόνο του.`);await sleep(w*1000+500,signal);dgNote('');continue}
+        lastErr={code:'rate_limited',message:m};dgNote('Δοκιμάζω άλλο δωρεάν μοντέλο του Gemini…');break}
       if(res.status===404||(/model/i.test(m)&&/not found|not supported|not available|unsupported/i.test(m))){lastErr={code:'upstream_error',message:m};break}
       if(/location|region|country/i.test(m))throw {code:'region',message:m};
       if(res.status===400&&/api key/i.test(m)||res.status===401||res.status===403)throw {code:'bad_key',message:m};
