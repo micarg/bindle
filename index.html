@@ -1129,15 +1129,18 @@ function showWord(y){
     if(out.url){const a=document.createElement('a');a.href=out.url;a.target='_blank';a.rel='noopener';a.textContent='Από το '+out.src;a.style.color='inherit';src.append(a)}else src.textContent='Από το '+out.src;d.append(src)});
 }
 async function define(word,sent){
-  const lang=((book&&book.lang)||'el').slice(0,2),key=lang+'|'+word.toLowerCase(),cache=store.get('dict',{});
+  const lang=((book&&book.lang)||'el').slice(0,2),key=lang+'|'+word.toLowerCase(),cache=store.get('dict2',{});
   if(cache[key])return cache[key];
   let out=null;
-  if(sampleFn){try{const t=await callAI(`Δώσε σύντομο ορισμό στα ελληνικά της λέξης «${word}» όπως χρησιμοποιείται σε αυτή την πρόταση ενός βιβλίου: «${sent.slice(0,600)}».
-Γράψε ακριβώς δύο γραμμές, χωρίς markdown:
-1η γραμμή: η βασική μορφή της λέξης και το μέρος του λόγου, π.χ. «βράζω (ρήμα)».
-2η γραμμή: τι σημαίνει εδώ, σε έως 25 λέξεις. Αν είναι όνομα προσώπου ή τόπου, πες το απλά.`,null,200);out={src:'Claude',text:t.trim().replace(/\*\*/g,'')}}catch(e){}}
+  if(sampleFn){try{
+    const raw=await callAI(`Είσαι λεξικό για αναγνώστη βιβλίου. Εξήγησε στα ελληνικά τη λέξη «${word}» όπως χρησιμοποιείται σε αυτή την πρόταση: «${sent.slice(0,600)}».
+Απάντησε μόνο με JSON της μορφής {"lemma":"η βασική μορφή της λέξης","pos":"μέρος του λόγου, π.χ. ρήμα","meaning":"τι σημαίνει εδώ, μία απλή πρόταση έως 25 λέξεις"}. Αν είναι όνομα προσώπου ή τόπου, γράψε το στο meaning. Αν είναι ευγενική έκφραση ή επιφώνημα, εξήγησε πότε λέγεται.`,null,2000,true);
+    let j=null;try{j=JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g,''))}catch(e){const m=raw.match(/\{[\s\S]*\}/);if(m)try{j=JSON.parse(m[0])}catch(e2){}}
+    const mean=j&&String(j.meaning||'').trim();
+    if(mean&&mean.length>6&&/\p{L}{3}/u.test(mean)){const head=[j.lemma,j.pos?`(${j.pos})`:''].filter(Boolean).join(' ').trim();out={src:aiName(),text:(head?head+'\n':'')+mean}}
+  }catch(e){}}
   if(!out)out=await wiki(word,lang);
-  if(out&&out.text){cache[key]=out;const ks=Object.keys(cache);if(ks.length>400)delete cache[ks[0]];store.set('dict',cache)}
+  if(out&&out.text){cache[key]=out;const ks=Object.keys(cache);if(ks.length>400)delete cache[ks[0]];store.set('dict2',cache)}
   return out;
 }
 async function wiki(word,lang){
