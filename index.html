@@ -95,6 +95,19 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .hint{font-size:12px;color:var(--ink-soft);line-height:1.5}
 .err{color:#a3392b;font-size:13px}
 .sheet.full{bottom:0}
+.sheet{grid-template-columns:minmax(0,1fr)}
+.askf{width:100%;box-sizing:border-box}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sgrid button{flex-direction:column;justify-content:center;gap:8px;height:96px;font:400 14px var(--font-ui);border-radius:10px;text-align:center;padding:8px}
+.sgrid button svg{width:26px;height:26px;flex:none}
+.chat{display:grid;gap:12px;align-content:start}
+.qq{justify-self:end;max-width:85%;background:var(--chip);border-radius:14px 14px 4px 14px;padding:9px 12px;font:400 15px/1.45 var(--font-ui);color:var(--ink)}
+.qa{justify-self:start;max-width:94%;font:300 16px/1.6 var(--font-read);color:var(--ink);white-space:pre-line}
+.qa .src{display:block;font:400 11.5px var(--font-ui);color:var(--ink-soft);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips button{border-radius:16px;font-weight:400;text-align:left}
+.askf{display:flex;gap:8px;position:sticky;bottom:-16px;background:var(--paper);padding-block:8px}
+.askf input{flex:1;min-width:0;font:400 16px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:18px;padding:9px 14px;-webkit-user-select:text;user-select:text}
+.askf button{border-radius:18px}
 .veil{position:absolute;inset:-12px -40px;z-index:4;background:color-mix(in srgb,var(--paper) 55%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s ease}
 body.dim .veil{opacity:1;pointer-events:auto}
 .foot{transition:opacity .2s ease}
@@ -211,6 +224,8 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σελιδοδείκτης</button>
       <button id="hlBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Υπογραμμίσεις και σημειώσεις</button>
       <button id="peopleBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Πρόσωπα</button>
+      <button id="askBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M10 9.3a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6 1v.3M12 14.3v.01"/></svg>Ρώτα το βιβλίο</button>
+      <button id="soundsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>Ήχοι συγκέντρωσης</button>
       <button id="timerBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18.4 7.1l1.4-1.4"/></svg>Χρονόμετρο ανάγνωσης</button>
       <button id="statsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M10 20V6M15 20v-10M20 20v-4"/></svg>Στατιστικά</button>
       <button id="setBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Ρυθμίσεις</button>
@@ -231,7 +246,6 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
       <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
       <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini (φυσική)</button><button data-v="iphone">iPhone</button></div></div>
-      <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
       <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
       <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
       <p class="hint" id="apiHint"></p>
@@ -266,6 +280,16 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <div class="libtools"><button id="wHl">Υπογράμμιση πρότασης</button><button id="wNote">Σημείωση</button><button id="wFind">Αναζήτηση</button></div>
       <div id="wNoteBox" hidden style="display:grid;gap:8px"><div class="wsent" id="wSent"></div><textarea id="wNoteTxt" rows="3" placeholder="Γράψε τη σημείωσή σου"></textarea><div class="libtools"><button id="wNoteSave">Αποθήκευση σημείωσης</button></div></div>
     </div>
+    <div class="sheet full" id="sounds" hidden>
+      <div class="sgrid" id="sndGrid"><button data-snd="rain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 8a3.5 3.5 0 0 1 .5 7H7z"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg><span>Βροχή</span></button><button data-snd="waves"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9c2 0 2-1.5 4.5-1.5S9.5 9 12 9s2.5-1.5 4.5-1.5S19 9 21 9M3 14c2 0 2-1.5 4.5-1.5S9.5 14 12 14s2.5-1.5 4.5-1.5S19 14 21 14M3 19c2 0 2-1.5 4.5-1.5S9.5 19 12 19s2.5-1.5 4.5-1.5S19 19 21 19"/></svg><span>Κύματα</span></button><button data-snd="fire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c3.3 0 6-2.5 6-6 0-3.2-2.2-5-3.5-7.5-.6 2-1.6 3-2.8 3.4C12.5 8 11.5 5 9 3c.3 3-1.5 5-2.6 7A6.5 6.5 0 0 0 6 15c0 3.5 2.7 6 6 6z"/></svg><span>Τζάκι</span></button><button data-snd="brown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12c1.5 0 1.5-4 3-4s1.5 8 3 8 1.5-6 3-6 1.5 4 3 4 1.5-2 3-2 1.5 1 3 1"/></svg><span>Απαλός θόρυβος</span></button><button id="radioBtn" class="radio" data-r="1" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
+      <div class="row"><span>Ένταση</span><div class="seg" id="sndVol"><button data-v="0">Χαμηλή</button><button data-v="1">Κανονική</button></div></div>
+      <p class="hint">Οι ήχοι φτιάχνονται μέσα στο κινητό και δουλεύουν χωρίς ίντερνετ. Πάτα ξανά τον ίδιο ήχο για να σταματήσει. Για την ένταση χρησιμοποίησε και τα κουμπιά του κινητού. Το Classic FM θέλει ίντερνετ.</p>
+    </div>
+    <div class="sheet full" id="ask" hidden>
+      <div id="askLog" class="chat"></div>
+      <form id="askForm" class="askf"><input id="askIn" type="text" placeholder="Γράψε την ερώτησή σου" autocomplete="off" enterkeyhint="send"><button type="submit">Ρώτα</button></form>
+      <div class="libtools"><button id="askClear">Καθαρισμός</button></div>
+    </div>
     <div class="sheet full" id="sum" hidden>
       <div class="summeta" id="sumMeta"></div>
       <div class="sumtext" id="sumBody"></div>
@@ -282,7 +306,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({loud:0,voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
@@ -768,7 +792,7 @@ async function buildLib(){
 async function deleteBook(id){
   if(id==='sample')store.set('hideSample',true);
   else{setLib(getLib().filter(x=>x.id!==id));await idbDel('books',id)}
-  for(const k of ['pos:','bm:','dg:','hl:','rs:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
+  for(const k of ['pos:','bm:','dg:','hl:','rs:','qa:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
   if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
   buildLib();
 }
@@ -787,9 +811,9 @@ $('file').addEventListener('change',handleFile);
 $('file2').addEventListener('change',handleFile);
 
 /* ---------- controls ---------- */
-const sheets=['menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop'];
+const sheets=['menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
 function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
-addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις και σημειώσεις');addX('people','Πρόσωπα');addX('stats','Στατιστικά');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');
+addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις και σημειώσεις');addX('people','Πρόσωπα');addX('stats','Στατιστικά');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
 $('lib').querySelector('.xrow span').replaceWith(libDD);
 const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
@@ -1224,7 +1248,7 @@ $('wkSeg').addEventListener('click',()=>setTimeout(wakePing,0));
 const STREAMS=['https://ice-the.musicradio.com/ClassicFMMP3','https://media-ssl.musicradio.com/ClassicFM','https://media-the.musicradio.com/ClassicFM'];
 let radio=null,radioState='off';
 function setRadio(st,msg){radioState=st;const b=$('radioBtn');b.setAttribute('aria-pressed',st==='on');b.classList.toggle('loading',st==='loading');
-  $('radioLbl').textContent=st==='on'?'Classic FM · Σταμάτημα':st==='loading'?'Σύνδεση…':msg||'Classic FM';$('radioDot').hidden=st!=='on'}
+  $('radioLbl').textContent=st==='on'?'Classic FM · Σταμάτημα':st==='loading'?'Σύνδεση…':msg||'Classic FM';if(typeof setSndUI==='function')setSndUI()}
 function playStream(i){
   if(i>=STREAMS.length){stopRadio('Δεν συνδέθηκε. Ξαναδοκίμασε');return}
   if(!radio){radio=new Audio();radio.preload='none';radio.addEventListener('playing',()=>setRadio('on'));radio.addEventListener('pause',()=>{if(radioState==='on')setRadio('off')})}
@@ -1235,7 +1259,94 @@ function playStream(i){
 function startRadio(){setRadio('loading');playStream(0);
   if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:'Classic FM',artist:'Ζωντανά',album:'Bindle',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}catch(e){}}}
 function stopRadio(msg){if(radio){radio.pause();radio.removeAttribute('src');radio.load()}setRadio('off',msg)}
-$('radioBtn').onclick=()=>{radioState==='off'?startRadio():stopRadio()};
+$('radioBtn').onclick=()=>{if(radioState==='off'){stopSound();startRadio()}else stopRadio()};
+/* ---------- focus sounds, generated on the phone (they work offline) ---------- */
+let sndAudio=null,sndCur='',sndUrls={};
+const SND={rain:'Βροχή',waves:'Κύματα',fire:'Τζάκι',brown:'Απαλός θόρυβος'};
+function makeLoop(kind,loud){
+  const R=22050,F=R*2,L=R*40,N=L+F,x=new Float32Array(N);
+  let seed=987654321;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};const wn=()=>rnd()*2-1;
+  let b0=0,b1=0,b2=0,br=0,lp=0,lp2=0,hp=0,prev=0,pw=0;
+  const pink=()=>{const w=wn();b0=0.99765*b0+w*0.0990460;b1=0.96300*b1+w*0.2965164;b2=0.57000*b2+w*1.0526913;return (b0+b1+b2+w*0.1848)*0.11};
+  const brown=()=>{br=(br+0.02*wn())/1.02;return br*3.5};
+  if(kind==='brown'){for(let i=0;i<N;i++){lp+=0.12*(brown()-lp);x[i]=lp}}
+  if(kind==='rain'){const drops=[];
+    for(let i=0;i<N;i++){const p=pink();hp=0.92*(hp+p-prev);prev=p;lp+=0.35*(hp-lp);let v=lp*0.55+brown()*0.12;
+      if(rnd()<0.0016)drops.push({a:0.05+rnd()*0.18,k:0.002+rnd()*0.004,t:0});
+      for(let k=drops.length-1;k>=0;k--){const d=drops[k];const w=wn();v+=(w-pw)*0.5*d.a*Math.exp(-d.t*d.k);pw=w;d.t++;if(d.t>R*0.04)drops.splice(k,1)}
+      x[i]=v}}
+  if(kind==='waves'){let ph=rnd(),per=9;
+    for(let i=0;i<N;i++){ph+=1/(R*per);if(ph>=1){ph-=1;per=7+rnd()*5}const env=Math.pow(Math.sin(Math.PI*ph),2.2)*0.85+0.12;
+      lp+=0.05*(brown()-lp);lp2+=0.3*(pink()-lp2);x[i]=(lp*0.9+lp2*0.35*env)*env}}
+  if(kind==='fire'){const cr=[];
+    for(let i=0;i<N;i++){lp+=0.03*(brown()-lp);lp2+=0.2*(lp-lp2);let v=lp2*0.6;
+      if(rnd()<0.0009)cr.push({a:0.15+rnd()*0.5,len:R*(0.003+rnd()*0.01),t:0});
+      if(rnd()<0.00008)for(let k=0;k<6;k++)cr.push({a:0.05+rnd()*0.25,len:R*0.004,t:-Math.floor(rnd()*R*0.15)});
+      for(let k=cr.length-1;k>=0;k--){const c=cr[k];if(c.t>=0){const w=wn();v+=(w-pw)*0.5*c.a*Math.exp(-c.t/(c.len*0.3));pw=w}c.t++;if(c.t>c.len*3)cr.splice(k,1)}
+      x[i]=v}}
+  let ss=0;for(let i=0;i<N;i+=7)ss+=x[i]*x[i];const rms=Math.sqrt(ss/(N/7))||1;
+  const g=(loud?0.16:0.085)/rms,out=new Int16Array(L);
+  for(let i=0;i<L;i++){let v=x[i];if(i<F){const t=i/F*Math.PI/2;v=x[i]*Math.sin(t)+x[L+i]*Math.cos(t)}out[i]=Math.round(Math.tanh(v*g)*32000)}
+  return pcmToWav(new Uint8Array(out.buffer),R);
+}
+function setSndUI(){document.querySelectorAll('#sndGrid [data-snd]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.snd===sndCur));
+  $('radioDot').hidden=!(sndCur||radioState==='on');$('radioDot').textContent=sndCur?'♪ '+SND[sndCur]:'♪';
+  $('sndVol').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v)===String(+!!S.loud)))}
+function stopSound(){if(sndAudio){sndAudio.pause()}sndCur='';setSndUI()}
+function playSound(kind){
+  if(radioState!=='off')stopRadio();
+  if(!sndAudio){sndAudio=new Audio();sndAudio.loop=true;sndAudio.addEventListener('pause',()=>{if(sndCur&&sndAudio.dataset.k===sndCur&&!sndAudio.ended){sndCur='';setSndUI()}})}
+  try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  const key=kind+(S.loud?'L':'');if(!sndUrls[key])sndUrls[key]=URL.createObjectURL(makeLoop(kind,!!S.loud));
+  sndCur=kind;sndAudio.dataset.k=kind;sndAudio.src=sndUrls[key];sndAudio.play().catch(()=>{sndCur='';setSndUI()});
+  if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:SND[kind],artist:'Ήχος συγκέντρωσης',album:'Bindle',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}catch(e){}}
+  setSndUI();
+}
+document.querySelectorAll('#sndGrid [data-snd]').forEach(b=>b.onclick=()=>{b.dataset.snd===sndCur?stopSound():playSound(b.dataset.snd)});
+$('sndVol').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.loud=+b.dataset.v;store.set('settings',S);if(sndCur)playSound(sndCur);else setSndUI()});
+$('soundsBtn').onclick=()=>{closeAll();setSndUI();$('sounds').hidden=false};
+
+/* ---------- ask the book: answers only from the pages already read ---------- */
+let askCtl=null;
+const getQA=()=>book?store.get('qa:'+book.id,[]):[];
+const setQA=l=>store.set('qa:'+book.id,l.slice(-30));
+function buildAsk(){
+  const el=$('askLog');el.innerHTML='';const l=getQA();
+  if(!sampleFn){el.innerHTML='';const p=document.createElement('p');p.className='summeta';p.textContent='Για να απαντά στις ερωτήσεις σου, διάλεξε Gemini (δωρεάν) στις Ρυθμίσεις → Περιλήψεις με τεχνητή νοημοσύνη.';
+    const b=document.createElement('button');b.textContent='Άνοιγμα Ρυθμίσεων';b.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};el.append(p,b);$('askForm').hidden=true;return}
+  $('askForm').hidden=false;
+  if(!l.length){const p=document.createElement('p');p.className='summeta';p.textContent='Ρώτα οτιδήποτε για όσα έχεις διαβάσει. Οι απαντήσεις βασίζονται μόνο στις σελίδες μέχρι εκεί που βρίσκεσαι, χωρίς αποκαλύψεις για τη συνέχεια.';el.append(p);
+    const rs=getRS(),who=rs&&rs.people&&rs.people[0]?rs.people[0].name:'';
+    const sug=['Τι έγινε στις τελευταίες σελίδες;','Ποια είναι τα βασικά πρόσωπα;',who?`Ποιος είναι ο/η ${who};`:'Τι θέλει ο πρωταγωνιστής;'];
+    const w=document.createElement('div');w.className='chips';sug.forEach(q=>{const b=document.createElement('button');b.textContent=q;b.onclick=()=>askQ(q);w.append(b)});el.append(w)}
+  for(const qa of l){const q=document.createElement('div');q.className='qq';q.textContent=qa.q;const a=document.createElement('div');a.className='qa';a.textContent=qa.a;
+    if(qa.p!=null){const m=document.createElement('span');m.className='src';m.textContent=`μέχρι τη σελ. ${qa.p}`;a.append(m)}el.append(q,a)}
+  el.scrollTop=el.scrollHeight;$('ask').scrollTop=$('ask').scrollHeight;
+}
+async function askQ(q){
+  q=(q||'').trim();if(!q||askCtl||!sampleFn)return;
+  $('askIn').value='';const el=$('askLog');
+  const qd=document.createElement('div');qd.className='qq';qd.textContent=q;const ad=document.createElement('div');ad.className='qa thinking';ad.textContent='Σκέφτεται…';
+  el.querySelectorAll('.chips').forEach(c=>c.remove());el.append(qd,ad);$('ask').scrollTop=$('ask').scrollHeight;
+  const C=gPos(curPoint()),start=Math.max(0,C-40000);
+  const text=cleanText(textRange(start,C)),notes=start>0?localNotesRange(0,start):[],rs=getRS(),prev=getQA().slice(-6);
+  const P=[`Είσαι βοηθός ανάγνωσης για το βιβλίο «${book.title}»${book.author?' ('+book.author+')':''}. Ο αναγνώστης έχει διαβάσει μόνο μέχρι ένα σημείο και ρωτά κάτι.`,
+    'ΚΑΝΟΝΕΣ: Απάντησε ΜΟΝΟ με βάση το υλικό παρακάτω. Μη χρησιμοποιείς ό,τι ξέρεις για το βιβλίο από αλλού και μην αποκαλύπτεις τίποτα από τη συνέχεια. Αν η απάντηση δεν έχει φανεί ακόμα στις σελίδες που διάβασε, πες το απλά (π.χ. «Αυτό δεν έχει φανεί ακόμα μέχρι εκεί που διάβασες»). Απάντησε στα ελληνικά, απλά και σύντομα, σε 2 έως 5 προτάσεις, χωρίς markdown.'];
+  if(rs&&rs.pos<=C+400){P.push('ΠΕΡΙΛΗΨΗ ΤΗΣ ΙΣΤΟΡΙΑΣ ΜΕΧΡΙ ΠΡΟΣΦΑΤΑ:\n'+rs.story.map(x=>'- '+x).join('\n'));if(rs.people&&rs.people.length)P.push('ΠΡΟΣΩΠΑ:\n'+rs.people.map(p=>`- ${p.name}: ${p.desc}`).join('\n'))}
+  if(notes.length)P.push('ΦΡΑΣΕΙΣ ΑΠΟ ΠΙΟ ΠΑΛΙΕΣ ΣΕΛΙΔΕΣ (διαλεγμένες αυτόματα):\n'+notes.map(x=>'- '+x).join('\n'));
+  P.push(`ΟΙ ΠΙΟ ΠΡΟΣΦΑΤΕΣ ΣΕΛΙΔΕΣ ΠΟΥ ΔΙΑΒΑΣΕ (μέχρι το σημείο όπου βρίσκεται):\n"""\n${text}\n"""`);
+  if(prev.length)P.push('ΠΡΟΗΓΟΥΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ ΤΟΥ:\n'+prev.map(x=>`Ερώτηση: ${x.q}\nΑπάντηση: ${x.a}`).join('\n'));
+  P.push('ΕΡΩΤΗΣΗ: '+q);
+  askCtl=new AbortController();
+  try{let a=(await callAI(P.join('\n\n'),askCtl.signal,1500)).replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+    const pg=Math.max(1,Math.ceil(readChars()/PRINT));const l=getQA();l.push({q,a,p:pg,t:Date.now()});setQA(l)}
+  catch(e){const c=e&&e.code;if(c!=='cancelled'){const l=getQA();ad.className='qa err';ad.textContent=sumErr[c]||'Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο.';askCtl=null;return}}
+  askCtl=null;buildAsk();
+}
+$('askForm').addEventListener('submit',e=>{e.preventDefault();askQ($('askIn').value)});
+$('askBtn').onclick=()=>{closeAll();buildAsk();$('ask').hidden=false;setTimeout(()=>{$('ask').scrollTop=$('ask').scrollHeight},30)};
+$('askClear').onclick=()=>{if(!book)return;if(!$('askClear').dataset.sure){$('askClear').dataset.sure=1;$('askClear').textContent='Σίγουρα;';return}$('askClear').dataset.sure='';$('askClear').textContent='Καθαρισμός';setQA([]);buildAsk()};
+
 /* ---------- dim and blur the page behind open panels ---------- */
 {const upd=()=>document.body.classList.toggle('dim',sheets.some(id=>id!=='wpop'&&!$(id).hidden));
  new MutationObserver(upd).observe(stage,{attributes:true,attributeFilter:['hidden'],subtree:true});
