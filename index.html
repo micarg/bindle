@@ -202,7 +202,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <button id="libBtn" class="mi">Βιβλιοθήκη</button>
       <button id="tocBtn" class="mi">Περιεχόμενα</button>
       <button id="searchBtn" class="mi">Αναζήτηση</button>
-      <button id="bmBtn" class="mi">Σελιδοδείκτες</button>
+      <button id="bmBtn" class="mi">Σελιδοδείκτης</button>
       <button id="hlBtn" class="mi">Υπογραμμίσεις και σημειώσεις</button>
       <button id="peopleBtn" class="mi">Πρόσωπα</button>
       <button id="timerBtn" class="mi">Χρονόμετρο ανάγνωσης</button>
@@ -387,13 +387,13 @@ function updateFoot(){
 }
 
 /* ---------- bookmarks ---------- */
-const getBms=()=>store.get('bm:'+book.id,[]);
+const getBms=()=>{const l=store.get('bm:'+book.id,[]);return l.length>1?l.slice(-1):l};
 const onThis=b=>b.ci===ci&&Math.round(b.frac*(pages-1))===pi;
 function updBm(){const on=getBms().some(onThis);$('bmToggle').setAttribute('aria-pressed',on);$('bmToggle').setAttribute('aria-label',on?'Αφαίρεση σελιδοδείκτη':'Προσθήκη σελιδοδείκτη')}
 function pageSnippet(){const W=stage.clientWidth;for(const el of page.querySelectorAll('p,h1,h2,h3')){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.right>s.left+4&&r.left<s.left+W-4)return el.textContent.trim().slice(0,70)}return ''}
-function toggleBm(){let l=getBms();if(l.some(onThis))l=l.filter(b=>!onThis(b));else l.push({ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()});l.sort((a,b)=>a.ci-b.ci||a.frac-b.frac);store.set('bm:'+book.id,l);updBm()}
-function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σελιδοδείκτες');
-  if(!l.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις σελιδοδείκτες ακόμα. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις μια σελίδα.</p>');return}
+function toggleBm(){let l=getBms();if(l.some(onThis))l=[];else l=[{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()}];store.set('bm:'+book.id,l);updBm()}
+function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σελιδοδείκτης');
+  if(!l.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις βάλει σελιδοδείκτη σε αυτό το βιβλίο. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις τη σελίδα. Κάθε βιβλίο έχει έναν σελιδοδείκτη, όπως ένα κανονικό βιβλίο.</p>');return}
   l.forEach((b,i)=>{const row=document.createElement('div');row.className='bml';const a=document.createElement('a');a.href='#';
     a.innerHTML=`<span style="display:block;font-size:13px;color:var(--ink-soft);font-family:var(--font-ui)"></span><span></span>`;a.children[0].textContent=b.title+' · '+b.pct;a.children[1].textContent=b.snip?b.snip+'…':'';
     a.onclick=e=>{e.preventDefault();ci=b.ci;renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout();t.hidden=true};
