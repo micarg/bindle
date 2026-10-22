@@ -230,6 +230,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <p class="hint" style="margin-top:-6px">Φωτίζει τη γραμμή που διαβάζεις και αχνίζει τις υπόλοιπες. Πάτα δεξιά για την επόμενη γραμμή, αριστερά για την προηγούμενη. Για αλλαγή σελίδας σύρε το δάχτυλο.</p>
       <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
       <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
+      <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini (φυσική)</button><button data-v="iphone">iPhone</button></div></div>
       <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
       <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
       <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
@@ -281,7 +282,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
@@ -303,7 +304,7 @@ function applyVars(){
   if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
   $('guideBtn').setAttribute('aria-pressed',!!S.guide);$('guideBtn').textContent=S.guide?'Ενεργός':'Ανενεργός';
-  for(const [seg,key] of [['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  for(const [seg,key] of [['vcSeg','voice'],['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -713,7 +714,7 @@ async function parseEpub(buf){
 }
 
 /* ---------- storage: IndexedDB for book files, localStorage for the shelf ---------- */
-function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('xartireader',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('b'))d.createObjectStore('b');if(!d.objectStoreNames.contains('books'))d.createObjectStore('books')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
+function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('xartireader',3);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('b'))d.createObjectStore('b');if(!d.objectStoreNames.contains('books'))d.createObjectStore('books');if(!d.objectStoreNames.contains('tts'))d.createObjectStore('tts')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}})}
 async function idbPut(st,k,v){try{const d=await idb();await new Promise((r,j)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=r;t.onerror=()=>j(t.error)});return true}catch(e){return false}}
 async function idbGet(st,k){try{const d=await idb();return await new Promise(r=>{const q=d.transaction(st).objectStore(st).get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)})}catch(e){return null}}
 async function idbDel(st,k){try{const d=await idb();d.transaction(st,'readwrite').objectStore(st).delete(k)}catch(e){}}
@@ -798,7 +799,7 @@ $('bmToggle').onclick=()=>{closeAll();toggleBm()};
 $('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
 $('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);$('lib').hidden=false};
 $('editLib').onclick=()=>setEditing(!editing);
-const closeAll=()=>{let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
+const closeAll=()=>{if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
 $('zr').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guideNext():next()};$('zl').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guidePrev():prev()};
@@ -813,7 +814,7 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
@@ -1246,15 +1247,50 @@ function elVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^el/i.tes
   return vs.sort((a,b)=>sc(b)-sc(a))[0]||null}catch(e){return null}}
 try{speechSynthesis.getVoices();speechSynthesis.addEventListener('voiceschanged',()=>{})}catch(e){}
 function setSpk(on){speaking=on;$('spkLbl').textContent=on?'Σταμάτημα':'Ακρόαση';$('sumSpeak').setAttribute('aria-pressed',on)}
-function spkReady(){if('speechSynthesis' in window){$('sumSpeak').hidden=false;setSpk(speaking)}}
-$('sumSpeak').onclick=()=>{
-  if(!('speechSynthesis' in window))return;
-  if(speaking){speechSynthesis.cancel();setSpk(false);return}
+function spkReady(){if('speechSynthesis' in window||store.get('gkey','')){$('sumSpeak').hidden=false;setSpk(speaking)}}
+const TTSMODELS=['gemini-3.8-flash-tts','gemini-3.8-flash-lite-tts','gemini-3.1-flash-tts-preview','gemini-2.5-flash-preview-tts'];
+let ttsAudio=null,ttsCtl=null;
+function silentWav(){const n=2400,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,24000,true);v.setUint32(28,48000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);return new Blob([b],{type:'audio/wav'})}
+function pcmToWav(bytes,rate){const b=new ArrayBuffer(44+bytes.length),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+bytes.length,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,bytes.length,true);new Uint8Array(b,44).set(bytes);return new Blob([b],{type:'audio/wav'})}
+function hash(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+t.length}
+async function geminiVoice(text,signal){
+  const key=store.get('gkey','');if(!key)throw {code:'bad_key'};
+  const id='v1:'+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
+  const models=[store.get('gtts',''),...TTSMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let last={code:'upstream_error'};
+  for(const model of models){
+    let res;try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:'Διάβασε το παρακάτω στα ελληνικά με ήρεμη, απαλή και ζεστή γυναικεία φωνή, σε χαλαρό, φυσικό ρυθμό, σαν να το λες σε έναν φίλο:\n\n'+text}]}],
+        generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Achernar'}}}}})})}
+    catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
+    if(!res.ok){let m='';try{m=(await res.json()).error.message||''}catch(e){}last={code:res.status===429?'rate_limited':res.status===401||res.status===403&&/key/i.test(m)?'bad_key':'upstream_error',message:m};continue}
+    const j=await res.json(),parts=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[],p=parts.find(x=>x.inlineData&&x.inlineData.data);
+    if(!p){last={code:'empty_completion'};continue}
+    const bin=atob(p.inlineData.data),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const mt=p.inlineData.mimeType||'',rate=+((mt.match(/rate=(\d+)/)||[])[1]||24000);
+    const blob=/wav/i.test(mt)?new Blob([bytes],{type:'audio/wav'}):pcmToWav(bytes,rate);
+    store.set('gtts',model);idbPut('tts',id,blob);return blob;
+  }
+  throw last;
+}
+function speakIphone(parts){const v=elVoice();speechSynthesis.cancel();setSpk(true);
+  parts.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='el-GR';if(v)u.voice=v;u.rate=0.92;u.pitch=1.02;u.volume=1;
+    if(i===parts.length-1){u.onend=()=>setSpk(false);u.onerror=()=>setSpk(false)}speechSynthesis.speak(u)})}
+function stopVoice(){try{speechSynthesis.cancel()}catch(e){}if(ttsCtl)ttsCtl.abort();if(ttsAudio){ttsAudio.pause()}setSpk(false)}
+$('sumSpeak').onclick=async()=>{
+  if(speaking){stopVoice();return}
   const parts=[...$('sumBody').querySelectorAll('.lab, li, p')].filter(e=>!e.closest('.summeta,.err,.thinking')&&!e.classList.contains('summeta')&&!e.classList.contains('err')).map(e=>e.textContent.replace(/\s+/g,' ').trim()).filter(Boolean);
   if(!parts.length)return;
-  speechSynthesis.cancel();const v=elVoice();setSpk(true);
-  parts.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='el-GR';if(v)u.voice=v;u.rate=0.92;u.pitch=1.02;u.volume=1;
-    if(i===parts.length-1){u.onend=()=>setSpk(false);u.onerror=()=>setSpk(false)}speechSynthesis.speak(u)});
+  if(S.voice!=='gemini'||!store.get('gkey','')){if('speechSynthesis' in window)speakIphone(parts);return}
+  if(!ttsAudio){ttsAudio=new Audio();ttsAudio.addEventListener('ended',()=>{if(ttsAudio.dataset.real)setSpk(false)});ttsAudio.addEventListener('pause',()=>{if(ttsAudio.dataset.real)setSpk(false)})}
+  ttsAudio.dataset.real='';ttsAudio.src=URL.createObjectURL(silentWav());ttsAudio.play().catch(()=>{});
+  setSpk(true);$('spkLbl').textContent='Ετοιμάζεται η φωνή…';ttsCtl=new AbortController();
+  try{const blob=await geminiVoice(parts.map(t=>/[.!?;…:]$/.test(t)?t:t+'.').join('\n'),ttsCtl.signal);
+    if(!speaking)return;ttsAudio.src=URL.createObjectURL(blob);ttsAudio.dataset.real='1';$('spkLbl').textContent='Σταμάτημα';await ttsAudio.play()}
+  catch(e){if(e&&e.code==='cancelled'){setSpk(false);return}
+    const m=document.createElement('p');m.className='summeta';m.textContent='Η φωνή του Gemini δεν είναι διαθέσιμη αυτή τη στιγμή, οπότε διαβάζει η φωνή του iPhone.';$('sumBody').append(m);
+    if('speechSynthesis' in window)speakIphone(parts);else setSpk(false)}
 };
 /* ---------- start ---------- */
 async function splashFor(id){
