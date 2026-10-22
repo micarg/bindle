@@ -25,6 +25,7 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;color-scheme:dark}}
 :root[data-theme="dark"]{--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;color-scheme:dark}
+:root[data-theme="warm"]{--paper:#1f170f;--ink:#ead2ae;--ink-soft:#a68d6c;--rule:#3a2c1f;--chip:#2a1f15;--accent:#d9a066;color-scheme:dark}
 html,body{height:100%}
 body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);overflow:hidden;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper);z-index:10}
@@ -144,6 +145,44 @@ img{max-width:100%}
 .app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .keyrow input{flex:1;min-width:0;font:400 16px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
 .hint a{color:var(--ink)}
+.filebtn{position:relative}
+#chap{cursor:pointer;white-space:nowrap}
+#tDot{white-space:nowrap}
+.guide{position:absolute;left:-24px;right:-24px;z-index:1;pointer-events:none;border-radius:4px;background:color-mix(in srgb,var(--ink) 5%,transparent);box-shadow:0 0 0 200vmax color-mix(in srgb,var(--paper) 62%,transparent);transition:top .18s ease,height .18s ease}
+#page mark.hl{background:color-mix(in srgb,#e2b33c 38%,transparent);color:inherit;border-radius:2px;padding:0 .04em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+#page mark.hl.note{text-decoration:underline dotted color-mix(in srgb,var(--ink) 60%,transparent);text-underline-offset:.2em}
+.flash{position:absolute;z-index:1;pointer-events:none;border-radius:3px;background:color-mix(in srgb,#e2b33c 55%,transparent);animation:flashout 1.8s ease forwards}
+@keyframes flashout{0%,55%{opacity:1}100%{opacity:0}}
+#wpop{top:auto;bottom:0;max-height:62%;gap:10px;animation:rise .18s ease-out}
+#wpop.attop{top:0;bottom:auto}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wword{font:500 20px/1.3 var(--font-read);color:var(--ink)}
+.wdef{font:400 15px/1.55 var(--font-ui);color:var(--ink);white-space:pre-line}
+.wdef .src{display:block;font-size:12px;color:var(--ink-soft);margin-top:4px}
+.wsent{font:italic 300 14px/1.5 var(--font-read);color:var(--ink-soft);border-left:2px solid var(--rule);padding-left:10px}
+textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical;-webkit-user-select:text;user-select:text}
+.list{display:grid}
+.item{display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid var(--rule);padding:10px 2px}
+.item .go{flex:1;min-width:0;display:block;border:0;padding:0;text-align:left;background:transparent;border-radius:0;min-height:0}
+.item .meta{display:block;font:500 12px var(--font-ui);color:var(--ink-soft);margin-bottom:3px}
+.item .q{display:block;font:300 15px/1.5 var(--font-read);color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.item .q b{font-weight:700;background:color-mix(in srgb,#e2b33c 30%,transparent)}
+.item .nt{display:block;font:italic 400 13.5px/1.45 var(--font-ui);color:var(--ink-soft);margin-top:4px}
+.item>button:not(.go){border:0;color:var(--ink-soft);min-height:30px}
+.sres .q{-webkit-line-clamp:2}
+.person{border-bottom:1px solid var(--rule);padding:10px 2px;display:block;width:100%;text-align:left;border-left:0;border-right:0;border-top:0;border-radius:0;background:transparent;min-height:0}
+.person b{display:block;font:500 15px var(--font-ui);color:var(--ink)}
+.person span{display:block;font:300 14px/1.5 var(--font-read);color:var(--ink-soft);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:var(--chip);border-radius:8px;padding:12px}
+.stat small{display:block;font-size:12px;color:var(--ink-soft)}
+.stat strong{display:block;font:500 22px/1.2 var(--font-ui);color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:150px;padding-top:8px}
+.week div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.week i{display:block;width:100%;max-width:26px;border-radius:3px 3px 0 0;background:var(--ink-soft);min-height:2px}
+.week .today i{background:var(--ink)}
+.week .today{color:var(--ink);font-weight:500}
+.big{font:500 17px/1.45 var(--font-ui);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -155,15 +194,21 @@ img{max-width:100%}
   </header>
   <main class="stage" id="stage">
     <div id="page" lang="el" aria-live="polite"></div>
+    <div class="guide" id="guide" hidden></div>
     <div class="zone l" id="zl" aria-hidden="true"></div>
     <div class="zone c" id="zc" aria-hidden="true"></div>
     <div class="zone r" id="zr" aria-hidden="true"></div>
     <div class="sheet menu" id="menu" hidden>
       <button id="libBtn" class="mi">Βιβλιοθήκη</button>
       <button id="tocBtn" class="mi">Περιεχόμενα</button>
-      <label class="mi">Άνοιγμα EPUB<input id="file" type="file" accept=".epub,application/epub+zip"></label>
+      <button id="searchBtn" class="mi">Αναζήτηση</button>
       <button id="bmBtn" class="mi">Σελιδοδείκτες</button>
+      <button id="hlBtn" class="mi">Υπογραμμίσεις και σημειώσεις</button>
+      <button id="peopleBtn" class="mi">Πρόσωπα</button>
+      <button id="timerBtn" class="mi">Χρονόμετρο ανάγνωσης</button>
+      <button id="statsBtn" class="mi">Στατιστικά</button>
       <button id="setBtn" class="mi">Ρυθμίσεις</button>
+      <input id="file" type="file" accept=".epub,application/epub+zip" hidden>
     </div>
     <div class="sheet toc" id="bms" hidden></div>
     <div class="sheet" id="settings" hidden>
@@ -173,14 +218,19 @@ img{max-width:100%}
       <div class="row"><span>Μέγεθος γραμμάτων</span><div class="seg"><button id="fsDown" aria-label="Μικρότερα">A−</button><button id="fsUp" aria-label="Μεγαλύτερα">A+</button></div></div>
       <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
       <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
-      <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button></div></div>
+      <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button><button data-v="warm">Ζεστό</button></div></div>
+      <div class="row"><span>Πλάτος κειμένου</span><div class="seg" id="wdSeg"><button data-v="0">Κανονικό</button><button data-v="1">Στενό</button></div></div>
+      <div class="row"><span>Οδηγός γραμμής</span><button id="guideBtn" aria-pressed="false">Ανενεργός</button></div>
+      <p class="hint" style="margin-top:-6px">Φωτίζει τη γραμμή που διαβάζεις και αχνίζει τις υπόλοιπες. Πάτα δεξιά για την επόμενη γραμμή, αριστερά για την προηγούμενη. Για αλλαγή σελίδας σύρε το δάχτυλο.</p>
       <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
       <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
       <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
       <div class="row"><span>Κλειδί Claude API (για τις περιλήψεις)</span></div>
       <div class="row keyrow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."><button id="apiSave">Αποθήκευση</button></div>
       <p class="hint" id="apiHint">Το κλειδί το φτιάχνεις στο console.anthropic.com → API Keys. Μένει μόνο σε αυτό το κινητό και χρησιμοποιείται μόνο για τις περιλήψεις.</p>
-      <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού.</p>
+      <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
+      <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις. Τα ίδια τα βιβλία δεν μπαίνουν: σε νέο κινητό τα ξαναπροσθέτεις και η πρόοδός τους επανέρχεται.</p>
+      <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
     </div>
     <div class="sheet toc" id="toc" hidden></div>
     <div class="sheet full" id="lib" hidden>
@@ -192,6 +242,23 @@ img{max-width:100%}
       <p class="libhint" id="libHint" hidden>Πάτα «Διαγραφή» στο βιβλίο που θέλεις να σβήσεις.</p>
       <div class="lib" id="libGrid"></div>
     </div>
+    <div class="sheet full" id="search" hidden>
+      <div class="row keyrow"><input id="sq" type="search" placeholder="Λέξη ή φράση" autocomplete="off" spellcheck="false" enterkeyhint="search"></div>
+      <p class="summeta" id="sInfo"></p>
+      <div class="list sres" id="sRes"></div>
+    </div>
+    <div class="sheet full" id="hls" hidden><div class="list" id="hlList"></div></div>
+    <div class="sheet full" id="people" hidden><div id="peopleBody" class="list"></div></div>
+    <div class="sheet full" id="stats" hidden><div id="statsBody" style="display:grid;gap:16px"></div></div>
+    <div class="sheet" id="timer" hidden><div id="timerBody" style="display:grid;gap:12px"></div></div>
+    <div class="sheet" id="tdone" hidden><p class="big" id="tdText"></p><div class="libtools"><button id="tdMore"></button><button id="tdRest">Διάλειμμα</button></div></div>
+    <div class="sheet" id="recap" hidden><div class="sumtext" id="recapBody"></div><div class="libtools"><button id="recapGo">Συνέχεια ανάγνωσης</button></div></div>
+    <div class="sheet" id="wpop" hidden>
+      <div class="wword" id="wWord"></div>
+      <div class="wdef" id="wDef"></div>
+      <div class="libtools"><button id="wHl">Υπογράμμιση πρότασης</button><button id="wNote">Σημείωση</button><button id="wFind">Αναζήτηση</button></div>
+      <div id="wNoteBox" hidden style="display:grid;gap:8px"><div class="wsent" id="wSent"></div><textarea id="wNoteTxt" rows="3" placeholder="Γράψε τη σημείωσή σου"></textarea><div class="libtools"><button id="wNoteSave">Αποθήκευση σημείωσης</button></div></div>
+    </div>
     <div class="sheet full" id="sum" hidden>
       <div class="summeta" id="sumMeta"></div>
       <div class="sumtext" id="sumBody"></div>
@@ -199,7 +266,7 @@ img{max-width:100%}
     </div>
   </main>
   <footer class="foot" id="foot">
-    <span id="chap">—</span><span id="radioDot" hidden aria-label="Παίζει Classic FM">♪</span><div class="prog"><i id="pbar" style="width:0"></i></div><span id="pct">0%</span>
+    <span id="chap" role="button" tabindex="0">—</span><span id="tDot" hidden></span><span id="radioDot" hidden aria-label="Παίζει Classic FM">♪</span><div class="prog"><i id="pbar" style="width:0"></i></div><span id="pct">0%</span>
   </footer>
 </div>
 
@@ -208,7 +275,7 @@ img{max-width:100%}
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
@@ -228,7 +295,8 @@ function applyVars(){
   r.setProperty('--font-read',S.font==='Futura'?'Futura, "Futura PT", "Didact Gothic", sans-serif':S.font==='Times'?'"Times New Roman", Times, Tinos, serif':S.font==='System'?'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif':`"${S.font}", ${S.font==='Open Sans'?'system-ui, sans-serif':'Georgia, serif'}`);
   if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
-  for(const [seg,key] of [['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  $('guideBtn').setAttribute('aria-pressed',!!S.guide);$('guideBtn').textContent=S.guide?'Ενεργός':'Ανενεργός';
+  for(const [seg,key] of [['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -238,7 +306,7 @@ function bionic(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
   while(w.nextNode())nodes.push(w.currentNode);
   for(const n of nodes){
-    if(n.parentElement&&n.parentElement.closest('.lab,.hd,h1,h2,h3,h4,h5,h6'))continue;
+    if(n.parentElement&&n.parentElement.closest('.lab,.hd,.summeta,h1,h2,h3,h4,h5,h6'))continue;
     const t=n.nodeValue;if(!t.trim())continue;
     const f=document.createDocumentFragment();let last=0;
     for(const m of t.matchAll(WORD)){
@@ -264,15 +332,16 @@ function measureCpp(){const c=book.chars[ci]||0;if(pages>=3&&c>1500){const v=Mat
 
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function layout(keep,anim){
-  const W=stage.clientWidth,gap=48;
-  page.style.columnWidth=W+'px';page.style.columnGap=gap+'px';page.style.width=W+'px';
-  pages=Math.max(1,Math.ceil((page.scrollWidth+gap-2)/(W+gap)));
+  const {gap,m,cw,step}=geom();
+  page.style.marginLeft=m+'px';page.style.width=cw+'px';page.style.columnWidth=cw+'px';page.style.columnGap=(gap+2*m)+'px';
+  pages=Math.max(1,Math.ceil((page.scrollWidth+gap+2*m-2)/step));
   if(keep==='end')pi=pages-1;
   pi=Math.min(Math.max(0,pi),pages-1);
   page.style.transition=anim&&!RM?'transform .38s cubic-bezier(.25,.8,.25,1)':'none';
-  page.style.transform=`translateX(${-pi*(W+gap)}px)`;
+  page.style.transform=`translateX(${-pi*step}px)`;
   measureCpp();
   updateFoot();
+  updateGuide();
 }
 
 function markHeads(root){
@@ -298,6 +367,8 @@ function renderChapter(keep,fade){
   const ch=book.chapters[ci];
   page.innerHTML=ch.html;
   markHeads(page);
+  applyHls();
+  chText=page.textContent;
   if(S.bionic)bionic(page);
   const imgs=[...page.querySelectorAll('img')];
   layout(keep);
@@ -307,10 +378,11 @@ function renderChapter(keep,fade){
 function updateFoot(){
   const total=sum(book.chars)||1,rc=readChars();
   const T=totalPages(book.chars),X=Math.min(T,Math.max(1,Math.round(rc/cpp)));
-  $('chap').textContent=`σελ. ${X} από ${T}`;
-  $('pct').textContent=Math.round(rc/total*100)+'%';
+  const remC=(book.chars[ci]||0)*(1-(pi+1)/pages),remB=Math.max(0,total-rc);
+  $('chap').textContent=S.foot===1?(pi>=pages-1?'Τέλος κεφαλαίου':`Κεφάλαιο: ${fmtMin(remC/cpm)} ακόμα`):S.foot===2?`Βιβλίο: ${fmtMin(remB/cpm)} ακόμα`:`σελ. ${X} από ${T}`;
+  const pc=rc/total*100;$('pct').textContent=pc>0&&pc<1?'<1%':Math.round(pc)+'%';
   $('pbar').style.width=(rc/total*100).toFixed(1)+'%';
-  store.set('pos:'+book.id,{ci,frac:pages>1?pi/(pages-1):0,read:rc});
+  store.set('pos:'+book.id,{ci,frac:pages>1?pi/(pages-1):0,read:rc,t:Date.now()});
   updBm();
 }
 
@@ -334,9 +406,9 @@ function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms',
 let sampleFn=null,sumCtl=null,sumIdx=-1,dgRun=null;
 const MODEL='claude-haiku-5-5';
 function parseLooseJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m){try{return JSON.parse(m[1])}catch(e){}}const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch(e){}}throw {code:'invalid_json',text:t}}
-async function callClaude(prompt,signal){
+async function callClaude(prompt,signal,maxTok=8000){
   let res;
-  try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal,headers:{'content-type':'application/json','x-api-key':store.get('apikey',''),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:8000,messages:[{role:'user',content:prompt}]})})}
+  try{res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal,headers:{'content-type':'application/json','x-api-key':store.get('apikey',''),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:MODEL,max_tokens:maxTok,messages:[{role:'user',content:prompt}]})})}
   catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
   if(!res.ok){let m='';try{m=(await res.json()).error.message}catch(e){}throw {code:res.status===401||res.status===403?'bad_key':res.status===429?'rate_limited':res.status===529?'overloaded':res.status===400&&/credit/i.test(m)?'no_credit':'upstream_error',message:m}}
   const j=await res.json();const t=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
@@ -356,12 +428,13 @@ function segmentBook(b){
 function chunksOf(segs){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>CHUNK&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
 const getDg=id=>store.get('dg:'+id,null);
 const setDg=(id,d)=>store.set('dg:'+id,d);
-function digestState(b){const segs=segmentBook(b),chunks=chunksOf(segs),dd=getDg(b.id),d=dd&&dd.v===2?dd:{v:2,done:0,segs:{},chap:{}};return {segs,chunks,d}}
+function digestState(b){const segs=segmentBook(b),chunks=chunksOf(segs),dd=getDg(b.id),d=dd&&dd.v===3?dd:{v:3,done:0,segs:{},chap:{},people:[]};if(!d.people)d.people=[];return {segs,chunks,d}}
 
 function chunkPrompt(b,chunk,d){
   const lastSeg={};for(const s of segmentBook(b))lastSeg[s.ci]=s.id;
   const ending=[...new Set(chunk.filter(s=>lastSeg[s.ci]===s.id).map(s=>s.ci))];
   const carried=ending.map(ci=>{const prev=Object.entries(d.segs).filter(([k,v])=>+k.split('.')[0]===ci&&v&&!chunk.some(s=>s.id===k)).map(([,v])=>v);return prev.length?`Κεφάλαιο ${ci}: τα προηγούμενα τμήματά του (από προηγούμενο κομμάτι) λένε: ${prev.join(' ')}`:''}).filter(Boolean);
+  const known=[...new Set((d.people||[]).map(p=>p.name))].slice(0,40).join(', ');
   let body='',lastCi=-1;
   for(const s of chunk){if(s.ci!==lastCi){body+=`\n\n=== Κεφάλαιο ${s.ci}: ${b.chapters[s.ci].title} ===`;lastCi=s.ci}body+=`\n[${s.id}] ${s.text}`}
   return `Διαβάζεις ένα κομμάτι από το βιβλίο «${b.title}»${b.author?' ('+b.author+')':''}. Το κείμενο είναι χωρισμένο σε τμήματα με ετικέτες όπως [3.0], όπου ο πρώτος αριθμός είναι το κεφάλαιο.
@@ -369,8 +442,9 @@ function chunkPrompt(b,chunk,d){
 Οι σημειώσεις θα εμφανιστούν ως σύντομες κουκκίδες, για να θυμηθεί ο αναγνώστης μόνο τα πιο σημαντικά. Να είσαι πολύ σύντομος.
 1. Για ΚΑΘΕ τμήμα: αν συμβαίνει κάτι σημαντικό για την ιστορία, γράψε στα ελληνικά ΜΙΑ σύντομη φράση (έως 12 λέξεις) με αυτό που γίνεται ΜΟΝΟ μέσα σε εκείνο το τμήμα. Αν δεν γίνεται κάτι σημαντικό (περιγραφές, δευτερεύοντες διάλογοι, σελίδα τίτλου, πνευματικά δικαιώματα, περιεχόμενα), γράψε "". Μη χρησιμοποιείς πληροφορίες από επόμενα τμήματα.
 2. Για τα κεφάλαια ${ending.length?ending.join(', '):'(κανένα)'} γράψε ΜΙΑ πρόταση (έως 18 λέξεις) με το πιο σημαντικό που γίνεται στο κεφάλαιο (ή "" αν δεν έχει ιστορία).${carried.length?'\n'+carried.join('\n'):''}
+3. Στο "people" βάλε έως 8 σημαντικά πρόσωπα που εμφανίζονται σε αυτό το κομμάτι. Για το καθένα: "name" το όνομα όπως το χρησιμοποιεί συνήθως το βιβλίο${known?` (αν είναι κάποιο από τα ήδη γνωστά πρόσωπα: ${known}, γράψε ακριβώς το ίδιο όνομα)`:''}, "seg" η ετικέτα του πρώτου τμήματος αυτού του κομματιού όπου εμφανίζεται, "desc" ποιος είναι σε έως 15 λέξεις, με βάση ΜΟΝΟ όσα έχουν φανεί μέχρι και εκείνο το τμήμα. Χωρίς αποκαλύψεις για τη συνέχεια.
 
-Απάντησε μόνο με JSON αυτής της μορφής: {"segments":{"${chunk[0].id}":"..."},"chapters":{${ending.length?'"'+ending[0]+'":"..."':''}}}
+Απάντησε μόνο με JSON αυτής της μορφής: {"segments":{"${chunk[0].id}":"..."},"chapters":{${ending.length?'"'+ending[0]+'":"..."':''}},"people":[{"name":"...","seg":"${chunk[0].id}","desc":"..."}]}
 Βάλε ένα κλειδί για κάθε ετικέτα τμήματος.
 ---${body}`;
 }
@@ -379,24 +453,26 @@ async function runDigest(b){
   if(dgRun||!sampleFn)return;
   const {chunks,d}=digestState(b);
   dgRun={id:b.id,total:chunks.length,ctl:new AbortController()};
-  showSumSheet();
+  digestChanged();
   try{
     for(let c=d.done;c<chunks.length;c++){
-      dgRun.at=c;showSumSheet();
+      dgRun.at=c;digestChanged();
       const r=await sampleFn.json(chunkPrompt(b,chunks[c],d),{modelTier:'quick',signal:dgRun.ctl.signal});
       const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
       for(const s of chunks[c])d.segs[s.id]=typeof segs[s.id]==='string'?segs[s.id]:'';
       for(const k in chap)if(typeof chap[k]==='string')d.chap[k]=chap[k];
+      const ids=new Set(chunks[c].map(s=>s.id));
+      if(Array.isArray(r&&r.people))for(const p of r.people.slice(0,12))if(p&&typeof p.name==='string'&&p.name.trim())d.people.push({name:p.name.trim().slice(0,60),seg:ids.has(p.seg)?p.seg:chunks[c][0].id,desc:typeof p.desc==='string'?p.desc.slice(0,160):''});
       d.done=c+1;setDg(b.id,d);
     }
-    dgRun=null;showSumSheet();
+    dgRun=null;digestChanged();
   }catch(e){
     const code=e&&e.code;const msg=code==='cancelled'?'Η ανάγνωση σταμάτησε. Μπορείς να τη συνεχίσεις από εκεί που έμεινε.':['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(code)?'Δεν δόθηκε άδεια στη σελίδα να χρησιμοποιήσει το Claude, οπότε οι περιλήψεις δεν είναι διαθέσιμες.':(sumErr[code]||'Κάτι πήγε στραβά. Ό,τι διαβάστηκε έχει κρατηθεί, και μπορείς να συνεχίσεις.');
-    dgRun=null;showSumSheet(msg);
+    dgRun=null;digestChanged(msg);
   }
 }
 const sumErr={bad_key:'Το κλειδί API δεν δουλεύει. Έλεγξέ το στις Ρυθμίσεις.',no_credit:'Δεν υπάρχει υπόλοιπο στον λογαριασμό σου στο Claude API. Πρόσθεσε χρέωση στο console.anthropic.com.',offline:'Δεν υπάρχει σύνδεση στο ίντερνετ. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε όταν συνδεθείς.',overloaded:'Το Claude είναι φορτωμένο αυτή τη στιγμή. Συνέχισε σε λίγο.',rate_limited:'Έγιναν πολλά αιτήματα στο Claude. Ό,τι διαβάστηκε έχει κρατηθεί, συνέχισε σε λίγο.',refused:'Το Claude δεν δέχτηκε να διαβάσει ένα κομμάτι αυτού του βιβλίου.',prompt_too_large:'Ένα κομμάτι του βιβλίου ήταν πολύ μεγάλο.',session_expired:'Συνδέσου ξανά στο Claude και συνέχισε.',invalid_json:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.',empty_completion:'Ένα κομμάτι δεν διαβάστηκε σωστά. Πάτα «Συνέχεια» για να ξαναδοκιμάσει.'};
-const hasDigest=()=>{const d=book&&getDg(book.id);return !!(d&&d.v===2&&d.done>0)};
+const hasDigest=()=>{const d=book&&getDg(book.id);return !!(d&&d.v===3&&d.done>0)};
 function bullets(items){const ul=document.createElement('ul');items.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.append(li)});return ul}
 
 function bmPoint(b){const len=htmlText(book.chapters[b.ci].html).length;const cf=b.cf!=null?b.cf:Math.min(1,b.frac+0.05);return Math.round(len*cf)}
@@ -443,16 +519,17 @@ $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
 $('sumAgain').onclick=()=>{if(book)runDigest(book)};
 
 /* ---------- navigation ---------- */
-function next(){if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
+function next(){onTurn();if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
 function prev(){if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
 
 function openBook(b){
   book=b;$('title').textContent=b.title;page.lang=b.lang||'el';
   store.set('lastId',b.id);
   const lib=getLib(),e=lib.find(x=>x.id===b.id);if(e){e.opened=Date.now();setLib(lib)}
-  const pos=store.get('pos:'+b.id,null);ci=0;pi=0;
+  const pos=store.get('pos:'+b.id,null);ci=0;pi=0;lastTurn=Date.now();
   if(pos&&pos.ci<b.chapters.length){ci=pos.ci;renderChapter();pi=Math.round(pos.frac*(pages-1));layout()}else renderChapter();
   buildToc();
+  if(b.id!=='sample'||!store.get('lastId',''))setTimeout(()=>maybeRecap(pos&&pos.t),0);
 }
 
 function buildToc(){
@@ -572,7 +649,7 @@ async function buildLib(){
 async function deleteBook(id){
   if(id==='sample')store.set('hideSample',true);
   else{setLib(getLib().filter(x=>x.id!==id));await idbDel('books',id)}
-  for(const k of ['pos:','bm:','dg:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
+  for(const k of ['pos:','bm:','dg:','hl:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
   if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
   buildLib();
 }
@@ -591,9 +668,9 @@ $('file').addEventListener('change',handleFile);
 $('file2').addEventListener('change',handleFile);
 
 /* ---------- controls ---------- */
-const sheets=['menu','settings','toc','bms','lib','sum'];
+const sheets=['menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop'];
 function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
-addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');
+addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις και σημειώσεις');addX('people','Πρόσωπα');addX('stats','Στατιστικά');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
 $('lib').querySelector('.xrow span').replaceWith(libDD);
 const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
@@ -606,11 +683,11 @@ $('editLib').onclick=()=>setEditing(!editing);
 const closeAll=()=>{let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
-$('zr').onclick=()=>{if(!closeAll())next()};$('zl').onclick=()=>{if(!closeAll())prev()};
-$('zc').onclick=()=>{if(!closeAll())openMenu()};
+$('zr').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guideNext():next()};$('zl').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guidePrev():prev()};
+$('zc').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())openMenu()};
 document.addEventListener('keydown',e=>{if(sheets.some(s=>!$(s).hidden)){if(e.key==='Escape')closeAll();return}if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}});
 let sx=null;stage.addEventListener('touchstart',e=>{sx=sheets.some(s=>!$(s).hidden)?null:e.touches[0].clientX},{passive:true});
-stage.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>50){dx<0?next():prev()}});
+stage.addEventListener('touchend',e=>{if(sx==null||lpFired)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>50){dx<0?next():prev()}});
 $('setBtn').onclick=()=>{closeAll();$('settings').hidden=false};
 $('tocBtn').onclick=()=>{closeAll();buildToc();$('toc').hidden=false};
 const refresh=()=>{const f=pages>1?pi/(pages-1):0;applyVars();renderChapter();pi=Math.round(f*(pages-1));layout()};
@@ -618,7 +695,7 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
@@ -626,6 +703,282 @@ $('apiKey').value=store.get('apikey','');
 $('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+/* ---------- geometry and text helpers ---------- */
+function geom(){const W=stage.clientWidth,gap=48,m=+S.narrow?Math.round(W*0.08):0;return {W,gap,m,cw:W-2*m,step:W+gap}}
+let chText='';
+function textNodes(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),a=[];while(w.nextNode())a.push(w.currentNode);return a}
+function offsetOf(node,off){const r=document.createRange();r.setStart(page,0);r.setEnd(node,off);return r.toString().length}
+function rangeAt(s,e){const r=document.createRange();let pos=0,started=false;
+  for(const n of textNodes(page)){const L=n.nodeValue.length;
+    if(!started&&s<pos+L){r.setStart(n,Math.max(0,s-pos));started=true}
+    if(started&&e<=pos+L){r.setEnd(n,Math.max(0,e-pos));return r}
+    pos+=L}
+  return started?r:null}
+const fmtMin=m=>{if(!isFinite(m))return '—';if(m<1)return '<1′';const r=Math.round(m);return r<60?r+'′':Math.floor(r/60)+' ώ '+(r%60)+'′'};
+function goTo(c,s,e){
+  if(c!==ci){ci=c;pi=0;renderChapter()}
+  const r=rangeAt(s,e);if(!r)return;
+  const q=r.getClientRects()[0]||r.getBoundingClientRect(),pr=page.getBoundingClientRect(),{step}=geom();
+  pi=Math.max(0,Math.floor((q.left-pr.left)/step));layout(0,1);
+  setTimeout(()=>flash(r),430);
+}
+function flash(r){const sr=stage.getBoundingClientRect();for(const q of r.getClientRects()){if(q.width<1||q.right<sr.left||q.left>sr.right)continue;const d=document.createElement('div');d.className='flash';d.style.cssText=`left:${q.left-sr.left-2}px;top:${q.top-sr.top-1}px;width:${q.width+4}px;height:${q.height+2}px`;stage.append(d);setTimeout(()=>d.remove(),1900)}}
+
+/* ---------- reading speed, time left, stats ---------- */
+let lastTurn=Date.now(),cpm=store.get('cpm',1000);
+const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function onTurn(){
+  const now=Date.now(),dt=(now-lastTurn)/1000;lastTurn=now;if(!book)return;
+  const pc=(book.chars[ci]||0)/Math.max(1,pages);
+  if(dt>=3&&dt<=300&&pc>80){const c=pc/(dt/60);cpm=Math.round(Math.min(4000,Math.max(250,cpm*0.85+c*0.15)));store.set('cpm',cpm)}
+  const st=store.get('stats',{days:{},books:{}}),k=dayKey(),dd=st.days[k]||(st.days[k]={s:0,p:0}),add=dt<=300?Math.round(dt):0;
+  dd.p++;dd.s+=add;st.books[book.id]=(st.books[book.id]||0)+add;store.set('stats',st);
+  if(timer)timer.turns++;
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){lastTurn=Date.now();if(timer&&Date.now()>=timer.end)timerDone()}});
+$('chap').addEventListener('click',()=>{S.foot=((+S.foot||0)+1)%3;store.set('settings',S);updateFoot()});
+
+function buildStats(){
+  const st=store.get('stats',{days:{},books:{}}),el=$('statsBody');el.innerHTML='';
+  const today=st.days[dayKey()]||{s:0,p:0};
+  let streak=0;{const d=new Date();if(!((st.days[dayKey(d)]||{}).s>=60))d.setDate(d.getDate()-1);while(((st.days[dayKey(d)]||{}).s||0)>=60){streak++;d.setDate(d.getDate()-1)}}
+  const bookSec=book?(st.books[book.id]||0):0;
+  const tiles=[['Σήμερα',fmtMin(today.s/60).replace('<1′','0′')],['Σελίδες σήμερα',String(today.p)],['Σερί',streak+(streak===1?' ημέρα':' ημέρες')],['Ρυθμός',Math.round(cpm/6.3)+' λέξεις/λεπτό']];
+  const g=document.createElement('div');g.className='stats';
+  for(const [a,b] of tiles){const t=document.createElement('div');t.className='stat';t.innerHTML='<small></small><strong></strong>';t.children[0].textContent=a;t.children[1].textContent=b;g.append(t)}
+  el.append(g);
+  const lab=document.createElement('span');lab.className='summeta';lab.textContent='Λεπτά ανάγνωσης τις τελευταίες 7 ημέρες';el.append(lab);
+  const wk=document.createElement('div');wk.className='week';const days=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({d,m:Math.round(((st.days[dayKey(d)]||{}).s||0)/60),today:i===0})}
+  const mx=Math.max(10,...days.map(x=>x.m)),L=['Κ','Δ','Τ','Τ','Π','Π','Σ'];
+  for(const x of days){const c=document.createElement('div');if(x.today)c.className='today';c.innerHTML=`<span>${x.m}</span><i style="height:${Math.max(2,x.m/mx*100)}px"></i><span>${L[x.d.getDay()]}</span>`;wk.append(c)}
+  el.append(wk);
+  if(book){const p=document.createElement('p');p.className='summeta';p.textContent=`Σε αυτό το βιβλίο: ${fmtMin(bookSec/60).replace('<1′','λιγότερο από 1′')} ανάγνωσης.`;el.append(p)}
+  const n=document.createElement('p');n.className='hint';n.textContent='Μετράει ο χρόνος ανάμεσα στα γυρίσματα σελίδας, μέχρι 5 λεπτά τη φορά. Το σερί μετράει μέρες με τουλάχιστον 1 λεπτό ανάγνωσης.';el.append(n);
+}
+$('statsBtn').onclick=()=>{closeAll();buildStats();$('stats').hidden=false};
+
+/* ---------- reading timer ---------- */
+let timer=null,actx=null;
+function ensureAudio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume()}catch(e){}}
+function chime(){try{navigator.vibrate&&navigator.vibrate([120,80,120])}catch(e){}if(!actx)return;const t=actx.currentTime;
+  [[660,0],[880,.2]].forEach(([f,d])=>{const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(.16,t+d+.03);g.gain.exponentialRampToValueAtTime(.001,t+d+1.3);o.connect(g);g.connect(actx.destination);o.start(t+d);o.stop(t+d+1.4)})}
+function startTimer(min){ensureAudio();timer={end:Date.now()+min*60000,min,turns:0};S.timerMin=min;store.set('settings',S);updTimerDot()}
+function updTimerDot(){const d=$('tDot');if(!timer){d.hidden=true;return}d.hidden=false;d.textContent='⏱ '+Math.max(1,Math.ceil((timer.end-Date.now())/60000))+'′'}
+function timerDone(){const t=timer;timer=null;updTimerDot();chime();closeAll();
+  $('tdText').textContent=t.turns?`Διάβασες ${t.min} λεπτά και γύρισες ${t.turns} ${t.turns===1?'σελίδα':'σελίδες'}. Μπράβο!`:`Πέρασαν τα ${t.min} λεπτά ανάγνωσης.`;
+  $('tdMore').textContent=`Άλλα ${t.min}′`;$('tdMore').onclick=()=>{closeAll();startTimer(t.min)};$('tdone').hidden=false}
+$('tdRest').onclick=()=>closeAll();
+setInterval(()=>{if(!timer)return;if(Date.now()>=timer.end)timerDone();else updTimerDot()},1000);
+function buildTimer(){const el=$('timerBody');el.innerHTML='';
+  if(timer){const p=document.createElement('p');p.className='big';p.textContent=`Απομένουν ${Math.max(1,Math.ceil((timer.end-Date.now())/60000))} λεπτά.`;
+    const b=document.createElement('button');b.textContent='Σταμάτημα';b.onclick=()=>{timer=null;updTimerDot();closeAll()};const w=document.createElement('div');w.className='libtools';w.append(b);el.append(p,w);return}
+  const p=document.createElement('p');p.className='summeta';p.textContent='Διάλεξε πόση ώρα θα διαβάσεις. Όταν τελειώσει, θα ακούσεις ένα απαλό ήχο και θα δεις πόσες σελίδες διάβασες.';
+  const seg=document.createElement('div');seg.className='seg';
+  for(const m of [10,15,20,30]){const b=document.createElement('button');b.textContent=m+' λεπτά';if(m===S.timerMin)b.setAttribute('aria-pressed','true');b.onclick=()=>{startTimer(m);closeAll()};seg.append(b)}
+  el.append(p,seg)}
+$('timerBtn').onclick=()=>{closeAll();buildTimer();$('timer').hidden=false};
+
+/* ---------- line guide ---------- */
+let gLines=[],gIdx=0,gWant='top';
+function computeLines(){
+  const {step,cw}=geom(),pr=page.getBoundingClientRect(),x0=pi*step,x1=x0+cw,out=[];
+  for(const el of page.querySelectorAll('p,li,blockquote,h1,h2,h3,h4,h5,h6,div,pre')){
+    if(el.querySelector('p,li,blockquote,h1,h2,h3,h4,h5,h6,div,pre'))continue;
+    const r=el.getBoundingClientRect();if(!r.height)continue;
+    if(r.right-pr.left<x0+1||r.left-pr.left>x1-1)continue;
+    const rg=document.createRange();rg.selectNodeContents(el);
+    for(const q of rg.getClientRects()){const ql=q.left-pr.left;if(q.width<1||ql<x0-2||ql>x1)continue;out.push([q.top-pr.top,q.bottom-pr.top])}
+  }
+  out.sort((a,b)=>a[0]-b[0]);const L=[];
+  for(const [t,b] of out){const z=L[L.length-1];if(z&&t<z[1]-3){z[0]=Math.min(z[0],t);z[1]=Math.max(z[1],b)}else L.push([t,b])}
+  return L;
+}
+function placeGuide(){const g=$('guide'),z=gLines[gIdx];if(!S.guide||!z){g.hidden=true;return}g.hidden=false;g.style.top=(z[0]-3)+'px';g.style.height=(z[1]-z[0]+6)+'px'}
+function updateGuide(){if(!S.guide){$('guide').hidden=true;return}
+  gLines=computeLines();gIdx=gWant==='end'?gLines.length-1:gWant==='keep'?Math.min(gIdx,gLines.length-1):0;gWant='top';placeGuide()}
+function guideNext(){if(gIdx<gLines.length-1){gIdx++;placeGuide()}else{gWant='top';next()}}
+function guidePrev(){if(gIdx>0){gIdx--;placeGuide()}else{gWant='end';prev();gWant='top'}}
+$('guideBtn').onclick=()=>{S.guide=!S.guide;applyVars();gWant='top';updateGuide()};
+
+/* ---------- highlights and notes ---------- */
+const getHls=()=>book?store.get('hl:'+book.id,[]):[];
+const setHls=l=>store.set('hl:'+book.id,l);
+function applyHls(){
+  for(const h of getHls().filter(h=>h.ci===ci)){let pos=0;
+    for(const n of textNodes(page)){const L=n.nodeValue.length,a=Math.max(h.s,pos),b=Math.min(h.e,pos+L);
+      if(a<b){let t=n;if(a>pos)t=t.splitText(a-pos);if(b<pos+L)t.splitText(b-a);const m=document.createElement('mark');m.className='hl'+(h.note?' note':'');m.dataset.h=h.id;t.replaceWith(m);m.append(t)}
+      pos+=L;if(pos>=h.e)break}}
+}
+function rerenderKeep(){const keep=pi;renderChapter();pi=keep;layout()}
+function buildHls(){const el=$('hlList');el.innerHTML='';const l=getHls().slice().sort((a,b)=>a.ci-b.ci||a.s-b.s);
+  if(!l.length){el.innerHTML='<p class="empty">Δεν έχεις υπογραμμίσεις ακόμα. Κράτα πατημένη μια λέξη στο κείμενο και διάλεξε «Υπογράμμιση πρότασης» ή «Σημείωση».</p>';return}
+  for(const h of l){const it=document.createElement('div');it.className='item';const go=document.createElement('button');go.className='go';
+    go.innerHTML='<span class="meta"></span><span class="q"></span>';go.children[0].textContent=book.chapters[h.ci]?book.chapters[h.ci].title:'';go.children[1].textContent='«'+h.text.trim()+'»';
+    if(h.note){const n=document.createElement('span');n.className='nt';n.textContent=h.note;go.append(n)}
+    go.onclick=()=>{closeAll();goTo(h.ci,h.s,h.e)};
+    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Διαγραφή');
+    x.onclick=()=>{if(!x.dataset.sure){x.dataset.sure=1;x.textContent='Σίγουρα;';return}setHls(getHls().filter(z=>z.id!==h.id));if(h.ci===ci)rerenderKeep();buildHls()};
+    it.append(go,x);el.append(it)}}
+$('hlBtn').onclick=()=>{closeAll();buildHls();$('hls').hidden=false};
+
+/* ---------- long-press on a word: definition, highlight, note ---------- */
+let lpT=null,lpFired=false,lpX=0,lpY=0,W0=null;
+['zl','zc','zr'].forEach(id=>{const z=$(id);
+  z.addEventListener('pointerdown',e=>{lpFired=false;lpX=e.clientX;lpY=e.clientY;clearTimeout(lpT);if(sheets.some(s=>!$(s).hidden))return;lpT=setTimeout(()=>{lpFired=true;openWordAt(lpX,lpY)},520)});
+  z.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-lpX,e.clientY-lpY)>10)clearTimeout(lpT)});
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>z.addEventListener(ev,()=>clearTimeout(lpT)));
+  z.addEventListener('contextmenu',e=>e.preventDefault());
+});
+function caretAt(x,y){const zs=[...stage.querySelectorAll('.zone')];zs.forEach(z=>z.style.pointerEvents='none');let r=null;
+  try{if(document.caretRangeFromPoint)r=document.caretRangeFromPoint(x,y);else if(document.caretPositionFromPoint){const p=document.caretPositionFromPoint(x,y);if(p){r=document.createRange();r.setStart(p.offsetNode,p.offset)}}}catch(e){}
+  zs.forEach(z=>z.style.pointerEvents='');return r}
+const isL=c=>!!c&&/[\p{L}\p{M}\p{N}]/u.test(c);
+function openWordAt(x,y){
+  const r=caretAt(x,y);if(!r||r.startContainer.nodeType!==3||!page.contains(r.startContainer))return;
+  const T=chText,off=offsetOf(r.startContainer,r.startOffset);let s=off,e=off;
+  if(!isL(T[s])&&isL(T[s-1]))s=e=off-1;
+  if(!isL(T[s]))return;
+  while(s>0&&isL(T[s-1]))s--;while(e<T.length&&isL(T[e]))e++;
+  const blk=r.startContainer.parentElement.closest('p,li,blockquote,h1,h2,h3,h4,h5,h6,div');
+  let bS=0,bE=T.length;if(blk&&page.contains(blk)&&blk!==page){bS=offsetOf(blk,0);bE=bS+blk.textContent.length}
+  const END=/[.!?;…]/;let ss=bS,se=bE;
+  for(let i=s-1;i>=bS;i--){if(END.test(T[i])){let j=i+1;while(j<s&&/[»"”’)]/.test(T[j]))j++;if(j<s&&/\s/.test(T[j])){ss=j;break}}}
+  while(ss<s&&/\s/.test(T[ss]))ss++;
+  for(let i=e;i<bE;i++){if(END.test(T[i])){let j=i+1;while(j<bE&&/[»"”’).!?…]/.test(T[j]))j++;se=j;break}}
+  W0={word:T.slice(s,e),s,e,ss,se,sent:T.slice(ss,se).trim()};
+  showWord(y);
+}
+function hlAtWord(){return W0&&getHls().find(h=>h.ci===ci&&h.s<W0.e&&h.e>W0.s)}
+function showWord(y){
+  closeAll();const p=$('wpop'),sr=stage.getBoundingClientRect();
+  p.classList.toggle('attop',y>sr.top+sr.height*0.55);
+  $('wWord').textContent=W0.word;$('wNoteBox').hidden=true;
+  const h=hlAtWord();$('wHl').textContent=h?'Αφαίρεση υπογράμμισης':'Υπογράμμιση πρότασης';$('wNote').textContent=h&&h.note?'Επεξεργασία σημείωσης':'Σημείωση';
+  const d=$('wDef');d.innerHTML='<span class="thinking">Αναζήτηση ορισμού…</span>';p.hidden=false;
+  const want=W0;define(W0.word,W0.sent).then(out=>{if(W0!==want)return;d.innerHTML='';
+    if(!out){d.textContent='Δεν βρέθηκε ορισμός'+(navigator.onLine===false?' (δεν υπάρχει σύνδεση στο ίντερνετ).':'.');return}
+    d.append(out.text);const src=document.createElement('span');src.className='src';
+    if(out.url){const a=document.createElement('a');a.href=out.url;a.target='_blank';a.rel='noopener';a.textContent='Από το '+out.src;a.style.color='inherit';src.append(a)}else src.textContent='Από το '+out.src;d.append(src)});
+}
+async function define(word,sent){
+  const lang=((book&&book.lang)||'el').slice(0,2),key=lang+'|'+word.toLowerCase(),cache=store.get('dict',{});
+  if(cache[key])return cache[key];
+  let out=null;
+  if(sampleFn){try{const t=await callClaude(`Δώσε σύντομο ορισμό στα ελληνικά της λέξης «${word}» όπως χρησιμοποιείται σε αυτή την πρόταση ενός βιβλίου: «${sent.slice(0,600)}».
+Γράψε ακριβώς δύο γραμμές, χωρίς markdown:
+1η γραμμή: η βασική μορφή της λέξης και το μέρος του λόγου, π.χ. «βράζω (ρήμα)».
+2η γραμμή: τι σημαίνει εδώ, σε έως 25 λέξεις. Αν είναι όνομα προσώπου ή τόπου, πες το απλά.`,null,200);out={src:'Claude',text:t.trim().replace(/\*\*/g,'')}}catch(e){}}
+  if(!out)out=await wiki(word,lang);
+  if(out&&out.text){cache[key]=out;const ks=Object.keys(cache);if(ks.length>400)delete cache[ks[0]];store.set('dict',cache)}
+  return out;
+}
+async function wiki(word,lang){
+  const wl=lang==='el'?'el':'en';
+  const POS=wl==='el'?/^(Ουσιαστικό|Ρήμα|Επίθετο|Επίρρημα|Μετοχή|Αντωνυμία|Πρόθεση|Σύνδεσμος|Μόριο|Επιφώνημα|Αριθμητικό|Κύριο όνομα|Κλιτικός τύπος.*)$/:/^(Noun|Verb|Adjective|Adverb|Pronoun|Preposition|Conjunction|Interjection|Proper noun|Participle)$/;
+  for(const t of [...new Set([word.toLowerCase(),word])]){
+    try{const u=`https://${wl}.wiktionary.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&format=json&origin=*&titles=${encodeURIComponent(t)}`;
+      const j=await (await fetch(u)).json();const pg=Object.values((j.query&&j.query.pages)||{})[0];
+      if(!pg||'missing' in pg||!pg.extract)continue;
+      const lines=pg.extract.split('\n').map(x=>x.trim()).filter(x=>x&&!/^=+/.test(x));
+      const i=lines.findIndex(l=>POS.test(l));
+      const pick=(i>=0?lines.slice(i,i+3):lines.slice(0,3)).join('\n');
+      return {src:'Βικιλεξικό',text:pick.length>280?pick.slice(0,280)+'…':pick,url:`https://${wl}.wiktionary.org/wiki/${encodeURIComponent(t)}`};
+    }catch(e){}
+  }
+  return null;
+}
+$('wHl').onclick=()=>{if(!W0)return;const h=hlAtWord();
+  if(h)setHls(getHls().filter(z=>z.id!==h.id));
+  else{const l=getHls();l.push({id:Date.now().toString(36),ci,s:W0.ss,e:W0.se,text:W0.sent,note:'',t:Date.now()});setHls(l)}
+  closeAll();rerenderKeep()};
+$('wNote').onclick=()=>{if(!W0)return;const h=hlAtWord();$('wSent').textContent=h?h.text:W0.sent;$('wNoteTxt').value=h?h.note||'':'';$('wNoteBox').hidden=false;setTimeout(()=>$('wNoteTxt').focus(),50)};
+$('wNoteSave').onclick=()=>{if(!W0)return;const l=getHls(),note=$('wNoteTxt').value.trim();let h=l.find(z=>z.ci===ci&&z.s<W0.e&&z.e>W0.s);
+  if(!h){h={id:Date.now().toString(36),ci,s:W0.ss,e:W0.se,text:W0.sent,note:'',t:Date.now()};l.push(h)}
+  h.note=note;setHls(l);closeAll();rerenderKeep()};
+$('wFind').onclick=()=>{if(W0)openSearch(W0.word)};
+
+/* ---------- search ---------- */
+const FOLD=new Map();
+function foldCh(c){let f=FOLD.get(c);if(f===undefined){f=c.normalize('NFD').charAt(0).toLowerCase();if(f==='ς')f='σ';if(f.length!==1)f=c;FOLD.set(c,f)}return f}
+function fold(s){let o='';for(let i=0;i<s.length;i++)o+=foldCh(s[i]);return o}
+function chapTxt(i){book._txt=book._txt||[];if(book._txt[i]==null){const d=document.createElement('div');d.innerHTML=book.chapters[i].html.replace(/<img\b[^>]*>/gi,'');book._txt[i]=d.textContent}return book._txt[i]}
+function chapFold(i){book._fold=book._fold||[];if(book._fold[i]==null)book._fold[i]=fold(chapTxt(i));return book._fold[i]}
+let sqT=null;
+function runSearch(){
+  const raw=$('sq').value.trim(),res=$('sRes'),info=$('sInfo');res.innerHTML='';
+  if(raw.length<2){info.textContent='Γράψε τουλάχιστον 2 γράμματα.';return}
+  const q=fold(raw),hits=[];
+  for(let i=0;i<book.chapters.length&&hits.length<300;i++){const f=chapFold(i);let p=f.indexOf(q);while(p>=0&&hits.length<300){hits.push({ci:i,p});p=f.indexOf(q,p+q.length)}}
+  info.textContent=hits.length?(hits.length>=300?'Πάνω από 300 αποτελέσματα':hits.length+(hits.length===1?' αποτέλεσμα':' αποτελέσματα')):'Δεν βρέθηκε πουθενά στο βιβλίο.';
+  for(const h of hits.slice(0,120)){const t=chapTxt(h.ci),a=Math.max(0,h.p-40),b=Math.min(t.length,h.p+q.length+70);
+    const it=document.createElement('div');it.className='item';const go=document.createElement('button');go.className='go';
+    const meta=document.createElement('span');meta.className='meta';meta.textContent=book.chapters[h.ci].title;
+    const qq=document.createElement('span');qq.className='q';const m=document.createElement('b');m.textContent=t.slice(h.p,h.p+q.length);
+    const sp=x=>x.replace(/\s+/g,' ').replace(/([.!?;…»])(?=[Α-ΩΆ-ΏA-Z«—])/g,'$1 ');
+    qq.append((a>0?'…':'')+sp(t.slice(a,h.p)),m,sp(t.slice(h.p+q.length,b))+(b<t.length?'…':''));
+    go.append(meta,qq);go.onclick=()=>{closeAll();goTo(h.ci,h.p,h.p+q.length)};it.append(go);res.append(it)}
+}
+$('sq').addEventListener('input',()=>{clearTimeout(sqT);sqT=setTimeout(runSearch,250)});
+$('sq').addEventListener('keydown',e=>{if(e.key==='Enter'){clearTimeout(sqT);runSearch();$('sq').blur()}});
+function openSearch(q){closeAll();$('search').hidden=false;if(q!=null){$('sq').value=q;runSearch()}else{$('sRes').innerHTML='';$('sInfo').textContent='';setTimeout(()=>$('sq').focus(),60)}}
+$('searchBtn').onclick=()=>openSearch(null);
+
+/* ---------- people (from Claude's one-time reading) ---------- */
+function curPoint(){return {ci,cf:(pi+1)/Math.max(1,pages)}}
+function buildPeople(msg){
+  const el=$('peopleBody');el.innerHTML='';if(!book)return;
+  const {segs,chunks,d}=digestState(book),running=dgRun&&dgRun.id===book.id;
+  const note=t=>{const p=document.createElement('p');p.className='summeta';p.textContent=t;el.append(p)};
+  if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;el.append(e)}
+  if(!d.done){
+    note(running?`Το Claude διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}. Τα πρόσωπα εμφανίζονται μόλις τελειώσει το πρώτο μέρος.`:'Τα πρόσωπα εμφανίζονται αφού το Claude διαβάσει το βιβλίο μία φορά. Η ίδια ανάγνωση χρησιμεύει και για τις περιλήψεις, οπότε γίνεται μόνο μία χρέωση.');
+    if(!running){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');
+      if(sampleFn){b.textContent='Ανάγνωση βιβλίου';b.onclick=()=>runDigest(book)}else{b.textContent='Βάλε κλειδί API στις Ρυθμίσεις';b.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('apiKey').scrollIntoView({block:'center'}),50)}}
+      w.append(b);el.append(w)}
+    return}
+  const pt=bmPoint(curPoint()),idx={};segs.forEach((s,i)=>idx[s.id]=i);
+  const ok=new Set(segs.filter(s=>s.ci<ci||(s.ci===ci&&s.end<=pt)).map(s=>s.id));
+  const by=new Map();
+  for(const p of d.people||[]){if(!ok.has(p.seg))continue;const i=idx[p.seg],c=by.get(p.name);
+    if(!c)by.set(p.name,{name:p.name,first:i,last:i,desc:p.desc});else{c.first=Math.min(c.first,i);if(i>=c.last&&p.desc){c.last=i;c.desc=p.desc}}}
+  const list=[...by.values()].sort((a,b)=>a.first-b.first);
+  if(!list.length)note('Δεν έχουν εμφανιστεί ακόμα σημαντικά πρόσωπα μέχρι το σημείο που διαβάζεις.');
+  else note('Μόνο όσα ξέρεις μέχρι τη σελίδα που διαβάζεις. Πάτα ένα όνομα για να το βρεις στο βιβλίο.');
+  for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc||'';b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
+  if(d.done<chunks.length){note(running?`Το Claude συνεχίζει να διαβάζει (μέρος ${dgRun.at+1} από ${dgRun.total}).`:`Το Claude έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου.`);
+    if(!running&&sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Συνέχεια ανάγνωσης από το Claude';b.onclick=()=>runDigest(book);w.append(b);el.append(w)}}
+}
+function digestChanged(msg){showSumSheet(msg);if(!$('people').hidden)buildPeople(msg)}
+$('peopleBtn').onclick=()=>{closeAll();buildPeople();$('people').hidden=false};
+
+/* ---------- "where was I?" on reopening a book ---------- */
+function maybeRecap(prevT){
+  if(!prevT||Date.now()-prevT<8*3600e3||!book||!hasDigest())return;
+  const s=summaryFor(curPoint());if(!s)return;
+  const items=[...s.earlier.slice(-2).map(e=>e.text),...s.now.slice(-4)];if(!items.length)return;
+  const body=$('recapBody');body.innerHTML='';
+  const days=Math.round((Date.now()-prevT)/864e5);const h=document.createElement('p');h.className='summeta';
+  h.textContent=days>=2?`Τελευταία φορά διάβασες πριν από ${days} ημέρες. Θυμήσου πού ήσουν:`:'Θυμήσου πού ήσουν:';
+  body.append(h,bullets(items));if(S.bionic)bionic(body);
+  closeAll();$('recap').hidden=false;
+}
+$('recapGo').onclick=()=>closeAll();
+
+/* ---------- backup ---------- */
+$('bkExp').onclick=async()=>{
+  const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('xr:')&&k!=='xr:apikey')data[k]=localStorage.getItem(k)}
+  const json=JSON.stringify({app:'bindle',v:1,date:new Date().toISOString(),data}),name=`bindle-${dayKey()}.json`;
+  let file;try{file=new File([json],name,{type:'application/json'})}catch(e){file=new Blob([json],{type:'application/json'})}
+  try{if(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Αντίγραφο Bindle'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+};
+$('bkImp').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const j=JSON.parse(await f.text());if(!j||j.app!=='bindle'||typeof j.data!=='object')throw 0;
+    for(const [k,v] of Object.entries(j.data))if(k.startsWith('xr:')&&k!=='xr:apikey'&&typeof v==='string')localStorage.setItem(k,v);
+    $('bkHint').textContent='Η επαναφορά έγινε. Η εφαρμογή ξαναφορτώνει…';setTimeout(()=>location.reload(),900)}
+  catch(err){$('bkHint').textContent='Αυτό το αρχείο δεν είναι αντίγραφο ασφαλείας του Bindle.'}});
+
 /* ---------- keep the screen on while reading ---------- */
 let wl=null,wkVideo=null,wkTimer=null,wkOn=false;
 const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
