@@ -260,6 +260,25 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
 .foot.scrub #chap,.foot.scrub #radioDot{display:none}
 #scrubTip{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 52px);transform:translateX(-50%);background:var(--ink);color:var(--paper);font:500 13px/1.35 var(--font-ui);padding:9px 14px;border-radius:14px;text-align:center;pointer-events:none;z-index:61;max-width:calc(100% - 48px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 #scrubTip b{display:block;font-weight:600}
+
+/* library: long-press menu and arranging */
+#bkPop{position:fixed;inset:0;z-index:65}
+#bkPop .bpbg{position:absolute;inset:0;background:color-mix(in srgb,var(--paper) 35%,transparent);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fadein .15s ease}
+#bkPop .bpm{position:absolute;width:236px;background:var(--paper);border:1px solid var(--rule);border-radius:18px;padding:6px;box-shadow:0 18px 40px -10px rgba(0,0,0,.45);animation:spin .18s ease-out}
+#bkPop .bph{display:flex;align-items:center;gap:8px;padding:4px 4px 6px 10px}
+#bkPop .bph span{flex:1;min-width:0;font:500 12.5px var(--font-ui);color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bkPop .bpx{width:30px;height:30px;min-height:0;padding:0;justify-content:center;border-radius:50%;border:0;background:var(--chip);font-size:13px}
+#bkPop .bpi{width:100%;justify-content:flex-start;gap:12px;border:0;border-radius:12px;padding:12px;font:400 15px var(--font-ui);background:transparent}
+#bkPop .bpi+.bpi{margin-top:2px}
+#bkPop .bpi.del{color:#c0392b}#bkPop .bpi.del.sure{background:#c0392b;color:#fff}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.bk.lifted .cv{transform:scale(1.05);transition:transform .18s ease}
+.arrbar{display:flex;align-items:center;gap:12px;justify-content:space-between;font:400 13px var(--font-ui);color:var(--ink-soft)}
+.lib.arr .bk{touch-action:none;animation:jiggle .32s ease-in-out infinite alternate}
+.lib.arr .bk:nth-child(2n){animation-delay:-.16s}
+.lib.arr .bk.dragging{animation:none;z-index:5;transition:none;opacity:.95}
+.lib.arr .bk.dragging .cv{box-shadow:0 20px 36px -8px rgba(0,0,0,.55)}
+@keyframes jiggle{from{rotate:-1.2deg}to{rotate:1.2deg}}
 </style>
 </head>
 <body>
@@ -331,10 +350,10 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
     <div class="sheet full" id="lib" hidden>
       <div class="ddmenu" id="libMenu" hidden>
         <label class="mi">Προσθήκη EPUB<input id="file2" type="file" accept=".epub,application/epub+zip"></label>
-        <button id="editLib" class="mi">Διαγραφή βιβλίων</button>
+        <button id="editLib" class="mi">Τακτοποίηση βιβλίων</button>
       </div>
       <p class="err" id="libErr" hidden></p>
-      <p class="libhint" id="libHint" hidden>Πάτα «Διαγραφή» στο βιβλίο που θέλεις να σβήσεις.</p>
+      <div class="arrbar" id="libHint" hidden><span>Σύρε τα βιβλία για να αλλάξεις τη σειρά τους.</span><button id="arrDone">Τέλος</button></div>
       <div class="lib" id="libGrid"></div>
     </div>
     <div class="sheet full" id="search" hidden>
@@ -890,6 +909,7 @@ async function addBookFile(f){
   const lib=getLib().filter(x=>x.id!==b.id);
   lib.unshift({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:Date.now()});
   setLib(lib);
+  {const o=store.get('libOrder',null);if(o)store.set('libOrder',[b.id,...o.filter(x=>x!==b.id)])}
   await idbPut('books',b.id,{buf,cover:b.cover});
   saveParsed(b);openBook(b);return b;
 }
@@ -909,7 +929,10 @@ function coverTint(t){let h=0;for(const c of String(t||''))h=(h*31+c.charCodeAt(
 async function buildLib(){
   const g=$('libGrid');g.innerHTML='';coverUrls.forEach(URL.revokeObjectURL);coverUrls=[];
   const lib=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0));
-  const all=store.get('hideSample',false)?lib:[...lib,{id:'sample',title:SAMPLE.title,author:SAMPLE.author,chars:SAMPLE.chars,cover:false}];
+  let all=store.get('hideSample',false)?lib:[...lib,{id:'sample',title:SAMPLE.title,author:SAMPLE.author,chars:SAMPLE.chars,cover:false}];
+  const ord=store.get('libOrder',null);
+  if(ord){const ix=id=>{const k=ord.indexOf(id);return k<0?-1:k};all=all.slice().sort((a,b)=>{const x=ix(a.id),y=ix(b.id);if(x<0&&y<0)return 0;if(x<0)return -1;if(y<0)return 1;return x-y})}
+  $('libGrid').classList.toggle('arr',editing);
   $('libHint').hidden=!editing;
   if(!all.length){g.innerHTML='<p class="libhint">Η βιβλιοθήκη σου είναι άδεια. Πρόσθεσε ένα EPUB από το μενού «Βιβλιοθήκη ▾».</p>';return}
   for(const e of all){
@@ -922,13 +945,13 @@ async function buildLib(){
     const p=document.createElement('div');p.className='bp';p.textContent=pct>=99.5?'Διαβάστηκε · 100%':Xp?`${Math.max(1,Math.round(pct))}% διαβασμένο`:'Αδιάβαστο · 0%';
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
     card.append(cv,t,p,bar);
-    let lp,lpFired=false;
-    card.addEventListener('pointerdown',()=>{lpFired=false;clearTimeout(lp);if(!editing)lp=setTimeout(()=>{lpFired=true;setEditing(true)},550)});
-    ['pointerup','pointerleave','pointercancel'].forEach(ev=>card.addEventListener(ev,()=>clearTimeout(lp)));
-    card.addEventListener('contextmenu',ev=>ev.preventDefault());
-    card.onclick=async()=>{if(editing||lpFired)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
-    if(editing){const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.tabIndex=0;rm.textContent='Διαγραφή';
-      rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){deleteBook(e.id)}else{rm.dataset.sure=1;rm.classList.add('sure');rm.textContent='Σίγουρα;'}};card.append(rm)}
+    card.dataset.id=e.id;card.addEventListener('contextmenu',ev=>ev.preventDefault());
+    if(editing){card.addEventListener('pointerdown',ev=>startBookDrag(ev,card))}
+    else{let lp=null,x0=0,y0=0,fired=false;
+      card.addEventListener('pointerdown',ev=>{fired=false;x0=ev.clientX;y0=ev.clientY;clearTimeout(lp);lp=setTimeout(()=>{fired=true;card._lp=Date.now();bookMenu(card,e)},600);libLp=()=>clearTimeout(lp)});
+      card.addEventListener('pointermove',ev=>{if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>8)clearTimeout(lp)});
+      ['pointerup','pointerleave','pointercancel'].forEach(n=>card.addEventListener(n,()=>clearTimeout(lp)));
+      card.onclick=async()=>{if(fired||Date.now()-(card._lp||0)<700)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}}}
     g.append(card);
     if(e.cover){idbGet('books',e.id).then(r=>{if(r&&r.cover){const u=URL.createObjectURL(r.cover);coverUrls.push(u);const im=document.createElement('img');im.alt='';im.src=u;im.onload=()=>{cv.innerHTML='';cv.append(im)}}})}
   }
@@ -940,7 +963,49 @@ async function deleteBook(id){
   if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
   buildLib();
 }
-function setEditing(on){editing=on;$('editLib').textContent=on?'Τέλος διαγραφής':'Διαγραφή βιβλίων';setLibMenu(false);buildLib()}
+function setEditing(on){editing=on;$('editLib').textContent=on?'Τέλος τακτοποίησης':'Τακτοποίηση βιβλίων';setLibMenu(false);closeBookMenu();buildLib()}
+/* long-press menu on a book: move or delete, closes with ✕ or a tap outside */
+let libLp=()=>{};$('lib').addEventListener('scroll',()=>libLp(),{passive:true});
+function closeBookMenu(){const p=$('bkPop');if(p)p.remove()}
+function bookMenu(card,e){
+  closeBookMenu();const r=card.querySelector('.cv').getBoundingClientRect();
+  const w=document.createElement('div');w.id='bkPop';w.innerHTML=`<div class="bpbg"></div><div class="bpm" role="menu"><div class="bph"><span></span><button class="bpx" aria-label="Κλείσιμο">✕</button></div><button class="bpi" data-a="move"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg><span>Μετακίνηση</span></button><button class="bpi del" data-a="del"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Διαγραφή</span></button></div>`;
+  w.querySelector('.bph span').textContent=e.title;document.body.append(w);
+  const m=w.querySelector('.bpm'),mh=m.offsetHeight,mw=m.offsetWidth,vw=innerWidth,vh=innerHeight;
+  let top=r.bottom+10;if(top+mh>vh-20)top=Math.max(20,r.top-mh-10);
+  m.style.top=top+'px';m.style.left=Math.min(vw-mw-12,Math.max(12,r.left+r.width/2-mw/2))+'px';
+  card.classList.add('lifted');const done=()=>{card.classList.remove('lifted');closeBookMenu()};
+  let armed=false;const arm=()=>setTimeout(()=>{armed=true},80);document.addEventListener('pointerup',arm,{once:true});document.addEventListener('pointercancel',arm,{once:true});
+  w.addEventListener('click',ev=>{if(!armed){ev.stopPropagation();ev.preventDefault()}},true);
+  w.querySelector('.bpbg').addEventListener('click',done);w.querySelector('.bpx').onclick=done;
+  w.querySelector('[data-a=move]').onclick=()=>{done();setEditing(true)};
+  const del=w.querySelector('[data-a=del]');del.onclick=()=>{if(del.dataset.sure){done();deleteBook(e.id)}else{del.dataset.sure=1;del.classList.add('sure');del.querySelector('span').textContent='Πάτα ξανά για διαγραφή'}};
+}
+/* drag books to reorder, like apps on the iPhone home screen */
+function homeRect(el){let l=0,t=0,n=el;const par=$('lib');while(n&&n!==par){l+=n.offsetLeft;t+=n.offsetTop;n=n.offsetParent}
+  const pr=par.getBoundingClientRect(),L=pr.left+par.clientLeft+l-par.scrollLeft,T=pr.top+par.clientTop+t-par.scrollTop;return {left:L,top:T,right:L+el.offsetWidth,bottom:T+el.offsetHeight}}
+function startBookDrag(ev,card){
+  ev.preventDefault();const g=$('libGrid');
+  const base=card.getBoundingClientRect();let ox=ev.clientX-base.left,oy=ev.clientY-base.top;
+  card.classList.add('dragging');
+  const place=(x,y)=>{card.style.transform='none';const nr=card.getBoundingClientRect();card.style.transform=`translate(${x-ox-nr.left}px,${y-oy-nr.top}px) scale(1.06)`};
+  const move=e=>{const x=e.clientX,y=e.clientY;
+    const others=[...g.querySelectorAll('.bk')].filter(c=>c!==card);
+    for(const o of others){const r=homeRect(o);if(x>r.left&&x<r.right&&y>r.top&&y<r.bottom){
+      const kids=[...g.children],ci=kids.indexOf(card),oi=kids.indexOf(o);
+      const before=others.map(c=>[c,c.getBoundingClientRect()]);
+      if(ci<oi)o.after(card);else o.before(card);
+      for(const [c,r0] of before){const r1=c.getBoundingClientRect();const dx=r0.left-r1.left,dy=r0.top-r1.top;if(dx||dy){c.style.transition='none';c.style.transform=`translate(${dx}px,${dy}px)`;requestAnimationFrame(()=>{c.style.transition='transform .22s ease';c.style.transform=''})}}
+      break}}
+    place(x,y);
+    const sh=$('lib'),sr=sh.getBoundingClientRect();if(y<sr.top+50)sh.scrollTop-=8;else if(y>sr.bottom-50)sh.scrollTop+=8};
+  const up=e=>{if(e&&e.pointerId!==pid)return;if(e&&e.type==='pointerup')move(e);removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    card.classList.remove('dragging');card.style.transition='transform .2s ease';card.style.transform='';setTimeout(()=>{card.style.transition=''},220);
+    store.set('libOrder',[...g.querySelectorAll('.bk')].map(c=>c.dataset.id))};
+  const pid=ev.pointerId,mv=e=>{if(e.pointerId===pid){e.preventDefault();move(e)}};
+  addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
+  place(ev.clientX,ev.clientY);
+}
 function showLibErr(m){$('libErr').textContent=m;$('libErr').hidden=!m}
 
 async function handleFile(e){
@@ -967,7 +1032,8 @@ $('bmToggle').onclick=()=>{closeAll();toggleBm()};
 $('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
 $('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);$('lib').hidden=false};
 $('editLib').onclick=()=>setEditing(!editing);
-const closeAll=()=>{lastOpen=sheets.find(x=>!$(x).hidden)||lastOpen;lastClose=Date.now();if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
+$('arrDone').onclick=()=>setEditing(false);
+const closeAll=()=>{if(typeof closeBookMenu==='function')closeBookMenu();lastOpen=sheets.find(x=>!$(x).hidden)||lastOpen;lastClose=Date.now();if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
 $('zr').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guideNext():next()};$('zl').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guidePrev():prev()};
