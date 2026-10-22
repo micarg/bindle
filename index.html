@@ -418,21 +418,29 @@ async function callClaude(prompt,signal,maxTok=8000){
 }
 const aiName=()=>S.ai==='gemini'?'Gemini':'Claude';
 const aiKeyName=()=>S.ai==='gemini'?'gkey':'apikey';
+const dgNote=t=>{if(dgRun){dgRun.note=t;updDgStat()}};
+function dgText(){if(!dgRun)return '';const sec=Math.round((Date.now()-(dgRun.t0||Date.now()))/1000);return `Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total} · ${sec>=60?Math.floor(sec/60)+'′ '+(sec%60)+'″':sec+'″'}`+(dgRun.note?`\n${dgRun.note}`:'')}
+function updDgStat(){document.querySelectorAll('.dgstat').forEach(e=>e.textContent=dgText())}
+setInterval(()=>{if(dgRun)updDgStat()},1000);
 const sleep=(ms,signal)=>new Promise((r,j)=>{const t=setTimeout(r,ms);if(signal)signal.addEventListener('abort',()=>{clearTimeout(t);j({code:'cancelled'})},{once:true})});
 const GMODELS=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-2.5-flash'];
 async function callGemini(prompt,signal,maxTok=8192,json=false){
   const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null;
   for(const model of models){
     for(let attempt=0;attempt<4;attempt++){
-      let res;
-      try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
-        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(category=>({category,threshold:'BLOCK_NONE'})),generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},json?{responseMimeType:'application/json'}:{})})})}
-      catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
+      let res,timedOut=false;const ac=new AbortController(),onAb=()=>ac.abort();if(signal){if(signal.aborted)throw {code:'cancelled'};signal.addEventListener('abort',onAb,{once:true})}
+      const to=setTimeout(()=>{timedOut=true;ac.abort()},180000);
+      const think=store.get('gthink',true)?{thinkingConfig:/^gemini-2/.test(model)?{thinkingBudget:0}:{thinkingLevel:'low'}}:{};
+      try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal:ac.signal,headers:{'content-type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(category=>({category,threshold:'BLOCK_NONE'})),generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},think,json?{responseMimeType:'application/json'}:{})})})}
+      catch(e){clearTimeout(to);if(timedOut&&attempt<3){dgNote('Το '+aiName()+' αργεί να απαντήσει. Ξαναδοκιμάζω.');continue}throw {code:timedOut?'upstream_error':e&&e.name==='AbortError'?'cancelled':'offline'}}
+      clearTimeout(to);if(signal)signal.removeEventListener('abort',onAb);
       if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
         if(!t.trim())throw {code:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion'};
-        store.set('gmodel',model);return t}
+        store.set('gmodel',model);dgNote('');return t}
       let m='',delay=0;try{const j=await res.json();m=(j.error&&j.error.message)||'';const ri=((j.error&&j.error.details)||[]).find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0}catch(e){}
-      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){await sleep(Math.min(70,delay||20)*1000+500,signal);continue}throw {code:'rate_limited',message:m}}
+      if(res.status===400&&/thinking/i.test(m)&&store.get('gthink',true)){store.set('gthink',false);attempt--;continue}
+      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){const w=Math.min(70,delay||20);dgNote(`Το δωρεάν Gemini δέχεται λίγα αιτήματα ανά λεπτό. Περιμένω ${Math.round(w)}″ και συνεχίζω μόνο του.`);await sleep(w*1000+500,signal);dgNote('');continue}throw {code:'rate_limited',message:m}}
       if(res.status===404||(/model/i.test(m)&&/not found|not supported|not available|unsupported/i.test(m))){lastErr={code:'upstream_error',message:m};break}
       if(/location|region|country/i.test(m))throw {code:'region',message:m};
       if(res.status===400&&/api key/i.test(m)||res.status===401||res.status===403)throw {code:'bad_key',message:m};
@@ -453,10 +461,10 @@ function segmentBook(b){
       segs.push({id:i+'.'+k,ci:i,start:s,end:e,text:t.slice(s,e).trim()});s=e;k++}});
   return segs;
 }
-function chunksOf(segs){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>CHUNK&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
+function chunksOf(segs,cs=CHUNK){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>cs&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
 const getDg=id=>store.get('dg:'+id,null);
 const setDg=(id,d)=>store.set('dg:'+id,d);
-function digestState(b){const segs=segmentBook(b),chunks=chunksOf(segs),dd=getDg(b.id),d=dd&&dd.v===3?dd:{v:3,done:0,segs:{},chap:{},people:[]};if(!d.people)d.people=[];return {segs,chunks,d}}
+function digestState(b){const segs=segmentBook(b),dd=getDg(b.id),d=dd&&dd.v===3?dd:{v:3,done:0,segs:{},chap:{},people:[]};if(!d.people)d.people=[];if(!d.cs)d.cs=d.done>0?CHUNK:(S.ai==='gemini'?90000:CHUNK);const chunks=chunksOf(segs,d.cs);return {segs,chunks,d}}
 
 function chunkPrompt(b,chunk,d){
   const lastSeg={};for(const s of segmentBook(b))lastSeg[s.ci]=s.id;
@@ -487,6 +495,7 @@ async function digestChunk(b,chunk,d,signal){
   try{r=await sampleFn.json(chunkPrompt(b,work,d),{signal})}
   catch(e){
     if(!['refused','empty_completion','invalid_json'].includes(e&&e.code))throw e;
+    dgNote('Ένα κομμάτι δεν έγινε δεκτό από το '+aiName()+'. Το χωρίζω σε μικρότερα και συνεχίζω.');
     if(work.length>1){const h=Math.ceil(work.length/2);await digestChunk(b,chunk.filter(s=>work.slice(0,h).some(w=>w.id===s.id)),d,signal);await digestChunk(b,chunk.filter(s=>work.slice(h).some(w=>w.id===s.id)),d,signal);return}
     d.segs[work[0].id]=localDigest(b).segs[work[0].id]||'';return}
   const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
@@ -502,7 +511,7 @@ async function runDigest(b){
   digestChanged();
   try{
     for(let c=d.done;c<chunks.length;c++){
-      dgRun.at=c;digestChanged();
+      dgRun.at=c;dgRun.t0=Date.now();dgRun.note='';digestChanged();
       await digestChunk(b,chunks[c],d,dgRun.ctl.signal);
       d.done=c+1;setDg(b.id,d);
     }
@@ -615,7 +624,7 @@ function showSumSheet(msg){
   const note=document.createElement('p');note.className='summeta';
   note.textContent=s.ai?`Περίληψη από το ${aiName()}.`:'Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου. Δεν χρειάζεται ίντερνετ ούτε χρέωση.';
   body.append(note);
-  if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}. Μπορείς να κλείσεις το παράθυρο και να συνεχίσεις το διάβασμα.`;body.append(p);stop.hidden=false;return}
+  if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();const q=document.createElement('p');q.className='summeta';q.textContent='Κάθε μέρος παίρνει συνήθως από μισό έως 2 λεπτά. Μπορείς να κλείσεις το παράθυρο και να διαβάζεις, αρκεί να μείνει ανοιχτή η εφαρμογή.';body.append(p,q);stop.hidden=false;return}
   if(!s.ai&&sampleFn){
     if(S.ai==='gemini'&&!msg){runDigest(book);return}
     again.onclick=()=>{if(book)runDigest(book)};again.textContent=d.done?`Συνέχεια ανάγνωσης από το ${aiName()} (${chunks.length-d.done} μέρη)`:S.ai==='gemini'?'Κανονική περίληψη με Gemini':'Κανονική περίληψη με Claude (με χρέωση)';again.hidden=false}
@@ -1066,7 +1075,7 @@ function buildPeople(msg){
     note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα που διαβάζεις, με την πρώτη φράση όπου εμφανίστηκαν. Πάτα ένα όνομα για να το βρεις στο βιβλίο.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
     for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc;b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
     if(!running&&sampleFn&&S.ai==='gemini'&&!msg){runDigest(book);return}
-    if(running)note(`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}.`);
+    if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();el.append(p)}
     else if(sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Περιγραφές με '+aiName()+(S.ai==='claude'?' (με χρέωση)':'');b.onclick=()=>runDigest(book);w.append(b);el.append(w)}
     return}
   const pt=bmPoint(curPoint()),idx={};segs.forEach((s,i)=>idx[s.id]=i);
