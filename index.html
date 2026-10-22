@@ -328,7 +328,8 @@ function bionic(root){
 
 /* ---------- pages ---------- */
 const sum=a=>a.reduce((x,y)=>x+y,0);
-const totalPages=chars=>Math.max(1,Math.ceil(sum(chars)/cpp));
+const PRINT=1800;
+const totalPages=chars=>Math.max(1,Math.ceil(sum(chars)/PRINT));
 function readChars(){const c=book.chars[ci]||0;return sum(book.chars.slice(0,ci))+c*(pi+1)/pages}
 function measureCpp(){const c=book.chars[ci]||0;if(pages>=3&&c>1500){const v=Math.round(c/(pages-0.5));if(Math.abs(v-cpp)>20){cpp=v;store.set('cpp',cpp)}}}
 
@@ -379,7 +380,7 @@ function renderChapter(keep,fade){
 
 function updateFoot(){
   const total=sum(book.chars)||1,rc=readChars();
-  const T=totalPages(book.chars),X=Math.min(T,Math.max(1,Math.round(rc/cpp)));
+  const T=totalPages(book.chars),X=Math.min(T,Math.max(1,Math.ceil(rc/PRINT)));
   const remC=(book.chars[ci]||0)*(1-(pi+1)/pages),remB=Math.max(0,total-rc);
   $('chap').textContent=S.foot===1?(pi>=pages-1?'Τέλος κεφαλαίου':`Κεφάλαιο: ${fmtMin(remC/cpm)} ακόμα`):S.foot===2?`Βιβλίο: ${fmtMin(remB/cpm)} ακόμα`:`σελ. ${X} από ${T}`;
   const pc=rc/total*100;$('pct').textContent=pc>0&&pc<1?'<1%':Math.round(pc)+'%';
@@ -734,7 +735,7 @@ async function buildLib(){
   $('libHint').hidden=!editing;
   if(!all.length){g.innerHTML='<p class="libhint">Η βιβλιοθήκη σου είναι άδεια. Πρόσθεσε ένα EPUB από το μενού «Βιβλιοθήκη ▾».</p>';return}
   for(const e of all){
-    const pos=store.get('pos:'+e.id,null),T=totalPages(e.chars),Xp=pos&&pos.read?Math.min(T,Math.max(1,Math.round(pos.read/cpp))):0;
+    const pos=store.get('pos:'+e.id,null),T=totalPages(e.chars),Xp=pos&&pos.read?Math.min(T,Math.max(1,Math.ceil(pos.read/PRINT))):0;
     const pct=pos&&pos.read?Math.min(100,pos.read/(sum(e.chars)||1)*100):0;
     const card=document.createElement('button');card.className='bk';card.setAttribute('aria-current',book&&book.id===e.id);
     const cv=document.createElement('div');cv.className='cv';
