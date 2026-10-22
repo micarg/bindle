@@ -1,5 +1,5 @@
 // Bindle service worker: keeps the app working offline.
-const VERSION = 'bindle-v31';
+const VERSION = 'bindle-v32';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'wake.mp4'];
 
 self.addEventListener('install', (e) => {
@@ -23,7 +23,7 @@ self.addEventListener('fetch', (e) => {
   // App page: network first so updates arrive, cache as fallback when offline.
   if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-cache' })
         .then((res) => { const copy = res.clone(); caches.open(VERSION).then((c) => c.put('index.html', copy)); return res; })
         .catch(() => caches.match('index.html'))
     );
