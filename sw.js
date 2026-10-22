@@ -1,5 +1,5 @@
 // Bindle service worker: keeps the app working offline.
-const VERSION = 'bindle-v45';
+const VERSION = 'bindle-v46';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'wake.mp4'];
 
 self.addEventListener('install', (e) => {
