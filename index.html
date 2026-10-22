@@ -279,6 +279,10 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
 .lib.arr .bk.dragging{animation:none;z-index:5;transition:none;opacity:.95}
 .lib.arr .bk.dragging .cv{box-shadow:0 20px 36px -8px rgba(0,0,0,.55)}
 @keyframes jiggle{from{rotate:-1.2deg}to{rotate:1.2deg}}
+
+.lib .rm{display:none}
+.lib.arr .rm{display:inline-flex;top:-9px;left:-9px;right:auto;width:26px;height:26px;min-height:0;padding:0;border-radius:13px;background:var(--ink);color:var(--paper);border:0;font:600 12px var(--font-ui);box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:3}
+.lib.arr .rm.sure{width:auto;padding:0 10px;background:#c0392b;color:#fff}
 </style>
 </head>
 <body>
@@ -353,7 +357,7 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
         <button id="editLib" class="mi">Τακτοποίηση βιβλίων</button>
       </div>
       <p class="err" id="libErr" hidden></p>
-      <div class="arrbar" id="libHint" hidden><span>Σύρε τα βιβλία για να αλλάξεις τη σειρά τους.</span><button id="arrDone">Τέλος</button></div>
+      <div class="arrbar" id="libHint" hidden><span>Σύρε τα βιβλία για να αλλάξεις σειρά. Πάτα ✕ για διαγραφή.</span><button id="arrDone">Τέλος</button></div>
       <div class="lib" id="libGrid"></div>
     </div>
     <div class="sheet full" id="search" hidden>
@@ -933,7 +937,7 @@ async function buildLib(){
   const ord=store.get('libOrder',null);
   if(ord){const ix=id=>{const k=ord.indexOf(id);return k<0?-1:k};all=all.slice().sort((a,b)=>{const x=ix(a.id),y=ix(b.id);if(x<0&&y<0)return 0;if(x<0)return -1;if(y<0)return 1;return x-y})}
   $('libGrid').classList.toggle('arr',editing);
-  $('libHint').hidden=!editing;
+  
   if(!all.length){g.innerHTML='<p class="libhint">Η βιβλιοθήκη σου είναι άδεια. Πρόσθεσε ένα EPUB από το μενού «Βιβλιοθήκη ▾».</p>';return}
   for(const e of all){
     const pos=store.get('pos:'+e.id,null),T=totalPages(e.chars),Xp=pos&&pos.read?Math.min(T,Math.max(1,Math.ceil(pos.read/PRINT))):0;
@@ -946,12 +950,19 @@ async function buildLib(){
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
     card.append(cv,t,p,bar);
     card.dataset.id=e.id;card.addEventListener('contextmenu',ev=>ev.preventDefault());
-    if(editing){card.addEventListener('pointerdown',ev=>startBookDrag(ev,card))}
-    else{let lp=null,x0=0,y0=0,fired=false;
-      card.addEventListener('pointerdown',ev=>{fired=false;x0=ev.clientX;y0=ev.clientY;clearTimeout(lp);lp=setTimeout(()=>{fired=true;card._lp=Date.now();bookMenu(card,e)},600);libLp=()=>clearTimeout(lp)});
-      card.addEventListener('pointermove',ev=>{if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>8)clearTimeout(lp)});
-      ['pointerup','pointerleave','pointercancel'].forEach(n=>card.addEventListener(n,()=>clearTimeout(lp)));
-      card.onclick=async()=>{if(fired||Date.now()-(card._lp||0)<700)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}}}
+    const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.setAttribute('aria-label','Διαγραφή');rm.textContent='✕';
+    rm.addEventListener('pointerdown',ev=>ev.stopPropagation());
+    rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){deleteBook(e.id)}else{g.querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.textContent='✕'});rm.dataset.sure=1;rm.classList.add('sure');rm.textContent='Διαγραφή;'}};
+    card.append(rm);
+    let lp=null,x0=0,y0=0,fired=false;
+    card.addEventListener('pointerdown',ev=>{
+      if(editing){startBookDrag(ev,card);return}
+      fired=false;x0=ev.clientX;y0=ev.clientY;clearTimeout(lp);
+      lp=setTimeout(()=>{fired=true;card._lp=Date.now();setArrange(true);startBookDrag({pointerId:ev.pointerId,clientX:x0,clientY:y0,preventDefault(){}},card,true)},550);libLp=()=>clearTimeout(lp)});
+    card.addEventListener('touchmove',ev=>{if(editing)ev.preventDefault()},{passive:false});
+    card.addEventListener('pointermove',ev=>{if(!editing&&Math.hypot(ev.clientX-x0,ev.clientY-y0)>8)clearTimeout(lp)});
+    ['pointerup','pointerleave','pointercancel'].forEach(n=>card.addEventListener(n,()=>clearTimeout(lp)));
+    card.onclick=async()=>{if(editing||fired||Date.now()-(card._lp||0)<700)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
     g.append(card);
     if(e.cover){idbGet('books',e.id).then(r=>{if(r&&r.cover){const u=URL.createObjectURL(r.cover);coverUrls.push(u);const im=document.createElement('img');im.alt='';im.src=u;im.onload=()=>{cv.innerHTML='';cv.append(im)}}})}
   }
@@ -963,7 +974,9 @@ async function deleteBook(id){
   if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
   buildLib();
 }
-function setEditing(on){editing=on;$('editLib').textContent=on?'Τέλος τακτοποίησης':'Τακτοποίηση βιβλίων';setLibMenu(false);closeBookMenu();buildLib()}
+function setArrange(on){editing=on;$('editLib').textContent=on?'Τέλος τακτοποίησης':'Τακτοποίηση βιβλίων';$('libGrid').classList.toggle('arr',on);$('libHint').hidden=!on;
+  if(!on)$('libGrid').querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.textContent='✕'})}
+function setEditing(on){setLibMenu(false);closeBookMenu();setArrange(on)}
 /* long-press menu on a book: move or delete, closes with ✕ or a tap outside */
 let libLp=()=>{};$('lib').addEventListener('scroll',()=>libLp(),{passive:true});
 function closeBookMenu(){const p=$('bkPop');if(p)p.remove()}
@@ -999,11 +1012,17 @@ function startBookDrag(ev,card){
       break}}
     place(x,y);
     const sh=$('lib'),sr=sh.getBoundingClientRect();if(y<sr.top+50)sh.scrollTop-=8;else if(y>sr.bottom-50)sh.scrollTop+=8};
-  const up=e=>{if(e&&e.pointerId!==pid)return;if(e&&e.type==='pointerup')move(e);removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+  let ended=false,touching=false;
+  const up=e=>{if(e&&e.pointerId!==pid)return;if(e&&e.type==='pointercancel'&&touching)return;fin(e)};
+  const fin=e=>{if(ended)return;ended=true;if(e&&e.type==='pointerup')move(e);removeEventListener('pointermove',mv);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);removeEventListener('touchmove',tm);removeEventListener('touchend',te);removeEventListener('touchcancel',te);
     card.classList.remove('dragging');card.style.transition='transform .2s ease';card.style.transform='';setTimeout(()=>{card.style.transition=''},220);
     store.set('libOrder',[...g.querySelectorAll('.bk')].map(c=>c.dataset.id))};
   const pid=ev.pointerId,mv=e=>{if(e.pointerId===pid){e.preventDefault();move(e)}};
+  const tm=e=>{const t=e.touches[0];if(!t)return;if(e.cancelable)e.preventDefault();move({clientX:t.clientX,clientY:t.clientY})};
+  const te=e=>{if(e.touches.length)return;const t=e.changedTouches[0];fin(t?{clientX:t.clientX,clientY:t.clientY,type:'pointerup'}:null)};
+  touching=ev.pointerType==='touch'||ev.fromTouch||('ontouchstart' in window);
   addEventListener('pointermove',mv,{passive:false});addEventListener('pointerup',up);addEventListener('pointercancel',up);
+  addEventListener('touchmove',tm,{passive:false});addEventListener('touchend',te);addEventListener('touchcancel',te);
   place(ev.clientX,ev.clientY);
 }
 function showLibErr(m){$('libErr').textContent=m;$('libErr').hidden=!m}
@@ -1030,9 +1049,10 @@ libDD.onclick=()=>setLibMenu($('libMenu').hidden);
 $('file2').addEventListener('click',()=>setLibMenu(false));
 $('bmToggle').onclick=()=>{closeAll();toggleBm()};
 $('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
-$('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);$('lib').hidden=false};
+$('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);buildLib();$('lib').hidden=false};
 $('editLib').onclick=()=>setEditing(!editing);
 $('arrDone').onclick=()=>setEditing(false);
+$('libGrid').addEventListener('click',ev=>{if(editing&&ev.target===$('libGrid'))setEditing(false)});
 const closeAll=()=>{if(typeof closeBookMenu==='function')closeBookMenu();lastOpen=sheets.find(x=>!$(x).hidden)||lastOpen;lastClose=Date.now();if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
