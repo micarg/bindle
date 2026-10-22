@@ -707,6 +707,7 @@ async function parseEpub(buf){
     const h=box.querySelector('h1,h2,h3');
     let title=tocTitle[path];
     if(!title&&h)title=h.textContent;
+    if(title&&/^\s*(?:[0-9]{1,4}|[IVXLCivxlc]{1,7}|[Α-Ωα-ω]{1,3}[΄'ʹ])\.?\s*$/.test(title)){for(const el of box.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6')){if(el.querySelector('p,div,h1,h2,h3,h4,h5,h6'))continue;const t=el.textContent.replace(/\s+/g,' ').trim();if(!t||t===title.trim()||/^[\s•*·⁂~\-–—#]+$/.test(t))continue;if(t.length<=70&&!/[.,;:!?…»]$/.test(t))title=title.trim()+'. '+t;break}}
     if(!title){const parts=[];for(const el of box.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li')){if(el.querySelector('p,div,h1,h2,h3,h4,h5,h6,li'))continue;const t=el.textContent.replace(/\s+/g,' ').trim();if(!t)continue;if(t.length>70||parts.length>=2)break;parts.push(t)}title=parts.join(' · ')}
     title=(title||'').replace(/\s+/g,' ').trim();if(title.length>70)title=title.slice(0,68).replace(/\s+\S*$/,'')+'…';
     chapters.push({title:title||('Ενότητα '+(chapters.length+1)),html:box.innerHTML});
