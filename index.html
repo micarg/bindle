@@ -95,6 +95,10 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .hint{font-size:12px;color:var(--ink-soft);line-height:1.5}
 .err{color:#a3392b;font-size:13px}
 .sheet.full{bottom:0}
+.veil{position:absolute;inset:-12px -40px;z-index:4;background:color-mix(in srgb,var(--paper) 55%,transparent);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s ease}
+body.dim .veil{opacity:1;pointer-events:auto}
+.foot{transition:opacity .2s ease}
+body.dim .foot{opacity:.35}
 .libtools{display:flex;gap:8px;flex-wrap:wrap}
 .libtools label{position:relative}
 .libtools input{position:absolute;opacity:0;width:1px;height:1px}
@@ -196,6 +200,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
   <main class="stage" id="stage">
     <div id="page" lang="el" aria-live="polite"></div>
     <div class="guide" id="guide" hidden></div>
+    <div class="veil" id="veil" aria-hidden="true"></div>
     <div class="zone l" id="zl" aria-hidden="true"></div>
     <div class="zone c" id="zc" aria-hidden="true"></div>
     <div class="zone r" id="zr" aria-hidden="true"></div>
@@ -1221,6 +1226,10 @@ function startRadio(){setRadio('loading');playStream(0);
   if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:'Classic FM',artist:'Ζωντανά',album:'Bindle',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]})}catch(e){}}}
 function stopRadio(msg){if(radio){radio.pause();radio.removeAttribute('src');radio.load()}setRadio('off',msg)}
 $('radioBtn').onclick=()=>{radioState==='off'?startRadio():stopRadio()};
+/* ---------- dim and blur the page behind open panels ---------- */
+{const upd=()=>document.body.classList.toggle('dim',sheets.some(id=>id!=='wpop'&&!$(id).hidden));
+ new MutationObserver(upd).observe(stage,{attributes:true,attributeFilter:['hidden'],subtree:true});
+ $('veil').addEventListener('click',()=>closeAll());upd();}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
