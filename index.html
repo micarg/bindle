@@ -123,7 +123,7 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 @keyframes spin{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 .bml .acts{display:flex;gap:2px}
 .sumbtn{font-size:12px;border:1px solid var(--rule)!important;color:var(--ink)!important;min-height:32px}
-.sumtext{font-family:var(--font-read);font-size:calc(var(--fs) * .92);line-height:1.65;font-weight:300}
+.sumtext{font-family:var(--font-read);font-size:min(calc(var(--fs) * .92),19px);line-height:1.65;font-weight:300}
 .sumtext p{margin:0 0 .8em}
 .sumtext ul{margin:0 0 1.1em;padding-left:1.1em}
 .sumtext li{margin:.3em 0;padding-left:.2em}
@@ -426,10 +426,10 @@ async function callGemini(prompt,signal,maxTok=8192,json=false){
     for(let attempt=0;attempt<4;attempt++){
       let res;
       try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
-        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},json?{responseMimeType:'application/json'}:{})})})}
+        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(category=>({category,threshold:'BLOCK_NONE'})),generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},json?{responseMimeType:'application/json'}:{})})})}
       catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
       if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
-        if(!t.trim())throw {code:j.promptFeedback&&j.promptFeedback.blockReason?'refused':'empty_completion'};
+        if(!t.trim())throw {code:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion'};
         store.set('gmodel',model);return t}
       let m='',delay=0;try{const j=await res.json();m=(j.error&&j.error.message)||'';const ri=((j.error&&j.error.details)||[]).find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0}catch(e){}
       if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){await sleep(Math.min(70,delay||20)*1000+500,signal);continue}throw {code:'rate_limited',message:m}}
@@ -465,7 +465,7 @@ function chunkPrompt(b,chunk,d){
   const known=[...new Set((d.people||[]).map(p=>p.name))].slice(0,40).join(', ');
   let body='',lastCi=-1;
   for(const s of chunk){if(s.ci!==lastCi){body+=`\n\n=== Κεφάλαιο ${s.ci}: ${b.chapters[s.ci].title} ===`;lastCi=s.ci}body+=`\n[${s.id}] ${s.text}`}
-  return `Διαβάζεις ένα κομμάτι από το βιβλίο «${b.title}»${b.author?' ('+b.author+')':''}. Το κείμενο είναι χωρισμένο σε τμήματα με ετικέτες όπως [3.0], όπου ο πρώτος αριθμός είναι το κεφάλαιο.
+  return `Βοηθάς έναν αναγνώστη να θυμάται την πλοκή ενός βιβλίου που διαβάζει (για προσωπική χρήση). Μη αντιγράφεις φράσεις του κειμένου, γράψε με δικά σου λόγια.\nΔιαβάζεις ένα κομμάτι από το βιβλίο «${b.title}»${b.author?' ('+b.author+')':''}. Το κείμενο είναι χωρισμένο σε τμήματα με ετικέτες όπως [3.0], όπου ο πρώτος αριθμός είναι το κεφάλαιο.
 
 Οι σημειώσεις θα εμφανιστούν ως σύντομες κουκκίδες, για να θυμηθεί ο αναγνώστης μόνο τα πιο σημαντικά. Να είσαι πολύ σύντομος.
 1. Για ΚΑΘΕ τμήμα: αν συμβαίνει κάτι σημαντικό για την ιστορία, γράψε στα ελληνικά ΜΙΑ σύντομη φράση (έως 12 λέξεις) με αυτό που γίνεται ΜΟΝΟ μέσα σε εκείνο το τμήμα. Αν δεν γίνεται κάτι σημαντικό (περιγραφές, δευτερεύοντες διάλογοι, σελίδα τίτλου, πνευματικά δικαιώματα, περιεχόμενα), γράψε "". Μη χρησιμοποιείς πληροφορίες από επόμενα τμήματα.
@@ -477,6 +477,24 @@ function chunkPrompt(b,chunk,d){
 ---${body}`;
 }
 
+async function digestChunk(b,chunk,d,signal){
+  const fs=frontMatterEnd(b);
+  const work=[];for(const s of chunk){if(s.ci<fs){d.segs[s.id]='';continue}
+    const clean=splitSentences(s.text).filter(x=>!META.test(fold(x))).join(' ').trim();
+    if(clean.length<40){d.segs[s.id]='';continue}work.push(Object.assign({},s,{text:clean}))}
+  if(!work.length)return;
+  let r;
+  try{r=await sampleFn.json(chunkPrompt(b,work,d),{signal})}
+  catch(e){
+    if(!['refused','empty_completion','invalid_json'].includes(e&&e.code))throw e;
+    if(work.length>1){const h=Math.ceil(work.length/2);await digestChunk(b,chunk.filter(s=>work.slice(0,h).some(w=>w.id===s.id)),d,signal);await digestChunk(b,chunk.filter(s=>work.slice(h).some(w=>w.id===s.id)),d,signal);return}
+    d.segs[work[0].id]=localDigest(b).segs[work[0].id]||'';return}
+  const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
+  for(const s of work)d.segs[s.id]=typeof segs[s.id]==='string'?segs[s.id]:'';
+  for(const k in chap)if(typeof chap[k]==='string')d.chap[k]=chap[k];
+  const ids=new Set(work.map(s=>s.id));
+  if(Array.isArray(r&&r.people))for(const p of r.people.slice(0,12))if(p&&typeof p.name==='string'&&p.name.trim())d.people.push({name:p.name.trim().slice(0,60),seg:ids.has(p.seg)?p.seg:work[0].id,desc:typeof p.desc==='string'?p.desc.slice(0,160):''});
+}
 async function runDigest(b){
   if(dgRun||!sampleFn)return;
   const {chunks,d}=digestState(b);
@@ -485,12 +503,7 @@ async function runDigest(b){
   try{
     for(let c=d.done;c<chunks.length;c++){
       dgRun.at=c;digestChanged();
-      const r=await sampleFn.json(chunkPrompt(b,chunks[c],d),{modelTier:'quick',signal:dgRun.ctl.signal});
-      const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
-      for(const s of chunks[c])d.segs[s.id]=typeof segs[s.id]==='string'?segs[s.id]:'';
-      for(const k in chap)if(typeof chap[k]==='string')d.chap[k]=chap[k];
-      const ids=new Set(chunks[c].map(s=>s.id));
-      if(Array.isArray(r&&r.people))for(const p of r.people.slice(0,12))if(p&&typeof p.name==='string'&&p.name.trim())d.people.push({name:p.name.trim().slice(0,60),seg:ids.has(p.seg)?p.seg:chunks[c][0].id,desc:typeof p.desc==='string'?p.desc.slice(0,160):''});
+      await digestChunk(b,chunks[c],d,dgRun.ctl.signal);
       d.done=c+1;setDg(b.id,d);
     }
     dgRun=null;digestChanged();
@@ -588,7 +601,7 @@ function showSumSheet(msg){
   const b=getBms()[sumIdx];if(!b)return;
   const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
   body.innerHTML='';again.hidden=true;stop.hidden=true;
-  $('sumMeta').textContent=`Μέχρι: ${b.title} · ${b.pct}`;
+  $('sumMeta').textContent=`Μέχρι: ${(book.chapters[b.ci]||{}).title||b.title} · ${b.pct}`;
   const {chunks,d}=digestState(book),running=dgRun&&dgRun.id===book.id;
   const s=summaryFor(b);
   if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
@@ -663,6 +676,17 @@ async function parseEpub(buf){
   const tag=n=>(opf.getElementsByTagName('dc:'+n)[0]||opf.getElementsByTagName(n)[0]||{}).textContent||'';
   const title=tag('title').trim()||'Βιβλίο',author=tag('creator').trim();
   const items={};for(const it of opf.getElementsByTagName('item'))items[it.getAttribute('id')]={href:it.getAttribute('href'),type:it.getAttribute('media-type')||'',props:it.getAttribute('properties')||''};
+  const tocTitle={};
+  try{
+    const navIt=Object.values(items).find(i=>i.props.split(/\s+/).includes('nav'));
+    const sp=opf.getElementsByTagName('spine')[0],ncxIt=sp&&items[sp.getAttribute('toc')]||Object.values(items).find(i=>/ncx/.test(i.type));
+    if(navIt){const np=resolve(opfPath,decodeURIComponent(navIt.href)),f=zip.file(np);if(f){const nd=new DOMParser().parseFromString(await f.async('string'),'text/html');
+      const nav=[...nd.querySelectorAll('nav')].find(n=>/toc/.test(n.getAttribute('epub:type')||n.getAttribute('type')||n.id||''))||nd.querySelector('nav');
+      if(nav)for(const a of nav.querySelectorAll('a[href]')){const p=resolve(np,decodeURIComponent(a.getAttribute('href').split('#')[0]));const t=a.textContent.replace(/\s+/g,' ').trim();if(t&&!tocTitle[p])tocTitle[p]=t}}}
+    if(!Object.keys(tocTitle).length&&ncxIt){const np=resolve(opfPath,decodeURIComponent(ncxIt.href)),f=zip.file(np);if(f){const nd=X(await f.async('string'));
+      for(const pt of nd.getElementsByTagName('navPoint')){const lab=pt.getElementsByTagName('text')[0],ct=pt.getElementsByTagName('content')[0];if(!lab||!ct)continue;
+        const p=resolve(np,decodeURIComponent((ct.getAttribute('src')||'').split('#')[0]));const t=lab.textContent.replace(/\s+/g,' ').trim();if(t&&!tocTitle[p])tocTitle[p]=t}}}
+  }catch(e){}
   const isImg=i=>i&&(i.type.startsWith('image')||/\.(jpe?g|png|gif|webp)$/i.test(i.href));
   let cov=Object.values(items).find(i=>i.props.split(/\s+/).includes('cover-image'));
   if(!isImg(cov)){const m=[...opf.getElementsByTagName('meta')].find(m=>m.getAttribute('name')==='cover');cov=m?items[m.getAttribute('content')]:null}
@@ -681,7 +705,11 @@ async function parseEpub(buf){
     const txt=box.textContent.replace(/\s+/g,' ').trim();
     if(!txt&&!box.querySelector('img'))continue;
     const h=box.querySelector('h1,h2,h3');
-    chapters.push({title:(h?h.textContent:txt).trim().slice(0,60)||('Ενότητα '+(chapters.length+1)),html:box.innerHTML});
+    let title=tocTitle[path];
+    if(!title&&h)title=h.textContent;
+    if(!title){const parts=[];for(const el of box.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li')){if(el.querySelector('p,div,h1,h2,h3,h4,h5,h6,li'))continue;const t=el.textContent.replace(/\s+/g,' ').trim();if(!t)continue;if(t.length>70||parts.length>=2)break;parts.push(t)}title=parts.join(' · ')}
+    title=(title||'').replace(/\s+/g,' ').trim();if(title.length>70)title=title.slice(0,68).replace(/\s+\S*$/,'')+'…';
+    chapters.push({title:title||('Ενότητα '+(chapters.length+1)),html:box.innerHTML});
     chars.push(Math.max(txt.length,box.querySelector('img')?400:0));
   }
   if(!chapters.length)throw new Error('empty');
