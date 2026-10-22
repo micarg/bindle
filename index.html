@@ -41,6 +41,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .empty{font-size:14px;color:var(--ink-soft);padding:8px 4px}
 .xrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font:500 13px var(--font-ui);color:var(--ink-soft);letter-spacing:.03em}
 #menu .xrow{padding:2px 6px 2px 16px;border-bottom:1px solid var(--rule)}
+.xrow .back{min-width:36px;margin-left:-8px;margin-right:2px;color:var(--ink)}
+.xrow>span{flex:1}
+.xrow .libdd{margin-right:auto}
 .xrow button{border:0;min-height:40px;min-width:40px;justify-content:center;font-size:18px;color:var(--ink)}
 .tbtn{border:0;min-height:28px;padding:4px 8px;max-width:85%;font:400 12px var(--font-ui);color:var(--ink-soft);letter-spacing:.03em;gap:5px}
 .tbtn .t{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -841,7 +844,7 @@ $('file2').addEventListener('change',handleFile);
 
 /* ---------- controls ---------- */
 const sheets=['menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
-function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
+function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';if(!['menu','wpop','recap','tdone'].includes(id)){const bk=document.createElement('button');bk.className='back';bk.setAttribute('aria-label','Πίσω');bk.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';bk.onclick=e=>{e.stopPropagation();goBack(id)};r.append(bk)}const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
 addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις και σημειώσεις');addX('people','Πρόσωπα');addX('stats','Στατιστικά');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
 $('lib').querySelector('.xrow span').replaceWith(libDD);
@@ -852,7 +855,7 @@ $('bmToggle').onclick=()=>{closeAll();toggleBm()};
 $('bmBtn').onclick=()=>{closeAll();buildBms();$('bms').hidden=false};
 $('libBtn').onclick=()=>{closeAll();showLibErr('');setEditing(false);$('lib').hidden=false};
 $('editLib').onclick=()=>setEditing(!editing);
-const closeAll=()=>{if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
+const closeAll=()=>{lastOpen=sheets.find(x=>!$(x).hidden)||lastOpen;lastClose=Date.now();if(typeof stopVoice==='function'&&speaking&&!$('sum').hidden)stopVoice();let o=false;sheets.forEach(s=>{if(!$(s).hidden)o=true;$(s).hidden=true});$('titleBtn').setAttribute('aria-expanded','false');return o};
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
 $('zr').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guideNext():next()};$('zl').onclick=()=>{if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guidePrev():prev()};
@@ -1435,6 +1438,11 @@ $('sumSpeak').onclick=async()=>{
 stage.addEventListener('scroll',()=>{if(stage.scrollLeft||stage.scrollTop){stage.scrollLeft=0;stage.scrollTop=0}});
 function openSetting(id){$('settings').hidden=false;const el=$(id),d=el&&el.closest('details');if(d)d.open=true;setTimeout(()=>el&&el.scrollIntoView({block:'center'}),60)}
 document.querySelectorAll('#settings details.grp').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('#settings details.grp').forEach(o=>{if(o!==d)o.open=false})}));
+let lastOpen=null,lastClose=0;const backTo={};
+const OPENER={lib:'libBtn',toc:'tocBtn',search:'searchBtn',bms:'bmBtn',hls:'hlBtn',people:'peopleBtn',ask:'askBtn',sounds:'soundsBtn',timer:'timerBtn',stats:'statsBtn',settings:'setBtn'};
+new MutationObserver(ms=>{for(const m of ms){const id=m.target.id;if(!sheets.includes(id)||m.target.hidden)continue;
+  backTo[id]=(Date.now()-lastClose<1500&&lastOpen&&lastOpen!==id&&!['wpop','recap','tdone'].includes(lastOpen))?lastOpen:'menu'}}).observe(stage,{attributes:true,attributeFilter:['hidden'],subtree:true});
+function goBack(id){const to=backTo[id]||'menu';closeAll();if(to==='menu'||!OPENER[to])openMenu();else $(OPENER[to]).click()}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
