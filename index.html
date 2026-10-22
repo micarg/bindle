@@ -49,6 +49,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 #menu.menu{display:flex;flex-direction:column;gap:0;left:0;right:0;margin:0 auto;width:min(300px,100%);height:auto;padding:4px 0;overflow:hidden;animation:drop .18s ease-out}
 #menu .mi,.ddmenu .mi{display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;width:100%;height:48px;min-height:0;margin:0;padding:0 16px;border:0;border-radius:0;background:transparent;color:var(--ink);font:400 15px var(--font-ui);text-align:left;cursor:pointer;overflow:hidden}
 #menu .mi+.mi,.ddmenu .mi+.mi{border-top:1px solid var(--rule)}
+#menu .mi svg{flex:none;width:20px;height:20px;margin-right:14px;color:var(--ink-soft)}
 #menu .mi input,.ddmenu .mi input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
 @keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 button,.filebtn{font:500 13px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:7px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;min-height:34px}
@@ -199,15 +200,15 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
     <div class="zone c" id="zc" aria-hidden="true"></div>
     <div class="zone r" id="zr" aria-hidden="true"></div>
     <div class="sheet menu" id="menu" hidden>
-      <button id="libBtn" class="mi">Βιβλιοθήκη</button>
-      <button id="tocBtn" class="mi">Περιεχόμενα</button>
-      <button id="searchBtn" class="mi">Αναζήτηση</button>
-      <button id="bmBtn" class="mi">Σελιδοδείκτης</button>
-      <button id="hlBtn" class="mi">Υπογραμμίσεις και σημειώσεις</button>
-      <button id="peopleBtn" class="mi">Πρόσωπα</button>
-      <button id="timerBtn" class="mi">Χρονόμετρο ανάγνωσης</button>
-      <button id="statsBtn" class="mi">Στατιστικά</button>
-      <button id="setBtn" class="mi">Ρυθμίσεις</button>
+      <button id="libBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3v16H5zM10 4h3v16h-3z"/><path d="M15.4 5.3l2.9-.8 3.5 15.1-2.9.8z"/></svg>Βιβλιοθήκη</button>
+      <button id="tocBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".9"/><circle cx="4.5" cy="12" r=".9"/><circle cx="4.5" cy="18" r=".9"/></svg>Περιεχόμενα</button>
+      <button id="searchBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>Αναζήτηση</button>
+      <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σελιδοδείκτης</button>
+      <button id="hlBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Υπογραμμίσεις και σημειώσεις</button>
+      <button id="peopleBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Πρόσωπα</button>
+      <button id="timerBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18.4 7.1l1.4-1.4"/></svg>Χρονόμετρο ανάγνωσης</button>
+      <button id="statsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M10 20V6M15 20v-10M20 20v-4"/></svg>Στατιστικά</button>
+      <button id="setBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Ρυθμίσεις</button>
       <input id="file" type="file" accept=".epub,application/epub+zip" hidden>
     </div>
     <div class="sheet toc" id="bms" hidden></div>
@@ -418,21 +419,29 @@ async function callClaude(prompt,signal,maxTok=8000){
 }
 const aiName=()=>S.ai==='gemini'?'Gemini':'Claude';
 const aiKeyName=()=>S.ai==='gemini'?'gkey':'apikey';
+const dgNote=t=>{if(dgRun){dgRun.note=t;updDgStat()}};
+function dgText(){if(!dgRun)return '';const sec=Math.round((Date.now()-(dgRun.t0||Date.now()))/1000);return (dgRun.mode==='roll'?`Το ${aiName()} διαβάζει τις σελίδες σου και γράφει την περίληψη… `:`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total} · `)+(sec>=60?Math.floor(sec/60)+'′ '+(sec%60)+'″':sec+'″')+(dgRun.note?`\n${dgRun.note}`:'')}
+function updDgStat(){document.querySelectorAll('.dgstat').forEach(e=>e.textContent=dgText())}
+setInterval(()=>{if(dgRun)updDgStat()},1000);
 const sleep=(ms,signal)=>new Promise((r,j)=>{const t=setTimeout(r,ms);if(signal)signal.addEventListener('abort',()=>{clearTimeout(t);j({code:'cancelled'})},{once:true})});
 const GMODELS=['gemini-3.8-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-2.5-flash'];
 async function callGemini(prompt,signal,maxTok=8192,json=false){
   const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null;
   for(const model of models){
     for(let attempt=0;attempt<4;attempt++){
-      let res;
-      try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
-        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(category=>({category,threshold:'BLOCK_NONE'})),generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},json?{responseMimeType:'application/json'}:{})})})}
-      catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
+      let res,timedOut=false;const ac=new AbortController(),onAb=()=>ac.abort();if(signal){if(signal.aborted)throw {code:'cancelled'};signal.addEventListener('abort',onAb,{once:true})}
+      const to=setTimeout(()=>{timedOut=true;ac.abort()},180000);
+      const think=store.get('gthink',true)?{thinkingConfig:/^gemini-2/.test(model)?{thinkingBudget:0}:{thinkingLevel:'low'}}:{};
+      try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal:ac.signal,headers:{'content-type':'application/json','x-goog-api-key':key},
+        body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],safetySettings:['HARM_CATEGORY_HARASSMENT','HARM_CATEGORY_HATE_SPEECH','HARM_CATEGORY_SEXUALLY_EXPLICIT','HARM_CATEGORY_DANGEROUS_CONTENT'].map(category=>({category,threshold:'BLOCK_NONE'})),generationConfig:Object.assign({temperature:0.3,maxOutputTokens:maxTok},think,json?{responseMimeType:'application/json'}:{})})})}
+      catch(e){clearTimeout(to);if(timedOut&&attempt<3){dgNote('Το '+aiName()+' αργεί να απαντήσει. Ξαναδοκιμάζω.');continue}throw {code:timedOut?'upstream_error':e&&e.name==='AbortError'?'cancelled':'offline'}}
+      clearTimeout(to);if(signal)signal.removeEventListener('abort',onAb);
       if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
         if(!t.trim())throw {code:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion'};
-        store.set('gmodel',model);return t}
+        store.set('gmodel',model);dgNote('');return t}
       let m='',delay=0;try{const j=await res.json();m=(j.error&&j.error.message)||'';const ri=((j.error&&j.error.details)||[]).find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0}catch(e){}
-      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){await sleep(Math.min(70,delay||20)*1000+500,signal);continue}throw {code:'rate_limited',message:m}}
+      if(res.status===400&&/thinking/i.test(m)&&store.get('gthink',true)){store.set('gthink',false);attempt--;continue}
+      if(res.status===429){if(/per ?day|perday|daily/i.test(m))throw {code:'quota_day',message:m};if(attempt<3){const w=Math.min(70,delay||20);dgNote(`Το δωρεάν Gemini δέχεται λίγα αιτήματα ανά λεπτό. Περιμένω ${Math.round(w)}″ και συνεχίζω μόνο του.`);await sleep(w*1000+500,signal);dgNote('');continue}throw {code:'rate_limited',message:m}}
       if(res.status===404||(/model/i.test(m)&&/not found|not supported|not available|unsupported/i.test(m))){lastErr={code:'upstream_error',message:m};break}
       if(/location|region|country/i.test(m))throw {code:'region',message:m};
       if(res.status===400&&/api key/i.test(m)||res.status===401||res.status===403)throw {code:'bad_key',message:m};
@@ -453,10 +462,10 @@ function segmentBook(b){
       segs.push({id:i+'.'+k,ci:i,start:s,end:e,text:t.slice(s,e).trim()});s=e;k++}});
   return segs;
 }
-function chunksOf(segs){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>CHUNK&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
+function chunksOf(segs,cs=CHUNK){const out=[];let cur=[],n=0;for(const s of segs){if(n+s.text.length>cs&&cur.length){out.push(cur);cur=[];n=0}cur.push(s);n+=s.text.length}if(cur.length)out.push(cur);return out}
 const getDg=id=>store.get('dg:'+id,null);
 const setDg=(id,d)=>store.set('dg:'+id,d);
-function digestState(b){const segs=segmentBook(b),chunks=chunksOf(segs),dd=getDg(b.id),d=dd&&dd.v===3?dd:{v:3,done:0,segs:{},chap:{},people:[]};if(!d.people)d.people=[];return {segs,chunks,d}}
+function digestState(b){const segs=segmentBook(b),dd=getDg(b.id),d=dd&&dd.v===3?dd:{v:3,done:0,segs:{},chap:{},people:[]};if(!d.people)d.people=[];if(!d.cs)d.cs=d.done>0?CHUNK:(S.ai==='gemini'?90000:CHUNK);const chunks=chunksOf(segs,d.cs);return {segs,chunks,d}}
 
 function chunkPrompt(b,chunk,d){
   const lastSeg={};for(const s of segmentBook(b))lastSeg[s.ci]=s.id;
@@ -487,6 +496,7 @@ async function digestChunk(b,chunk,d,signal){
   try{r=await sampleFn.json(chunkPrompt(b,work,d),{signal})}
   catch(e){
     if(!['refused','empty_completion','invalid_json'].includes(e&&e.code))throw e;
+    dgNote('Ένα κομμάτι δεν έγινε δεκτό από το '+aiName()+'. Το χωρίζω σε μικρότερα και συνεχίζω.');
     if(work.length>1){const h=Math.ceil(work.length/2);await digestChunk(b,chunk.filter(s=>work.slice(0,h).some(w=>w.id===s.id)),d,signal);await digestChunk(b,chunk.filter(s=>work.slice(h).some(w=>w.id===s.id)),d,signal);return}
     d.segs[work[0].id]=localDigest(b).segs[work[0].id]||'';return}
   const segs=(r&&r.segments)||{},chap=(r&&r.chapters)||{};
@@ -502,7 +512,7 @@ async function runDigest(b){
   digestChanged();
   try{
     for(let c=d.done;c<chunks.length;c++){
-      dgRun.at=c;digestChanged();
+      dgRun.at=c;dgRun.t0=Date.now();dgRun.note='';digestChanged();
       await digestChunk(b,chunks[c],d,dgRun.ctl.signal);
       d.done=c+1;setDg(b.id,d);
     }
@@ -596,34 +606,9 @@ function localPeople(pt){
 }
 function para(lab,text){const p=document.createElement('p');if(lab){const s=document.createElement('span');s.className='lab';s.textContent=lab;p.append(s)}p.append(text);return p}
 
-function showSumSheet(msg){
-  if(sumIdx<0||!book)return;
-  const b=getBms()[sumIdx];if(!b)return;
-  const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
-  body.innerHTML='';again.hidden=true;stop.hidden=true;
-  $('sumMeta').textContent=`Μέχρι: ${(book.chapters[b.ci]||{}).title||b.title} · ${b.pct}`;
-  const {chunks,d}=digestState(book),running=dgRun&&dgRun.id===book.id;
-  const s=summaryFor(b);
-  if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
-  if(!s){body.append(para('','Δεν βρέθηκε κείμενο για περίληψη μέχρι εδώ.'));return}
-  if(!s.earlier.length&&!s.now.length)body.append(para('','Είσαι ακόμα στην αρχή του βιβλίου, δεν υπάρχει κάτι να συνοψιστεί.'));
-  const earl=thin(s.earlier.map(e=>e.text),6,6),now=thin(s.now,6,4);
-  if(earl.length){const h=document.createElement('span');h.className='lab';h.textContent=s.earlier.length>earl.length?'Μέχρι τώρα (τα πιο σημαντικά)':'Μέχρι τώρα';body.append(h,bullets(earl))}
-  const h2=document.createElement('span');h2.className='lab';h2.textContent='Σε αυτό το κεφάλαιο';body.append(h2);
-  body.append(now.length?bullets(now):para('','Μόλις ξεκίνησες αυτό το κεφάλαιο.'));
-  if(S.bionic)bionic(body);
-  const note=document.createElement('p');note.className='summeta';
-  note.textContent=s.ai?`Περίληψη από το ${aiName()}.`:'Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου. Δεν χρειάζεται ίντερνετ ούτε χρέωση.';
-  body.append(note);
-  if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}. Μπορείς να κλείσεις το παράθυρο και να συνεχίσεις το διάβασμα.`;body.append(p);stop.hidden=false;return}
-  if(!s.ai&&sampleFn){
-    if(S.ai==='gemini'&&!msg){runDigest(book);return}
-    again.onclick=()=>{if(book)runDigest(book)};again.textContent=d.done?`Συνέχεια ανάγνωσης από το ${aiName()} (${chunks.length-d.done} μέρη)`:S.ai==='gemini'?'Κανονική περίληψη με Gemini':'Κανονική περίληψη με Claude (με χρέωση)';again.hidden=false}
-  else if(!s.ai&&!sampleFn){again.textContent='Κανονική περίληψη με τεχνητή νοημοσύνη';again.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};again.hidden=false}
-}
 function openSummary(i){sumIdx=i;closeAll();$('sum').hidden=false;showSumSheet()}
 $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
-$('sumAgain').onclick=()=>{if(book)runDigest(book)};
+
 
 /* ---------- navigation ---------- */
 function next(){onTurn();if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
@@ -772,7 +757,7 @@ async function buildLib(){
 async function deleteBook(id){
   if(id==='sample')store.set('hideSample',true);
   else{setLib(getLib().filter(x=>x.id!==id));await idbDel('books',id)}
-  for(const k of ['pos:','bm:','dg:','hl:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
+  for(const k of ['pos:','bm:','dg:','hl:','rs:'])try{localStorage.removeItem('xr:'+k+id)}catch(e){}
   if(book&&book.id===id){const nx=getLib().slice().sort((a,b)=>(b.opened||0)-(a.opened||0))[0];if(nx){try{await openFromLib(nx.id)}catch(e){openBook(SAMPLE)}}else openBook(SAMPLE)}
   buildLib();
 }
@@ -1056,30 +1041,115 @@ $('searchBtn').onclick=()=>openSearch(null);
 
 /* ---------- people (from Claude's one-time reading) ---------- */
 function curPoint(){return {ci,cf:(pi+1)/Math.max(1,pages)}}
+/* ---------- rolling summary: the AI reads only the pages since the last summary ---------- */
+const WIN=30000,MAXNEW=60000;
+const getRS=()=>book?store.get('rs:'+book.id,null):null;
+const setRS=v=>store.set('rs:'+book.id,v);
+const rollTried=new Set();
+function gPos(p){const fs=frontMatterEnd(book);if(p.ci<fs)return 0;let g=0;for(let c=fs;c<p.ci;c++)g+=chapTxt(c).length;return g+Math.round(chapTxt(p.ci).length*Math.min(1,Math.max(0,p.cf)))}
+function textRange(a,b){const fs=frontMatterEnd(book);let g=0,out='';
+  for(let c=fs;c<book.chapters.length&&g<b;c++){const t=chapTxt(c),L=t.length;if(g+L>a){const s=Math.max(0,a-g),e=Math.min(L,b-g);out+=(out?'\n\n':'')+t.slice(s,e)}g+=L}
+  return out}
+function localNotesRange(a,b){const L=localDigest(book),fs=frontMatterEnd(book),base={};let g=0;
+  for(let c=fs;c<book.chapters.length;c++){base[c]=g;g+=chapTxt(c).length}
+  const out=[];for(const s of segmentBook(book)){if(s.ci<fs)continue;const ratio=chapTxt(s.ci).length/Math.max(1,htmlText(book.chapters[s.ci].html).length),end=base[s.ci]+s.end*ratio;
+    if(end>a&&end<=b&&L.segs[s.id])out.push(L.segs[s.id])}
+  return thin(out,30,30)}
+function cleanText(t){return t.split(/\n\n/).map(p=>splitSentences(p).filter(x=>!META.test(fold(x))).join('').trim()).filter(Boolean).join('\n\n')}
+function rollPrompt(prev,notes,text){
+  const P=[];
+  P.push(`Βοηθάς έναν αναγνώστη με δυσκολία συγκέντρωσης να θυμάται την πλοκή του βιβλίου «${book.title}»${book.author?' ('+book.author+')':''}, που διαβάζει για προσωπική χρήση. Γράψε στα ελληνικά, με δικά σου απλά λόγια, χωρίς να αντιγράφεις φράσεις του κειμένου. Μην αναφέρεις τίποτα που δεν υπάρχει στο υλικό παρακάτω και μη μαντεύεις τη συνέχεια.`);
+  if(prev){P.push('ΠΕΡΙΛΗΨΗ ΜΕΧΡΙ ΤΗΝ ΠΡΟΗΓΟΥΜΕΝΗ ΦΟΡΑ:\n'+prev.story.map(x=>'- '+x).join('\n'));
+    if(prev.people&&prev.people.length)P.push('ΠΡΟΣΩΠΑ ΜΕΧΡΙ ΤΗΝ ΠΡΟΗΓΟΥΜΕΝΗ ΦΟΡΑ:\n'+prev.people.map(p=>`- ${p.name}: ${p.desc}`).join('\n'))}
+  if(notes.length)P.push('ΣΗΜΕΙΩΣΕΙΣ ΓΙΑ ΣΕΛΙΔΕΣ ΠΟΥ ΔΙΑΒΑΣΕ ΠΙΟ ΠΡΙΝ (φράσεις του βιβλίου διαλεγμένες αυτόματα, ίσως αποσπασματικές):\n'+notes.map(x=>'- '+x).join('\n'));
+  P.push(`${prev?'ΟΙ ΣΕΛΙΔΕΣ ΠΟΥ ΔΙΑΒΑΣΕ ΑΠΟ ΤΟΤΕ':'ΟΙ ΤΕΛΕΥΤΑΙΕΣ ΣΕΛΙΔΕΣ ΠΟΥ ΔΙΑΒΑΣΕ'} (μέχρι το σημείο όπου σταμάτησε):\n"""\n${text}\n"""`);
+  P.push(`Απάντησε μόνο με JSON αυτής της μορφής:
+{"story":["..."],"recent":["..."],"where":"...","people":[{"name":"...","desc":"..."}]}
+- story: 4 έως 10 σύντομες κουκκίδες (έως 18 λέξεις η καθεμία) για ΟΛΗ την ιστορία μέχρι εδώ, με χρονολογική σειρά.${prev?' Ενσωμάτωσε την προηγούμενη περίληψη, συμπύκνωσε τα παλιά και κράτα μόνο τα σημαντικά.':''}
+- recent: 2 έως 5 κουκκίδες για όσα έγιναν στις ${prev?'σελίδες από την προηγούμενη φορά':'τελευταίες σελίδες'}.
+- where: μία πρόταση για το ακριβές σημείο όπου σταμάτησε.
+- people: όλα τα σημαντικά πρόσωπα μέχρι εδώ, παλιά και καινούργια (έως 20). name όπως το λέει συνήθως το βιβλίο, desc ποιος είναι σε έως 15 λέξεις, μόνο με όσα έχουν φανεί μέχρι εδώ.`);
+  return P.join('\n\n');
+}
+async function rollSummary(p,signal){
+  const T=gPos(p),old=getRS(),prev=old&&old.pos<=T+50?old:null;
+  if(prev&&T-prev.pos<400)return prev;
+  const from=prev?prev.pos:0;let notes=[],ws=from;
+  if(T-from>(prev?MAXNEW:WIN)){ws=Math.max(from,T-WIN);notes=localNotesRange(from,ws)}
+  let text=cleanText(textRange(ws,T));
+  if(text.length<300&&!notes.length&&!prev)return null;
+  let r;
+  try{r=await sampleFn.json(rollPrompt(prev,notes,text),{signal})}
+  catch(e){
+    if(!['refused','empty_completion','invalid_json'].includes(e&&e.code)||text.length<4000)throw e;
+    dgNote('Το '+aiName()+' δεν δέχτηκε ένα κομμάτι. Ξαναδοκιμάζω με λιγότερες σελίδες.');
+    const cut=text.slice(-12000);notes=notes.concat(localNotesRange(ws,T-12000)).slice(-60);
+    r=await sampleFn.json(rollPrompt(prev,notes,cut),{signal});
+  }
+  const arr=x=>Array.isArray(x)?x.filter(y=>typeof y==='string'&&y.trim()).map(y=>y.trim()):[];
+  const people=Array.isArray(r&&r.people)?r.people.filter(x=>x&&typeof x.name==='string'&&x.name.trim()).slice(0,25).map(x=>({name:x.name.trim().slice(0,60),desc:typeof x.desc==='string'?x.desc.trim().slice(0,180):''})):[];
+  const v={pos:T,ci:p.ci,cf:p.cf,story:arr(r&&r.story).slice(0,12),recent:arr(r&&r.recent).slice(0,6),where:typeof(r&&r.where)==='string'?r.where.trim():'',people:people.length?people:(prev?prev.people:[]),t:Date.now(),by:aiName()};
+  if(!v.story.length&&!v.recent.length)throw {code:'empty_completion'};
+  setRS(v);return v;
+}
+async function startRoll(p){
+  if(dgRun||!sampleFn||!book)return;
+  rollTried.add(book.id+':'+gPos(p));
+  dgRun={id:book.id,mode:'roll',at:0,total:1,t0:Date.now(),note:'',ctl:new AbortController()};digestChanged();
+  let msg;
+  try{const v=await rollSummary(p,dgRun.ctl.signal);if(!v)msg='Δεν έχεις διαβάσει ακόμα αρκετές σελίδες για περίληψη.'}
+  catch(e){const c=e&&e.code;msg=c==='cancelled'?'Η περίληψη σταμάτησε.':(sumErr[c]||'Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο.')}
+  dgRun=null;digestChanged(msg);
+}
+function renderRoll(body,v){
+  const lab=t=>{const h=document.createElement('span');h.className='lab';h.textContent=t;body.append(h)};
+  if(v.story.length){lab('Η ιστορία μέχρι τώρα');body.append(bullets(v.story))}
+  if(v.recent.length){lab('Στις τελευταίες σελίδες');body.append(bullets(v.recent))}
+  if(v.where){lab('Πού σταμάτησες');body.append(para('',v.where))}
+}
+function renderLocal(body,p){
+  const s=summaryFor(p);
+  if(!s){body.append(para('','Δεν βρέθηκε κείμενο για περίληψη μέχρι εδώ.'));return}
+  if(!s.earlier.length&&!s.now.length){body.append(para('','Είσαι ακόμα στην αρχή του βιβλίου, δεν υπάρχει κάτι να συνοψιστεί.'));return}
+  const earl=thin(s.earlier.map(e=>e.text),6,6),now=thin(s.now,6,4);
+  if(earl.length){const h=document.createElement('span');h.className='lab';h.textContent='Μέχρι τώρα';body.append(h,bullets(earl))}
+  const h2=document.createElement('span');h2.className='lab';h2.textContent='Σε αυτό το κεφάλαιο';body.append(h2);
+  body.append(now.length?bullets(now):para('','Μόλις ξεκίνησες αυτό το κεφάλαιο.'));
+}
+function showSumSheet(msg){
+  if(sumIdx<0||!book)return;
+  const b=getBms()[sumIdx];if(!b)return;
+  const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
+  body.innerHTML='';again.hidden=true;stop.hidden=true;
+  $('sumMeta').textContent=`Μέχρι: ${(book.chapters[b.ci]||{}).title||b.title} · ${b.pct}`;
+  const T=gPos(b),rs=getRS(),running=dgRun&&dgRun.id===book.id;
+  const meta=t=>{const n=document.createElement('p');n.className='summeta';n.textContent=t;body.append(n)};
+  if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
+  if(rs&&Math.abs(rs.pos-T)<400&&!running){renderRoll(body,rs);if(S.bionic)bionic(body);meta(`Περίληψη από το ${rs.by}. Την επόμενη φορά θα διαβάσει μόνο τις καινούργιες σελίδες.`);return}
+  if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();body.append(p);stop.hidden=false;
+    meta('Στο μεταξύ, η δωρεάν περίληψη:')}
+  else if(sampleFn&&!msg&&!rollTried.has(book.id+':'+T)){startRoll(b);return}
+  renderLocal(body,b);if(S.bionic)bionic(body);
+  if(!running){
+    meta('Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου.');
+    if(sampleFn){again.textContent=`Περίληψη με ${aiName()}`;again.onclick=()=>startRoll(b);again.hidden=false}
+    else{again.textContent='Κανονική περίληψη με τεχνητή νοημοσύνη';again.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};again.hidden=false}
+  }
+}
 function buildPeople(msg){
   const el=$('peopleBody');el.innerHTML='';if(!book)return;
-  const {segs,chunks,d}=digestState(book),running=dgRun&&dgRun.id===book.id;
   const note=t=>{const p=document.createElement('p');p.className='summeta';p.textContent=t;el.append(p)};
+  const person=(n,d)=>{const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=n;b.children[1].textContent=d||'';b.onclick=()=>openSearch(n.split(/\s+/)[0]);el.append(b)};
+  const cur=curPoint(),C=gPos(cur),rs=getRS(),running=dgRun&&dgRun.id===book.id;
   if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;el.append(e)}
-  if(!d.done){
-    const list=localPeople(bmPoint(curPoint()));
-    note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα που διαβάζεις, με την πρώτη φράση όπου εμφανίστηκαν. Πάτα ένα όνομα για να το βρεις στο βιβλίο.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
-    for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc;b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
-    if(!running&&sampleFn&&S.ai==='gemini'&&!msg){runDigest(book);return}
-    if(running)note(`Το ${aiName()} διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}.`);
-    else if(sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Περιγραφές με '+aiName()+(S.ai==='claude'?' (με χρέωση)':'');b.onclick=()=>runDigest(book);w.append(b);el.append(w)}
-    return}
-  const pt=bmPoint(curPoint()),idx={};segs.forEach((s,i)=>idx[s.id]=i);
-  const ok=new Set(segs.filter(s=>s.ci<ci||(s.ci===ci&&s.end<=pt)).map(s=>s.id));
-  const by=new Map();
-  for(const p of d.people||[]){if(!ok.has(p.seg))continue;const i=idx[p.seg],c=by.get(p.name);
-    if(!c)by.set(p.name,{name:p.name,first:i,last:i,desc:p.desc});else{c.first=Math.min(c.first,i);if(i>=c.last&&p.desc){c.last=i;c.desc=p.desc}}}
-  const list=[...by.values()].sort((a,b)=>a.first-b.first);
-  if(!list.length)note('Δεν έχουν εμφανιστεί ακόμα σημαντικά πρόσωπα μέχρι το σημείο που διαβάζεις.');
-  else note('Μόνο όσα ξέρεις μέχρι τη σελίδα που διαβάζεις. Πάτα ένα όνομα για να το βρεις στο βιβλίο.');
-  for(const p of list){const b=document.createElement('button');b.className='person';b.innerHTML='<b></b><span></span>';b.children[0].textContent=p.name;b.children[1].textContent=p.desc||'';b.onclick=()=>openSearch(p.name.split(/\s+/)[0]);el.append(b)}
-  if(d.done<chunks.length){note(running?`Το ${aiName()} συνεχίζει να διαβάζει (μέρος ${dgRun.at+1} από ${dgRun.total}).`:`Το ${aiName()} έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου.`);
-    if(!running&&sampleFn){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent='Συνέχεια ανάγνωσης από το '+aiName();b.onclick=()=>runDigest(book);w.append(b);el.append(w)}}
+  if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();el.append(p)}
+  const fresh=rs&&rs.people&&rs.people.length&&rs.pos<=C+400;
+  if(fresh){note(`Από την τελευταία περίληψη του ${rs.by}. Πάτα ένα όνομα για να το βρεις στο βιβλίο.`);rs.people.forEach(p=>person(p.name,p.desc))}
+  else{const list=localPeople(bmPoint(cur));
+    note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα σου, με την πρώτη φράση όπου εμφανίστηκαν.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
+    list.forEach(p=>person(p.name,p.desc))}
+  if(!running&&sampleFn&&!(fresh&&C-rs.pos<400)){const w=document.createElement('div');w.className='libtools';const b=document.createElement('button');b.textContent=fresh?'Ενημέρωση μέχρι αυτή τη σελίδα':`Περιγραφές με ${aiName()}`;b.onclick=()=>startRoll(cur);w.append(b);el.append(w)}
+  if(!sampleFn)note('Για περιγραφές γραμμένες από τεχνητή νοημοσύνη, διάλεξε Gemini (δωρεάν) στις Ρυθμίσεις.');
 }
 function digestChanged(msg){showSumSheet(msg);if(!$('people').hidden)buildPeople(msg)}
 $('peopleBtn').onclick=()=>{closeAll();buildPeople();$('people').hidden=false};
@@ -1087,8 +1157,10 @@ $('peopleBtn').onclick=()=>{closeAll();buildPeople();$('people').hidden=false};
 /* ---------- "where was I?" on reopening a book ---------- */
 function maybeRecap(prevT){
   if(!prevT||Date.now()-prevT<8*3600e3||!book)return;
-  const s=summaryFor(curPoint());if(!s)return;
-  const items=[...s.earlier.slice(-2).map(e=>e.text),...s.now.slice(-3)];if(!items.length)return;
+  const C=gPos(curPoint()),rs=getRS();let items;
+  if(rs&&rs.pos<=C+400&&C-rs.pos<20000)items=[...rs.story.slice(-3),...(rs.where?[rs.where]:[])];
+  else{const s=summaryFor(curPoint());if(!s)return;items=[...s.earlier.slice(-2).map(e=>e.text),...s.now.slice(-3)]}
+  if(!items.length)return;
   const body=$('recapBody');body.innerHTML='';
   const days=Math.round((Date.now()-prevT)/864e5);const h=document.createElement('p');h.className='summeta';
   h.textContent=days>=2?`Τελευταία φορά διάβασες πριν από ${days} ημέρες. Θυμήσου πού ήσουν:`:'Θυμήσου πού ήσουν:';
