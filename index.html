@@ -56,7 +56,7 @@ button,.filebtn{font:500 13px var(--font-ui);color:var(--ink);background:transpa
 button:focus-visible,.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .filebtn input{position:absolute;opacity:0;width:1px;height:1px}
-.stage{flex:1;position:relative;overflow:hidden;margin-block:10px 8px;min-height:0}
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip;margin-block:10px 8px;min-height:0}
 #page{height:100%;column-fill:auto;font-family:var(--font-read);font-size:var(--fs);line-height:var(--lh);hyphens:manual;-webkit-hyphens:manual;text-align:var(--align);font-weight:300;transition:transform .0s}
 #page p{margin:0 0 .9em;text-indent:0}
 #page p.first,#page h1+p,#page h2+p,#page h3+p,#page hr+p{text-indent:0}
@@ -97,6 +97,15 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .sheet.full{bottom:0}
 .sheet{grid-template-columns:minmax(0,1fr)}
 .askf{width:100%;box-sizing:border-box}
+#settings{gap:0}
+details.grp{border-bottom:1px solid var(--rule)}
+details.grp:last-child{border-bottom:0}
+details.grp summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 2px;font:500 15px var(--font-ui);color:var(--ink);cursor:pointer;-webkit-user-select:none;user-select:none}
+details.grp summary::-webkit-details-marker{display:none}
+details.grp summary>svg:first-child{width:20px;height:20px;color:var(--ink-soft);flex:none}
+details.grp summary .chev{margin-left:auto;color:var(--ink-soft);transition:transform .2s}
+details.grp[open] summary .chev{transform:rotate(180deg)}
+.gbody{display:grid;gap:14px;padding:2px 2px 18px;animation:drop .18s ease-out}
 .sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .sgrid button{flex-direction:column;justify-content:center;gap:8px;height:96px;font:400 14px var(--font-ui);border-radius:10px;text-align:center;padding:8px}
 .sgrid button svg{width:26px;height:26px;flex:none}
@@ -233,26 +242,38 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
     </div>
     <div class="sheet toc" id="bms" hidden></div>
     <div class="sheet" id="settings" hidden>
-      <div class="row"><span>Bionic reading</span><button id="bnBtn" aria-pressed="true">Ενεργή</button></div>
-      <div class="row"><span>Ένταση</span><div class="seg" id="bnLvl"><button data-v="0.4">Ήπια</button><button data-v="0.5">Μέτρια</button><button data-v="0.6">Δυνατή</button></div></div>
-      <div class="row"><span>Γραμματοσειρά</span><div class="seg" id="ffSeg"><button data-v="Times" style="font-family:'Times New Roman',Tinos,serif">Times New Roman</button><button data-v="Futura" style="font-family:Futura,'Didact Gothic',sans-serif">Futura</button><button data-v="System" style="font-family:system-ui,sans-serif">Συστήματος</button><button data-v="Literata" style="font-family:Literata,serif">Literata</button><button data-v="Noto Serif" style="font-family:'Noto Serif',serif">Noto Serif</button><button data-v="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button><button data-v="Roboto Slab" style="font-family:'Roboto Slab',serif">Roboto Slab</button></div></div>
-      <div class="row"><span>Μέγεθος γραμμάτων</span><div class="seg"><button id="fsDown" aria-label="Μικρότερα">A−</button><button id="fsUp" aria-label="Μεγαλύτερα">A+</button></div></div>
-      <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
-      <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
-      <div class="row"><span>Γύρισμα σελίδας</span><div class="seg" id="trSeg"><button data-v="blur">Θόλωμα</button><button data-v="slide">Ολίσθηση</button></div></div>
-      <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button><button data-v="warm">Ζεστό</button></div></div>
-      <div class="row"><span>Πλάτος κειμένου</span><div class="seg" id="wdSeg"><button data-v="0">Κανονικό</button><button data-v="1">Στενό</button></div></div>
-      <div class="row"><span>Οδηγός γραμμής</span><button id="guideBtn" aria-pressed="false">Ανενεργός</button></div>
-      <p class="hint" style="margin-top:-6px">Φωτίζει τη γραμμή που διαβάζεις και αχνίζει τις υπόλοιπες. Πάτα δεξιά για την επόμενη γραμμή, αριστερά για την προηγούμενη. Για αλλαγή σελίδας σύρε το δάχτυλο.</p>
-      <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
-      <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
-      <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini (φυσική)</button><button data-v="iphone">iPhone</button></div></div>
-      <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
-      <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
-      <p class="hint" id="apiHint"></p>
-      <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
-      <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις. Τα ίδια τα βιβλία δεν μπαίνουν: σε νέο κινητό τα ξαναπροσθέτεις και η πρόοδός τους επανέρχεται.</p>
-      <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
+      <details class="grp" data-g="text"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19l5-14 5 14M6 14h6"/><path d="M15 19v-5.5a2.5 2.5 0 0 1 5 0V19M15 16h5"/></svg><span>Γράμματα και Bionic reading</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <div class="row"><span>Bionic reading</span><button id="bnBtn" aria-pressed="true">Ενεργή</button></div>
+        <div class="row"><span>Ένταση</span><div class="seg" id="bnLvl"><button data-v="0.4">Ήπια</button><button data-v="0.5">Μέτρια</button><button data-v="0.6">Δυνατή</button></div></div>
+        <div class="row"><span>Γραμματοσειρά</span><div class="seg" id="ffSeg"><button data-v="Times" style="font-family:'Times New Roman',Tinos,serif">Times New Roman</button><button data-v="Futura" style="font-family:Futura,'Didact Gothic',sans-serif">Futura</button><button data-v="System" style="font-family:system-ui,sans-serif">Συστήματος</button><button data-v="Literata" style="font-family:Literata,serif">Literata</button><button data-v="Noto Serif" style="font-family:'Noto Serif',serif">Noto Serif</button><button data-v="Open Sans" style="font-family:'Open Sans',sans-serif">Open Sans</button><button data-v="Roboto Slab" style="font-family:'Roboto Slab',serif">Roboto Slab</button></div></div>
+        <div class="row"><span>Μέγεθος γραμμάτων</span><div class="seg"><button id="fsDown" aria-label="Μικρότερα">A−</button><button id="fsUp" aria-label="Μεγαλύτερα">A+</button></div></div>
+        <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
+        <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
+        <div class="row"><span>Πλάτος κειμένου</span><div class="seg" id="wdSeg"><button data-v="0">Κανονικό</button><button data-v="1">Στενό</button></div></div>
+      </div></details>
+      <details class="grp" data-g="look"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg><span>Εμφάνιση</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button><button data-v="warm">Ζεστό</button></div></div>
+        <div class="row"><span>Γύρισμα σελίδας</span><div class="seg" id="trSeg"><button data-v="blur">Θόλωμα</button><button data-v="slide">Ολίσθηση</button></div></div>
+      </div></details>
+      <details class="grp" data-g="focus"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/></svg><span>Συγκέντρωση</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <div class="row"><span>Οδηγός γραμμής</span><button id="guideBtn" aria-pressed="false">Ανενεργός</button></div>
+        <p class="hint" style="margin-top:-6px">Φωτίζει τη γραμμή που διαβάζεις και αχνίζει τις υπόλοιπες. Πάτα δεξιά για την επόμενη γραμμή, αριστερά για την προηγούμενη. Για αλλαγή σελίδας σύρε το δάχτυλο.</p>
+        <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
+        <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
+      </div></details>
+      <details class="grp" data-g="ai"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg><span>Τεχνητή νοημοσύνη και φωνή</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
+        <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
+        <p class="hint" id="apiHint"></p>
+        <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini (φυσική)</button><button data-v="iphone">iPhone</button></div></div>
+      </div></details>
+      <details class="grp" data-g="backup"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 9a3.5 3.5 0 0 1 .5 7"/><path d="M12 12v8M9 15l3-3 3 3"/></svg><span>Αντίγραφο ασφαλείας</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
+        <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις. Τα ίδια τα βιβλία δεν μπαίνουν: σε νέο κινητό τα ξαναπροσθέτεις και η πρόοδός τους επανέρχεται.</p>
+      </div></details>
+      <details class="grp" data-g="help"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.8v.01"/></svg><span>Οδηγίες</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
+        <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
+      </div></details>
     </div>
     <div class="sheet toc" id="toc" hidden></div>
     <div class="sheet full" id="lib" hidden>
@@ -1179,7 +1200,7 @@ function showSumSheet(msg){
   if(!running){
     meta('Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου.');
     if(sampleFn){again.textContent=`Περίληψη με ${aiName()}`;again.onclick=()=>startRoll(b);again.hidden=false}
-    else{again.textContent='Κανονική περίληψη με τεχνητή νοημοσύνη';again.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};again.hidden=false}
+    else{again.textContent='Κανονική περίληψη με τεχνητή νοημοσύνη';again.onclick=()=>{closeAll();openSetting('aiSeg')};again.hidden=false}
   }
 }
 function buildPeople(msg){
@@ -1321,7 +1342,7 @@ const setQA=l=>store.set('qa:'+book.id,l.slice(-30));
 function buildAsk(){
   const el=$('askLog');el.innerHTML='';const l=getQA();
   if(!sampleFn){el.innerHTML='';const p=document.createElement('p');p.className='summeta';p.textContent='Για να απαντά στις ερωτήσεις σου, διάλεξε Gemini (δωρεάν) στις Ρυθμίσεις → Περιλήψεις με τεχνητή νοημοσύνη.';
-    const b=document.createElement('button');b.textContent='Άνοιγμα Ρυθμίσεων';b.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('aiSeg').scrollIntoView({block:'center'}),50)};el.append(p,b);$('askForm').hidden=true;return}
+    const b=document.createElement('button');b.textContent='Άνοιγμα Ρυθμίσεων';b.onclick=()=>{closeAll();openSetting('aiSeg')};el.append(p,b);$('askForm').hidden=true;return}
   $('askForm').hidden=false;
   if(!l.length){const p=document.createElement('p');p.className='summeta';p.textContent='Ρώτα οτιδήποτε για όσα έχεις διαβάσει. Οι απαντήσεις βασίζονται μόνο στις σελίδες μέχρι εκεί που βρίσκεσαι, χωρίς αποκαλύψεις για τη συνέχεια.';el.append(p);
     const rs=getRS(),who=rs&&rs.people&&rs.people[0]?rs.people[0].name:'';
@@ -1411,6 +1432,9 @@ $('sumSpeak').onclick=async()=>{
     const m=document.createElement('p');m.className='summeta';m.textContent='Η φωνή του Gemini δεν είναι διαθέσιμη αυτή τη στιγμή, οπότε διαβάζει η φωνή του iPhone.';$('sumBody').append(m);
     if('speechSynthesis' in window)speakIphone(parts);else setSpk(false)}
 };
+stage.addEventListener('scroll',()=>{if(stage.scrollLeft||stage.scrollTop){stage.scrollLeft=0;stage.scrollTop=0}});
+function openSetting(id){$('settings').hidden=false;const el=$(id),d=el&&el.closest('details');if(d)d.open=true;setTimeout(()=>el&&el.scrollIntoView({block:'center'}),60)}
+document.querySelectorAll('#settings details.grp').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('#settings details.grp').forEach(o=>{if(o!==d)o.open=false})}));
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
