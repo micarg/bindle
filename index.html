@@ -239,6 +239,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
       <div class="row"><span>Μέγεθος γραμμάτων</span><div class="seg"><button id="fsDown" aria-label="Μικρότερα">A−</button><button id="fsUp" aria-label="Μεγαλύτερα">A+</button></div></div>
       <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
       <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
+      <div class="row"><span>Γύρισμα σελίδας</span><div class="seg" id="trSeg"><button data-v="blur">Θόλωμα</button><button data-v="slide">Ολίσθηση</button></div></div>
       <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button><button data-v="warm">Ζεστό</button></div></div>
       <div class="row"><span>Πλάτος κειμένου</span><div class="seg" id="wdSeg"><button data-v="0">Κανονικό</button><button data-v="1">Στενό</button></div></div>
       <div class="row"><span>Οδηγός γραμμής</span><button id="guideBtn" aria-pressed="false">Ανενεργός</button></div>
@@ -306,7 +307,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({loud:0,voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({turn:'blur',loud:0,voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
@@ -328,7 +329,7 @@ function applyVars(){
   if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
   $('guideBtn').setAttribute('aria-pressed',!!S.guide);$('guideBtn').textContent=S.guide?'Ενεργός':'Ανενεργός';
-  for(const [seg,key] of [['vcSeg','voice'],['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  for(const [seg,key] of [['trSeg','turn'],['vcSeg','voice'],['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -364,14 +365,21 @@ function readChars(){const c=book.chars[ci]||0;return sum(book.chars.slice(0,ci)
 function measureCpp(){const c=book.chars[ci]||0;if(pages>=3&&c>1500){const v=Math.round(c/(pages-0.5));if(Math.abs(v-cpp)>20){cpp=v;store.set('cpp',cpp)}}}
 
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let turnAnim=null;
+function focusTurn(){
+  const apply=()=>{page.style.transition='none';page.style.transform=`translateX(${-pi*geom().step}px)`};
+  if(turnAnim){turnAnim.cancel();turnAnim=null;apply();return}
+  turnAnim=stage.animate([{filter:'blur(0px)',opacity:1},{filter:'blur(6px)',opacity:0.1}],{duration:170,easing:'ease-in',fill:'forwards'});
+  turnAnim.onfinish=()=>{const a=turnAnim;turnAnim=null;apply();stage.animate([{filter:'blur(6px)',opacity:0.1},{filter:'blur(0px)',opacity:1}],{duration:260,easing:'ease-out'});if(a)a.cancel()};
+}
 function layout(keep,anim){
   const {gap,m,cw,step}=geom();
   page.style.marginLeft=m+'px';page.style.width=cw+'px';page.style.columnWidth=cw+'px';page.style.columnGap=(gap+2*m)+'px';
   pages=Math.max(1,Math.ceil((page.scrollWidth+gap+2*m-2)/step));
   if(keep==='end')pi=pages-1;
   pi=Math.min(Math.max(0,pi),pages-1);
-  page.style.transition=anim&&!RM?'transform .38s cubic-bezier(.25,.8,.25,1)':'none';
-  page.style.transform=`translateX(${-pi*step}px)`;
+  if(anim&&!RM&&S.turn!=='slide'&&stage.animate)focusTurn();
+  else{if(turnAnim){turnAnim.cancel();turnAnim=null}page.style.transition=anim&&!RM?'transform .38s cubic-bezier(.25,.8,.25,1)':'none';page.style.transform=`translateX(${-pi*step}px)`}
   measureCpp();
   updateFoot();
   updateGuide();
@@ -396,7 +404,7 @@ function markHeads(root){
   }else marked.forEach(e=>e.classList.remove('hd','h-num','h-sep'));
 }
 function renderChapter(keep,fade){
-  if(fade&&!RM&&page.animate)page.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'});
+  if(fade&&!RM&&stage.animate){if(turnAnim){turnAnim.cancel();turnAnim=null}if(S.turn==='slide')page.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'});else stage.animate([{filter:'blur(6px)',opacity:0.1},{filter:'blur(0px)',opacity:1}],{duration:340,easing:'ease-out'})}
   const ch=book.chapters[ci];
   page.innerHTML=ch.html;
   markHeads(page);
@@ -838,7 +846,7 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['trSeg','turn',0],['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
