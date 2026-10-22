@@ -163,6 +163,8 @@ img{max-width:100%}
       <div class="row"><span>Στοίχιση</span><div class="seg" id="alSeg"><button data-v="left">Αριστερή</button><button data-v="justify">Πλήρης</button></div></div>
       <div class="row"><span>Διάστιχο</span><div class="seg" id="lhSeg"><button data-v="1.55">Πυκνό</button><button data-v="1.75">Κανονικό</button><button data-v="2">Αραιό</button></div></div>
       <div class="row"><span>Φόντο</span><div class="seg" id="thSeg"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button></div></div>
+      <div class="row"><span>Η οθόνη μένει ανοιχτή</span><div class="seg" id="wkSeg"><button data-v="0">Όχι</button><button data-v="5">5′</button><button data-v="15">15′</button><button data-v="-1">Πάντα</button></div></div>
+      <p class="hint" style="margin-top:-6px">Η οθόνη δεν σβήνει όσο διαβάζεις. Με 5′ ή 15′ σβήνει μόνο αν περάσει τόσος χρόνος χωρίς να γυρίσεις σελίδα, για να μη χαλάει μπαταρία αν το ξεχάσεις.</p>
       <div class="row"><span>Μουσική ενώ διαβάζεις</span><button id="radioBtn" class="radio" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="16" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span id="radioLbl">Classic FM</span></button></div>
       <div class="row"><span>Κλειδί Claude API (για τις περιλήψεις)</span></div>
       <div class="row keyrow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."><button id="apiSave">Αποθήκευση</button></div>
@@ -195,7 +197,7 @@ img{max-width:100%}
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
-let S=Object.assign({bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+let S=Object.assign({wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
@@ -215,7 +217,7 @@ function applyVars(){
   r.setProperty('--font-read',S.font==='Futura'?'Futura, "Futura PT", "Didact Gothic", sans-serif':S.font==='Times'?'"Times New Roman", Times, Tinos, serif':S.font==='System'?'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif':`"${S.font}", ${S.font==='Open Sans'?'system-ui, sans-serif':'Georgia, serif'}`);
   if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);else document.documentElement.removeAttribute('data-theme');
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
-  for(const [seg,key] of [['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  for(const [seg,key] of [['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -585,7 +587,7 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
@@ -593,6 +595,27 @@ $('apiKey').value=store.get('apikey','');
 $('apiSave').onclick=()=>{store.set('apikey',$('apiKey').value.trim());sampleFn=makeSample();$('apiSave').textContent=sampleFn?'Αποθηκεύτηκε':'Αποθήκευση';setTimeout(()=>$('apiSave').textContent='Αποθήκευση',1600)};
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 ['gesturestart','gesturechange','gestureend'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+/* ---------- keep the screen on while reading ---------- */
+let wl=null,wkVideo=null,wkTimer=null,wkOn=false;
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+async function wakeOn(){
+  if(document.visibilityState!=='visible')return;
+  wkOn=true;
+  if('wakeLock' in navigator&&!wl){try{wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}catch(e){wl=null}}
+  if(isIOS||!('wakeLock' in navigator)){
+    if(!wkVideo){wkVideo=document.createElement('video');wkVideo.src='wake.mp4';wkVideo.muted=true;wkVideo.loop=true;wkVideo.playsInline=true;wkVideo.setAttribute('playsinline','');wkVideo.setAttribute('muted','');wkVideo.setAttribute('aria-hidden','true');wkVideo.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:0;top:0';document.body.append(wkVideo)}
+    if(wkVideo.paused)wkVideo.play().catch(()=>{});
+  }
+}
+function wakeOff(){wkOn=false;clearTimeout(wkTimer);if(wl){wl.release().catch(()=>{});wl=null}if(wkVideo&&!wkVideo.paused)wkVideo.pause()}
+function wakePing(){
+  const m=+S.wake;if(!m){if(wkOn)wakeOff();return}
+  wakeOn();clearTimeout(wkTimer);
+  if(m>0)wkTimer=setTimeout(wakeOff,m*60000);
+}
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,wakePing,{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&wkOn){wl=null;wakeOn()}});
+$('wkSeg').addEventListener('click',()=>setTimeout(wakePing,0));
 /* ---------- radio ---------- */
 const STREAMS=['https://ice-the.musicradio.com/ClassicFMMP3','https://media-ssl.musicradio.com/ClassicFM','https://media-the.musicradio.com/ClassicFM'];
 let radio=null,radioState='off';
