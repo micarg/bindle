@@ -1137,8 +1137,11 @@ function showSumSheet(msg){
   if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
   if(rs&&Math.abs(rs.pos-T)<400&&!running){renderRoll(body,rs);if(S.bionic)bionic(body);meta(`Περίληψη από το ${rs.by}. Την επόμενη φορά θα διαβάσει μόνο τις καινούργιες σελίδες.`);return}
   if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();body.append(p);stop.hidden=false;
-    meta('Στο μεταξύ, η δωρεάν περίληψη:')}
+    if(sampleFn){meta('Συνήθως παίρνει 10–30 δευτερόλεπτα. Μπορείς να κλείσεις το παράθυρο και να διαβάζεις.');return}}
   else if(sampleFn&&!msg&&!rollTried.has(book.id+':'+T)){startRoll(b);return}
+  if(sampleFn){
+    if(rs&&rs.pos<T){renderRoll(body,rs);if(S.bionic)bionic(body);meta(`Αυτή είναι η προηγούμενη περίληψη, μέχρι ${Math.max(1,Math.ceil((T-rs.pos)/PRINT))} σελίδες πιο πριν.`)}
+    again.textContent='Δοκίμασε ξανά';again.onclick=()=>startRoll(b);again.hidden=false;return}
   renderLocal(body,b);if(S.bionic)bionic(body);
   if(!running){
     meta('Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου.');
@@ -1155,6 +1158,7 @@ function buildPeople(msg){
   if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();el.append(p)}
   const fresh=rs&&rs.people&&rs.people.length&&rs.pos<=C+400;
   if(fresh){note(`Από την τελευταία περίληψη του ${rs.by}. Πάτα ένα όνομα για να το βρεις στο βιβλίο.`);rs.people.forEach(p=>person(p.name,p.desc))}
+  else if(sampleFn){if(!running)note(`Πάτα το κουμπί για να γράψει το ${aiName()} ποια είναι τα πρόσωπα μέχρι τη σελίδα σου.`)}
   else{const list=localPeople(bmPoint(cur));
     note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα σου, με την πρώτη φράση όπου εμφανίστηκαν.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
     list.forEach(p=>person(p.name,p.desc))}
@@ -1169,6 +1173,7 @@ function maybeRecap(prevT){
   if(!prevT||Date.now()-prevT<8*3600e3||!book)return;
   const C=gPos(curPoint()),rs=getRS();let items;
   if(rs&&rs.pos<=C+400&&C-rs.pos<20000)items=[...rs.story.slice(-3),...(rs.where?[rs.where]:[])];
+  else if(sampleFn)return;
   else{const s=summaryFor(curPoint());if(!s)return;items=[...s.earlier.slice(-2).map(e=>e.text),...s.now.slice(-3)]}
   if(!items.length)return;
   const body=$('recapBody');body.innerHTML='';
