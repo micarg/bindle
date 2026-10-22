@@ -321,7 +321,7 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
       </div></details>
       <details class="grp" data-g="backup"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 9a3.5 3.5 0 0 1 .5 7"/><path d="M12 12v8M9 15l3-3 3 3"/></svg><span>Αντίγραφο ασφαλείας</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
         <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
-        <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις. Τα ίδια τα βιβλία δεν μπαίνουν: σε νέο κινητό τα ξαναπροσθέτεις και η πρόοδός τους επανέρχεται.</p>
+        <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά τα βιβλία, την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις, όλα σε ένα αρχείο. Αποθήκευσέ το στα Αρχεία ή στο iCloud.</p>
       </div></details>
       <details class="grp" data-g="help"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.8v.01"/></svg><span>Οδηγίες</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
         <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
@@ -1414,18 +1414,29 @@ function maybeRecap(prevT){
 $('recapGo').onclick=()=>closeAll();
 
 /* ---------- backup ---------- */
+const b2d=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
 $('bkExp').onclick=async()=>{
-  const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('xr:')&&k!=='xr:apikey')data[k]=localStorage.getItem(k)}
-  const json=JSON.stringify({app:'bindle',v:1,date:new Date().toISOString(),data}),name=`bindle-${dayKey()}.json`;
-  let file;try{file=new File([json],name,{type:'application/json'})}catch(e){file=new Blob([json],{type:'application/json'})}
-  try{if(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Αντίγραφο Bindle'});return}}catch(e){if(e&&e.name==='AbortError')return}
-  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+  const hint=$('bkHint'),old=hint.textContent;hint.textContent='Ετοιμάζω το αντίγραφο με τα βιβλία σου…';
+  try{
+    const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('xr:')&&k!=='xr:apikey')data[k]=localStorage.getItem(k)}
+    const books=[];for(const e of getLib()){const rec=await idbGet('books',e.id);if(rec&&rec.buf)books.push({id:e.id,epub:await b2d(new Blob([rec.buf],{type:'application/epub+zip'}))})}
+    const json=JSON.stringify({app:'bindle',v:2,date:new Date().toISOString(),data,books}),name=`bindle-${dayKey()}.json`;
+    let file;try{file=new File([json],name,{type:'application/json'})}catch(e){file=new Blob([json],{type:'application/json'})}
+    hint.textContent=old;
+    try{if(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Αντίγραφο Bindle'});return}}catch(e){if(e&&e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+  }catch(e){hint.textContent='Δεν έγινε το αντίγραφο. Δοκίμασε ξανά.'}
 };
-$('bkImp').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+$('bkImp').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const hint=$('bkHint');
   try{const j=JSON.parse(await f.text());if(!j||j.app!=='bindle'||typeof j.data!=='object')throw 0;
     for(const [k,v] of Object.entries(j.data))if(k.startsWith('xr:')&&k!=='xr:apikey'&&typeof v==='string')localStorage.setItem(k,v);
-    $('bkHint').textContent='Η επαναφορά έγινε. Η εφαρμογή ξαναφορτώνει…';setTimeout(()=>location.reload(),900)}
-  catch(err){$('bkHint').textContent='Αυτό το αρχείο δεν είναι αντίγραφο ασφαλείας του Bindle.'}});
+    const books=Array.isArray(j.books)?j.books:[];let n=0;
+    for(const bk of books){try{hint.textContent=`Επαναφέρω τα βιβλία… ${++n} από ${books.length}`;
+      const buf=await (await fetch(bk.epub)).arrayBuffer(),b=await parseEpub(buf);
+      await idbPut('books',b.id,{buf,cover:b.cover});saveParsed(b);
+      if(!getLib().some(x=>x.id===b.id)){const l=getLib();l.push({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:0});setLib(l)}}catch(err){}}
+    hint.textContent='Η επαναφορά έγινε. Η εφαρμογή ξαναφορτώνει…';setTimeout(()=>location.reload(),900)}
+  catch(err){hint.textContent='Αυτό το αρχείο δεν είναι αντίγραφο ασφαλείας του Bindle.'}});
 
 /* ---------- keep the screen on while reading ---------- */
 let wl=null,wkVideo=null,wkTimer=null,wkOn=false;
