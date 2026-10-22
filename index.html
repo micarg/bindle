@@ -268,7 +268,7 @@ textarea{font:400 16px/1.4 var(--font-ui);color:var(--ink);background:transparen
     <div class="sheet full" id="sum" hidden>
       <div class="summeta" id="sumMeta"></div>
       <div class="sumtext" id="sumBody"></div>
-      <div class="libtools"><button id="sumStop" hidden>Διακοπή</button><button id="sumAgain" hidden>Νέα περίληψη</button></div>
+      <div class="libtools"><button id="sumSpeak" hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="spkLbl">Ακρόαση</span></button><button id="sumStop" hidden>Διακοπή</button><button id="sumAgain" hidden>Νέα περίληψη</button></div>
     </div>
   </main>
   <footer class="foot" id="foot">
@@ -1130,19 +1130,19 @@ function showSumSheet(msg){
   if(sumIdx<0||!book)return;
   const b=getBms()[sumIdx];if(!b)return;
   const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
-  body.innerHTML='';again.hidden=true;stop.hidden=true;
+  body.innerHTML='';again.hidden=true;stop.hidden=true;$('sumSpeak').hidden=true;
   $('sumMeta').textContent=`Μέχρι: ${(book.chapters[b.ci]||{}).title||b.title} · ${b.pct}`;
   const T=gPos(b),rs=getRS(),running=dgRun&&dgRun.id===book.id;
   const meta=t=>{const n=document.createElement('p');n.className='summeta';n.textContent=t;body.append(n)};
   if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
-  if(rs&&Math.abs(rs.pos-T)<400&&!running){renderRoll(body,rs);if(S.bionic)bionic(body);meta(`Περίληψη από το ${rs.by}. Την επόμενη φορά θα διαβάσει μόνο τις καινούργιες σελίδες.`);return}
+  if(rs&&Math.abs(rs.pos-T)<400&&!running){renderRoll(body,rs);spkReady();meta(`Περίληψη από το ${rs.by}. Την επόμενη φορά θα διαβάσει μόνο τις καινούργιες σελίδες.`);return}
   if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();body.append(p);stop.hidden=false;
     if(sampleFn){meta('Συνήθως παίρνει 10–30 δευτερόλεπτα. Μπορείς να κλείσεις το παράθυρο και να διαβάζεις.');return}}
   else if(sampleFn&&!msg&&!rollTried.has(book.id+':'+T)){startRoll(b);return}
   if(sampleFn){
-    if(rs&&rs.pos<T){renderRoll(body,rs);if(S.bionic)bionic(body);meta(`Αυτή είναι η προηγούμενη περίληψη, μέχρι ${Math.max(1,Math.ceil((T-rs.pos)/PRINT))} σελίδες πιο πριν.`)}
+    if(rs&&rs.pos<T){renderRoll(body,rs);spkReady();meta(`Αυτή είναι η προηγούμενη περίληψη, μέχρι ${Math.max(1,Math.ceil((T-rs.pos)/PRINT))} σελίδες πιο πριν.`)}
     again.textContent='Δοκίμασε ξανά';again.onclick=()=>startRoll(b);again.hidden=false;return}
-  renderLocal(body,b);if(S.bionic)bionic(body);
+  renderLocal(body,b);spkReady();
   if(!running){
     meta('Δωρεάν περίληψη: οι πιο σημαντικές φράσεις του ίδιου του βιβλίου, διαλεγμένες μέσα στο κινητό σου.');
     if(sampleFn){again.textContent=`Περίληψη με ${aiName()}`;again.onclick=()=>startRoll(b);again.hidden=false}
@@ -1179,7 +1179,7 @@ function maybeRecap(prevT){
   const body=$('recapBody');body.innerHTML='';
   const days=Math.round((Date.now()-prevT)/864e5);const h=document.createElement('p');h.className='summeta';
   h.textContent=days>=2?`Τελευταία φορά διάβασες πριν από ${days} ημέρες. Θυμήσου πού ήσουν:`:'Θυμήσου πού ήσουν:';
-  body.append(h,bullets(items));if(S.bionic)bionic(body);
+  body.append(h,bullets(items));
   closeAll();$('recap').hidden=false;
 }
 $('recapGo').onclick=()=>closeAll();
@@ -1239,6 +1239,23 @@ $('radioBtn').onclick=()=>{radioState==='off'?startRadio():stopRadio()};
 {const upd=()=>document.body.classList.toggle('dim',sheets.some(id=>id!=='wpop'&&!$(id).hidden));
  new MutationObserver(upd).observe(stage,{attributes:true,attributeFilter:['hidden'],subtree:true});
  $('veil').addEventListener('click',()=>closeAll());upd();}
+/* ---------- read the summary aloud ---------- */
+let speaking=false;
+function elVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test(v.lang));
+  const sc=v=>(/melina/i.test(v.name)?4:0)+(/premium|enhanced|βελτιωμ|natural|neural/i.test(v.name)?3:0)+(/female|γυναικ/i.test(v.name)?1:0)-(/nikos|male|άνδρ/i.test(v.name)?3:0)+(v.localService?1:0);
+  return vs.sort((a,b)=>sc(b)-sc(a))[0]||null}catch(e){return null}}
+try{speechSynthesis.getVoices();speechSynthesis.addEventListener('voiceschanged',()=>{})}catch(e){}
+function setSpk(on){speaking=on;$('spkLbl').textContent=on?'Σταμάτημα':'Ακρόαση';$('sumSpeak').setAttribute('aria-pressed',on)}
+function spkReady(){if('speechSynthesis' in window){$('sumSpeak').hidden=false;setSpk(speaking)}}
+$('sumSpeak').onclick=()=>{
+  if(!('speechSynthesis' in window))return;
+  if(speaking){speechSynthesis.cancel();setSpk(false);return}
+  const parts=[...$('sumBody').querySelectorAll('.lab, li, p')].filter(e=>!e.closest('.summeta,.err,.thinking')&&!e.classList.contains('summeta')&&!e.classList.contains('err')).map(e=>e.textContent.replace(/\s+/g,' ').trim()).filter(Boolean);
+  if(!parts.length)return;
+  speechSynthesis.cancel();const v=elVoice();setSpk(true);
+  parts.forEach((t,i)=>{const u=new SpeechSynthesisUtterance(t);u.lang='el-GR';if(v)u.voice=v;u.rate=0.92;u.pitch=1.02;u.volume=1;
+    if(i===parts.length-1){u.onend=()=>setSpk(false);u.onerror=()=>setSpk(false)}speechSynthesis.speak(u)});
+};
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
