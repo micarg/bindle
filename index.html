@@ -180,6 +180,7 @@ input{-webkit-user-select:text;user-select:text}
 img{max-width:100%}
 *,*::before,*::after{-webkit-text-size-adjust:100%}
 .app{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (display-mode: standalone){html,body{height:100vh;height:100lvh}.app{height:100vh;height:100lvh}}
 .keyrow input{flex:1;min-width:0;font:400 16px var(--font-ui);color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-height:36px}
 .hint a{color:var(--ink)}
 .filebtn{position:relative}
@@ -942,6 +943,12 @@ $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
 for(const [seg,key,num] of [['trSeg','turn',0],['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
+/* iOS home-screen apps can be left shorter or scrolled after the keyboard or a rotation: put the page back */
+function fixViewport(){if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0}}
+document.addEventListener('focusout',()=>setTimeout(fixViewport,120));
+window.addEventListener('orientationchange',()=>setTimeout(fixViewport,350));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(fixViewport,100)});
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(fixViewport,120));
 let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{const f=pages>1?pi/(pages-1):0;layout();pi=Math.round(f*(pages-1));layout()},150)});
 
 function aiUI(){const k=$('apiKey'),row=$('keyRow'),h=$('apiHint');row.hidden=!S.ai;k.value=S.ai?store.get(aiKeyName(),''):'';
