@@ -1257,11 +1257,11 @@ function pcmToWav(bytes,rate){const b=new ArrayBuffer(44+bytes.length),v=new Dat
 function hash(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+t.length}
 async function geminiVoice(text,signal){
   const key=store.get('gkey','');if(!key)throw {code:'bad_key'};
-  const id='v1:'+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
+  const id='v2:'+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
   const models=[store.get('gtts',''),...TTSMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let last={code:'upstream_error'};
   for(const model of models){
     let res;try{res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',signal,headers:{'content-type':'application/json','x-goog-api-key':key},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:'Διάβασε το παρακάτω στα ελληνικά με ήρεμη, απαλή και ζεστή γυναικεία φωνή, σε χαλαρό, φυσικό ρυθμό, σαν να το λες σε έναν φίλο:\n\n'+text}]}],
+      body:JSON.stringify({contents:[{role:'user',parts:[{text}]}],
         generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Achernar'}}}}})})}
     catch(e){throw {code:e&&e.name==='AbortError'?'cancelled':'offline'}}
     if(!res.ok){let m='';try{m=(await res.json()).error.message||''}catch(e){}last={code:res.status===429?'rate_limited':res.status===401||res.status===403&&/key/i.test(m)?'bad_key':'upstream_error',message:m};continue}
