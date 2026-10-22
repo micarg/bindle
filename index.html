@@ -59,7 +59,7 @@ button,.filebtn{font:500 13px var(--font-ui);color:var(--ink);background:transpa
 button:focus-visible,.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .filebtn input{position:absolute;opacity:0;width:1px;height:1px}
-.stage{flex:1;position:relative;overflow:hidden;overflow:clip;margin-block:10px 8px;min-height:0}
+.stage{flex:1;position:relative;overflow:hidden;overflow:clip;margin-block:30px 8px;min-height:0}
 #page{height:100%;column-fill:auto;font-family:var(--font-read);font-size:var(--fs);line-height:var(--lh);hyphens:manual;-webkit-hyphens:manual;text-align:var(--align);font-weight:300;transition:transform .0s}
 #page p{margin:0 0 .9em;text-indent:0}
 #page p.first,#page h1+p,#page h2+p,#page h3+p,#page hr+p{text-indent:0}
@@ -88,7 +88,7 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 .zone{position:absolute;top:0;bottom:0;z-index:2;cursor:pointer}
 .zone.l{left:0;width:30%}.zone.c{left:30%;width:40%}.zone.r{right:0;width:30%}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:6px 12px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-.prog{flex:1;height:2px;background:var(--rule);position:relative}.prog i{position:absolute;inset:0 auto 0 0;background:var(--ink-soft)}
+.prog{flex:0 1 110px;margin-left:auto;height:2px;background:var(--rule);position:relative}.prog i{position:absolute;inset:0 auto 0 0;background:var(--ink-soft)}
 .sheet{position:absolute;left:0;right:0;top:0;z-index:5;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:14px;align-content:start;max-height:100%;overflow:auto}
 .ddmenu{display:flex;flex-direction:column;width:min(240px,100%);border:1px solid var(--rule);border-radius:8px;overflow:hidden;animation:drop .18s ease-out}
 .libdd{font-size:15px;color:var(--ink);padding-left:0;max-width:none}
