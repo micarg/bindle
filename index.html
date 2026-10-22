@@ -58,8 +58,11 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 #page{height:100%;column-fill:auto;font-family:var(--font-read);font-size:var(--fs);line-height:var(--lh);hyphens:manual;-webkit-hyphens:manual;text-align:var(--align);font-weight:300;transition:transform .0s}
 #page p{margin:0 0 .9em;text-indent:0}
 #page p.first,#page h1+p,#page h2+p,#page h3+p,#page hr+p{text-indent:0}
-#page h1,#page h2,#page h3{font-weight:500;text-align:center;line-height:1.25;text-wrap:balance;margin:1.2em 0 1em;break-after:avoid}
-#page h1{font-size:1.45em}#page h2{font-size:1.25em}#page h3{font-size:1.08em}
+#page h1,#page h2,#page h3,#page h4{font-family:var(--font-ui);font-weight:500;color:var(--ink);text-align:center;line-height:1.3;letter-spacing:.01em;text-wrap:balance;margin:2.4em auto 1.8em;max-width:88%;break-after:avoid;break-inside:avoid}
+#page h1{font-size:1.5em}#page h2{font-size:1.3em}#page h3{font-size:1.1em}#page h4{font-size:1em}
+#page h1::after,#page h2::after{content:"";display:block;width:2.2em;height:2px;background:var(--ink-soft);margin:.9em auto 0;opacity:.6}
+#page h3,#page h4{letter-spacing:.06em;text-transform:uppercase;font-size:.95em;color:var(--ink-soft)}
+#page>:first-child:is(h1,h2,h3){margin-top:3.2em}
 #page blockquote{margin:.6em 1.2em;font-style:italic}
 #page hr{border:0;text-align:center;margin:1em 0}#page hr::after{content:"⁂";color:var(--ink-soft)}
 #page img{max-width:100%;max-height:70vh;display:block;margin:.8em auto;break-inside:avoid}
@@ -227,7 +230,7 @@ function bionic(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
   while(w.nextNode())nodes.push(w.currentNode);
   for(const n of nodes){
-    if(n.parentElement&&n.parentElement.closest('.lab'))continue;
+    if(n.parentElement&&n.parentElement.closest('.lab,h1,h2,h3,h4,h5,h6'))continue;
     const t=n.nodeValue;if(!t.trim())continue;
     const f=document.createDocumentFragment();let last=0;
     for(const m of t.matchAll(WORD)){
