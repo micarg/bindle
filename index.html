@@ -326,7 +326,7 @@ function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms',
     a.innerHTML=`<span style="display:block;font-size:13px;color:var(--ink-soft);font-family:var(--font-ui)"></span><span></span>`;a.children[0].textContent=b.title+' · '+b.pct;a.children[1].textContent=b.snip?b.snip+'…':'';
     a.onclick=e=>{e.preventDefault();ci=b.ci;renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout();t.hidden=true};
     const acts=document.createElement('div');acts.className='acts';
-    if(sampleFn||hasDigest()){const s=document.createElement('button');s.className='sumbtn';s.textContent='Περίληψη';s.onclick=()=>openSummary(i);acts.append(s)}
+    {const s=document.createElement('button');s.className='sumbtn';s.textContent='Περίληψη';s.onclick=()=>openSummary(i);acts.append(s)}
     const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Διαγραφή');x.onclick=()=>{const n=getBms();n.splice(i,1);store.set('bm:'+book.id,n);updBm();buildBms()};
     acts.append(x);row.append(a,acts);t.append(row)})}
 
@@ -432,7 +432,8 @@ function showSumSheet(msg){
   if(running){const p=document.createElement('p');p.className='thinking';p.textContent=`Το Claude διαβάζει το βιβλίο… μέρος ${dgRun.at+1} από ${dgRun.total}`;body.append(p);
     body.append(para('','Μπορείς να κλείσεις αυτό το παράθυρο και να συνεχίσεις να διαβάζεις. Η περίληψη θα είναι έτοιμη μόλις διαβαστεί το σημείο του σελιδοδείκτη.'));stop.hidden=false;return}
   if(msg){const e=document.createElement('p');e.className='err';e.textContent=msg;body.append(e)}
-  if(!sampleFn){body.append(para('','Για τις περιλήψεις, βάλε πρώτα το κλειδί σου για το Claude API στις Ρυθμίσεις.'));return}
+  if(!sampleFn){body.append(para('','Για να φτιάξει περιλήψεις, το Bindle χρειάζεται το κλειδί σου για το Claude API. Το φτιάχνεις στο console.anthropic.com → API Keys και το βάζεις στις Ρυθμίσεις.'));again.textContent='Άνοιγμα Ρυθμίσεων';again.hidden=false;again.onclick=()=>{closeAll();$('settings').hidden=false;setTimeout(()=>$('apiKey').scrollIntoView({block:'center'}),50)};return}
+  again.onclick=()=>{if(book)runDigest(book)};
   const left=chunks.length-d.done;
   body.append(para('',d.done?`Το Claude έχει διαβάσει ${d.done} από ${chunks.length} μέρη του βιβλίου. Συνέχισε για να φτάσει ως τον σελιδοδείκτη.`:`Για να μην χρεώνεσαι σε κάθε περίληψη, το Claude διαβάζει μία φορά όλο το βιβλίο (${chunks.length} ${chunks.length===1?'μέρος':'μέρη'}). Μετά, η περίληψη για κάθε σελιδοδείκτη βγαίνει αμέσως και χωρίς νέα χρέωση.`));
   again.textContent=d.done?`Συνέχεια (${left} ${left===1?'μέρος':'μέρη'})`:'Ανάγνωση βιβλίου';again.hidden=false;
