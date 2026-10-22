@@ -440,7 +440,7 @@ function layout(keep,anim){
   updateGuide();
 }
 
-/* ---------- no lonely lines: a paragraph never leaves just one line at the bottom or top of a page ---------- */
+/* ---------- whole paragraphs: a paragraph that fits on one page is never split between pages; longer ones never leave a single line behind ---------- */
 function lineStarts(el,left0,colW){
   const out=[],rg=document.createRange(),tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n,lastTop=null,lastCol=-1;
   while((n=tw.nextNode())){const re=/\S+/g;let m;
@@ -460,14 +460,15 @@ function keepLines(cw,colGap){
   if(f._kl===sig)return;f._kl=sig;
   page.querySelectorAll('.kb').forEach(e=>e.classList.remove('kb'));page.querySelectorAll('i.ks').forEach(e=>e.remove());
   const blocks=[...page.querySelectorAll('p,li,blockquote,div,dd,dt,pre')].filter(el=>!el.classList.contains('hd')&&!el.querySelector('p,li,blockquote,div,dd,dt,pre,img,table'));
-  const colW=cw+colGap,t0=performance.now();
+  const colW=cw+colGap,t0=performance.now(),lhp=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.7,colLines=Math.max(3,Math.floor(page.clientHeight/lhp)-1);
   for(let i=0;i<blocks.length;i++){
-    if(performance.now()-t0>1500)break;
+    if(performance.now()-t0>4000)break;
     const el=blocks[i],r=el.getBoundingClientRect();if(r.width<=cw+2)continue;
+    const fr=el.getClientRects();if(fr.length>1){let h=0;for(const x of fr)h+=x.height;if(h/lhp<=colLines+0.3){el.classList.add('kb');continue}}
     const L=lineStarts(el,page.getBoundingClientRect().left,colW);if(L.length<2)continue;
     const c0=L[0].col,c1=L[L.length-1].col;if(c0===c1)continue;
     const first=L.filter(x=>x.col===c0).length,last=L.filter(x=>x.col===c1).length;
-    if(first<2||(last<2&&L.length<=3)){el.classList.add('kb');continue}
+    if(L.length<=colLines||first<2||(last<2&&L.length<=3)){el.classList.add('kb');continue}
     if(last<2){const k=L.findIndex(x=>x.col===c1)-1;if(k>0)splitBefore(el,L[k].n,L[k].off)}
   }
 }
