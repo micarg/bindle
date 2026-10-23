@@ -323,12 +323,13 @@ body.selmode .zone{pointer-events:none}
 
 /* read aloud */
 ::highlight(rd){background-color:rgba(61,139,253,.22)}
-#rdBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);z-index:40;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--rule);border-radius:22px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);animation:rise .22s ease-out;max-width:520px;margin:0 auto}
+#rdBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);z-index:40;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);border-radius:22px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);animation:rise .22s ease-out;max-width:520px;margin:0 auto}
 #rdBar button{min-height:0;border:0;border-radius:999px;padding:0}
 #rdBar .rp{width:40px;height:40px;justify-content:center;background:var(--ink);color:var(--paper);flex:none}
 #rdBar .rt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
 #rdBar .rt b{font:500 13.5px var(--font-ui);color:var(--ink)}
 #rdBar .rt span{font:400 11.5px var(--font-ui);color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rdBar .rl{height:32px;padding:0 10px;background:var(--chip);font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap}
 #rdBar .rr{height:32px;padding:0 10px;background:var(--chip);font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums}
 #rdBar .rx{width:32px;height:32px;justify-content:center;background:var(--chip);font-size:13px}
 
@@ -1952,7 +1953,12 @@ function pageOfOff(off){const r=rangeOf(off,Math.min(chText.length,off+1));if(!r
 function rdFirstOnPage(){const L=RA.sents;let lo=0,hi=L.length-1,ans=L.length?0:-1;
   while(lo<=hi){const mid=(lo+hi)>>1,p=pageOfOff(L[mid].s);if(p!=null&&p>=pi){ans=mid;hi=mid-1}else lo=mid+1}
   return ans}
+/* page limit: count book pages read since the limit was chosen, and stop when it is reached */
+function rdCount(i){const x=RA.sents[i];if(!x)return false;const g=sum(book.chars.slice(0,ci))+x.s;if(RA.base==null)RA.base=g;
+  const lim=+S.rdLimit||0,done=(g-RA.base)/PRINT,prev=Math.floor(RA.done||0);RA.done=done;if(Math.floor(done)!==prev)rdUI();
+  if(lim&&done>=lim){const n=lim;rdStop();toast(`Η ακρόαση σταμάτησε μετά από ${n} σελίδες`,3000);return true}return false}
 function rdMark(i){
+  if(RA.cur!==i&&rdCount(i))return;
   RA.cur=i;const x=RA.sents[i];if(!x)return;
   try{if(window.CSS&&CSS.highlights){const r=rangeOf(x.s,x.e);if(r)CSS.highlights.set('rd',new Highlight(r))}}catch(e){}
   rdFollow(x.s);
@@ -1962,12 +1968,14 @@ function rdClearMark(){try{if(window.CSS&&CSS.highlights)CSS.highlights.delete('
 function rdUI(){
   let b=$('rdBar');
   if(!RA||!RA.on){if(b){b.remove();rdRoom(false)}return}
-  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">✕</button>`;document.body.append(b);
+  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rl" aria-label="Πόσες σελίδες"></button><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">✕</button>`;document.body.append(b);
     b.querySelector('.rp').onclick=rdToggle;b.querySelector('.rx').onclick=rdStop;
+    b.querySelector('.rl').onclick=()=>{const L=[0,15,25,35],k=(L.indexOf(+S.rdLimit||0)+1)%L.length;S.rdLimit=L[k];store.set('settings',S);RA.base=null;if(RA.cur>=0)rdCount(RA.cur);rdUI();if(S.rdLimit)toast(`Θα διαβάσει ${S.rdLimit} σελίδες και θα σταματήσει`,1800);else toast('Θα διαβάζει χωρίς όριο',1500)};
     b.querySelector('.rr').onclick=()=>{const k=(RDRATES.indexOf(+S.rdRate||1)+1)%RDRATES.length;S.rdRate=RDRATES[k];store.set('settings',S);if(RA.audio)RA.audio.playbackRate=S.rdRate;if(RA.mode==='iphone'&&!RA.paused){rdIphone(RA.cur)}rdUI()}}
   b.querySelector('.rp').innerHTML=RA.paused?'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>':'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
   b.querySelector('.rt b').textContent=RA.loading?'Ετοιμάζεται η φωνή…':RA.paused?'Σε παύση':'Ακρόαση';
   b.querySelector('.rt span').textContent=RA.note||(RA.mode==='gemini'?'Φωνή Gemini':'Φωνή iPhone');
+  {const lim=+S.rdLimit||0,el=b.querySelector('.rl');if(!lim)el.textContent='∞';else{const left=Math.max(0,Math.ceil(lim-(RA.done||0)));el.textContent=left+' σελ.'}}
   b.querySelector('.rr').textContent=(+S.rdRate||1).toString().replace('.',',')+'×';
 }
 /* make room for the player under the text, and keep the same sentence on screen */
