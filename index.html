@@ -78,6 +78,7 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 #page .hd-end::after{content:"";display:block;width:2.2em;height:2px;background:var(--ink-soft);opacity:.6;margin:1em auto 0}
 #page blockquote{margin:.6em 1.2em;font-style:italic}
 #page hr{border:0;text-align:center;margin:1em 0}#page hr::after{content:"⁂";color:var(--ink-soft)}
+#page .klh{display:none!important}
 #page .kb{break-before:column;-webkit-column-break-before:always}
 #page i.ks{display:block;height:0;break-before:column;-webkit-column-break-before:always}
 #page img{max-width:100%;max-height:70vh;display:block;margin:.8em auto;break-inside:avoid}
@@ -285,7 +286,8 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
 .lib.arr .rm.sure{width:auto;padding:0 10px;background:#c0392b;color:#fff}
 
 /* animations */
-#fadeBlack{position:fixed;inset:-50px;background:#000;z-index:95;opacity:0;pointer-events:none}
+#fadeBlack{position:fixed;inset:-50px;background:#000;z-index:95;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+#fadeBlack span{color:#8f8c85;font:400 14px var(--font-ui);letter-spacing:.04em;animation:fadein .4s ease,pulse 1.6s ease-in-out .4s infinite}
 .hero{position:fixed;z-index:90;margin:0;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);pointer-events:none;transform-origin:center center;will-change:transform}
 .hero img{width:100%;height:100%;object-fit:cover}
 #menu:not([hidden])>.mi{animation:miIn .26s cubic-bezier(.3,.7,.2,1) both}
@@ -527,7 +529,7 @@ function focusTurn(){
 function layout(keep,anim){
   const {m,cw,pw,colGap,step}=geom();
   page.style.marginLeft=m+'px';page.style.width=pw+'px';page.style.columnWidth=cw+'px';page.style.columnGap=colGap+'px';
-  keepLines(cw,colGap);
+  keepLines(cw,colGap,keep==='end'?null:pi);
   pages=Math.max(1,Math.ceil((page.scrollWidth+colGap-2)/step));
   if(keep==='end')pi=pages-1;
   pi=Math.min(Math.max(0,pi),pages-1);
@@ -555,23 +557,70 @@ function splitBefore(el,n,off){let ref=off>0?n.splitText(off):n;
   while(ref.parentNode!==el&&ref.parentNode.firstChild===ref&&/^(B|SPAN|EM|I|STRONG|A|MARK|SMALL|U)$/.test(ref.parentNode.tagName))ref=ref.parentNode;
   const k=document.createElement('i');k.className='ks';ref.parentNode.insertBefore(k,ref)}
 let fontGen=0;if(document.fonts&&document.fonts.addEventListener)document.fonts.addEventListener('loadingdone',()=>{fontGen++;if(typeof book!=='undefined'&&book)layout()});
-function keepLines(cw,colGap){
-  const f=page.firstElementChild;if(!f)return;
+/* the work is done in order, a little at a time: everything before the point already handled never moves again,
+   so the page being read stays put while the rest of the chapter is checked in the background */
+let KL=null,klTimer=null;
+function keepLines(cw,colGap,targetPage){
+  const f=page.firstElementChild;if(!f){KL=null;return}
   const cs=getComputedStyle(page),sig=[cw,colGap,stage.clientHeight,cs.fontSize,cs.lineHeight,cs.fontFamily,S.bionic,S.lvl,S.align,S.lh,fontGen,[...page.querySelectorAll('img')].filter(i=>i.complete).length].join('|');
-  if(f._kl===sig)return;f._kl=sig;
-  page.querySelectorAll('.kb').forEach(e=>e.classList.remove('kb'));page.querySelectorAll('i.ks').forEach(e=>e.remove());
-  const blocks=[...page.querySelectorAll('p,li,blockquote,div,dd,dt,pre')].filter(el=>!el.classList.contains('hd')&&!el.querySelector('p,li,blockquote,div,dd,dt,pre,img,table'));
-  const colW=cw+colGap,t0=performance.now(),lhp=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.7,colLines=Math.max(3,Math.floor(page.clientHeight/lhp)-1);
-  for(let i=0;i<blocks.length;i++){
-    if(performance.now()-t0>4000)break;
-    const el=blocks[i],r=el.getBoundingClientRect();if(r.width<=cw+2)continue;
-    const fr=el.getClientRects();if(fr.length>1){let h=0;for(const x of fr)h+=x.height;if(h/lhp<=colLines+0.3){el.classList.add('kb');continue}}
+  if(!KL||KL.f!==f||KL.sig!==sig){
+    page.querySelectorAll('.kb').forEach(e=>e.classList.remove('kb'));page.querySelectorAll('i.ks').forEach(e=>e.remove());
+    const blocks=[...page.querySelectorAll('p,li,blockquote,div,dd,dt,pre')].filter(el=>!el.classList.contains('hd')&&!el.querySelector('p,li,blockquote,div,dd,dt,pre,img,table'));
+    const lhp=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.7;
+    KL={f,sig,blocks,i:0,cw,colW:cw+colGap,lhp,colLines:Math.max(3,Math.floor(page.clientHeight/lhp)-1)};
+  }
+  if(KL.i>=KL.blocks.length)return;
+  const {step}=geom(),cpp=Math.max(1,Math.round(step/KL.colW));
+  const until=targetPage==null?Infinity:(targetPage+3)*cpp;
+  /* jumping far ahead in a long chapter: start checking from the page being opened instead of from the beginning */
+  if(targetPage!=null){const B=KL.blocks,pl=page.getBoundingClientRect().left,colOf=el=>{const r=el.getClientRects()[0];return r?Math.floor((r.left-pl+1)/KL.colW):-1};
+    const want=Math.max(0,(targetPage-1)*cpp);
+    if(colOf(B[KL.i])<want-6*cpp){let lo=KL.i,hi=B.length-1,j=B.length;while(lo<=hi){const mid=(lo+hi)>>1;if(colOf(B[mid])>=want){j=mid;hi=mid-1}else lo=mid+1}KL.i=j}}
+  klRun(targetPage==null?2500:600,until);
+  clearTimeout(klTimer);if(KL.i<KL.blocks.length)klTimer=setTimeout(klIdle,120);
+}
+/* where the reader is, as a paragraph and which part of it, so the page can be found again even if the layout changed */
+function anchorNow(){
+  const bl=KL&&KL.f===page.firstElementChild?KL.blocks:null;if(!bl||!bl.length)return null;
+  const pr=page.getBoundingClientRect(),{step}=geom(),x0=pi*step-1;
+  let lo=0,hi=bl.length-1,hit=-1;
+  while(lo<=hi){const mid=(lo+hi)>>1,rs=bl[mid].getClientRects();const last=rs.length?rs[rs.length-1].left-pr.left:-1e9;if(last>=x0){hit=mid;hi=mid-1}else lo=mid+1}
+  if(hit<0)return null;const el=bl[hit],rs=[...el.getClientRects()];let f=0;while(f<rs.length-1&&rs[f].left-pr.left<x0)f++;
+  return {o:offsetOf(el,0),f};
+}
+function pageOfAnchor(a){
+  if(!a)return null;const x=nodeAt(a.o+1);if(!x)return null;const el=x.n.parentElement&&x.n.parentElement.closest('p,li,blockquote,div,dd,dt,pre');if(!el||!page.contains(el))return null;
+  const rs=el.getClientRects();if(!rs.length)return null;const q=rs[Math.min(a.f,rs.length-1)],pr=page.getBoundingClientRect(),{step}=geom();
+  return Math.max(0,Math.floor((q.left-pr.left+2)/step));
+}
+function klRun(budget,untilCol){
+  const K=KL,t0=performance.now(),cw=K.cw,colW=K.colW,lhp=K.lhp,colLines=K.colLines,B=K.blocks,n=B.length;let left0=null;
+  /* hide everything well past the point being checked, so each measurement only lays out a few pages */
+  let hid=Math.min(n,K.i+40);for(let j=hid;j<n;j++)B[j].classList.add('klh');
+  try{
+  while(K.i<K.blocks.length){
+    if(K.i>=hid-8&&hid<n){const to=Math.min(n,hid+40);for(;hid<to;hid++)B[hid].classList.remove('klh');left0=null}
+    if(performance.now()-t0>budget)break;
+    const el=K.blocks[K.i];if(!el.isConnected){K.i++;continue}
+    const r=el.getBoundingClientRect();if(left0===null)left0=page.getBoundingClientRect().left;
+    if(Math.floor((r.left-left0+1)/colW)>untilCol)break;
+    K.i++;
+    if(r.width<=cw+2)continue;
+    const fr=el.getClientRects();if(fr.length>1){let h=0;for(const x of fr)h+=x.height;if(h/lhp<=colLines+0.3){el.classList.add('kb');left0=null;continue}}
     const L=lineStarts(el,page.getBoundingClientRect().left,colW);if(L.length<2)continue;
     const c0=L[0].col,c1=L[L.length-1].col;if(c0===c1)continue;
     const first=L.filter(x=>x.col===c0).length,last=L.filter(x=>x.col===c1).length;
-    if(L.length<=colLines||first<2||(last<2&&L.length<=3)){el.classList.add('kb');continue}
-    if(last<2){const k=L.findIndex(x=>x.col===c1)-1;if(k>0)splitBefore(el,L[k].n,L[k].off)}
+    if(L.length<=colLines||first<2||(last<2&&L.length<=3)){el.classList.add('kb');left0=null;continue}
+    if(last<2){const k=L.findIndex(x=>x.col===c1)-1;if(k>0){splitBefore(el,L[k].n,L[k].off);left0=null}}
   }
+  }finally{for(let j=hid;j<n;j++)B[j].classList.remove('klh')}
+}
+function klIdle(){
+  if(!KL||KL.f!==page.firstElementChild||KL.i>=KL.blocks.length)return;
+  if(drag&&drag.on){klTimer=setTimeout(klIdle,200);return}
+  const {colGap,step}=geom();klRun(80,Infinity);
+  const np=Math.max(1,Math.ceil((page.scrollWidth+colGap-2)/step));if(np!==pages){pages=np;updateFoot()}
+  if(KL.i<KL.blocks.length)klTimer=setTimeout(klIdle,60);
 }
 function markHeads(root){
   const blocks=[...root.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,blockquote,li')].filter(el=>!el.querySelector('p,div,h1,h2,h3,h4,h5,h6,blockquote,li'));
@@ -612,7 +661,7 @@ function updateFoot(){
   $('chap').textContent=S.foot===1?(pi>=pages-1?'Τέλος κεφαλαίου':`Κεφάλαιο: ${fmtMin(remC/cpm)} ακόμα`):S.foot===2?`Βιβλίο: ${fmtMin(remB/cpm)} ακόμα`:`σελ. ${X} από ${T}`;
   const pc=rc/total*100;$('pct').textContent=pc>0&&pc<1?'<1%':Math.round(pc)+'%';
   $('pbar').style.width=(rc/total*100).toFixed(1)+'%';
-  store.set('pos:'+book.id,{ci,frac:pages>1?pi/(pages-1):0,read:rc,t:Date.now()});
+  store.set('pos:'+book.id,{ci,frac:pages>1?pi/(pages-1):0,read:rc,t:Date.now(),anc:anchorNow()});
   updBm();
 }
 
@@ -851,7 +900,11 @@ function openBook(b){
   store.set('lastId',b.id);
   const lib=getLib(),e=lib.find(x=>x.id===b.id);if(e){e.opened=Date.now();setLib(lib)}
   const pos=store.get('pos:'+b.id,null);ci=0;pi=0;lastTurn=Date.now();
-  if(pos&&pos.ci<b.chapters.length){ci=pos.ci;renderChapter();pi=Math.round(pos.frac*(pages-1));layout()}else renderChapter();
+  if(pos&&pos.ci<b.chapters.length){ci=pos.ci;renderChapter();
+    if(pos.anc){const x=nodeAt(pos.anc.o+1),el=x&&x.n.parentElement&&x.n.parentElement.closest('p,li,blockquote,div,dd,dt,pre');
+      if(el&&KL&&pos.anc.f===0){const j=KL.blocks.indexOf(el);if(j>KL.i+3){el.classList.add('kb');KL.i=j}}
+      for(let k=0;k<4;k++){const p=pageOfAnchor(pos.anc);if(p==null)break;if(p===pi&&k)break;pi=p;layout()}}
+    else{pi=Math.round(pos.frac*(pages-1));layout()}}else renderChapter();
   buildToc();
   if(b.id!=='sample'||!store.get('lastId',''))setTimeout(()=>maybeRecap(pos&&pos.t),0);
 }
@@ -1801,9 +1854,10 @@ function toast(msg,ms=1800,onTap){let t=$('toast');if(!t){t=document.createEleme
 function fadeBlack(){
   const d=document.createElement('div');d.id='fadeBlack';document.body.append(d);
   const inA=RM?null:d.animate([{opacity:0},{opacity:1}],{duration:280,easing:'ease-in',fill:'forwards'});
+  const lt=setTimeout(()=>{d.innerHTML='<span>Άνοιγμα…</span>'},700);
   if(RM)d.style.opacity=1;
   return {shown:inA?inA.finished.catch(()=>{}):Promise.resolve(),
-    out(){requestAnimationFrame(()=>requestAnimationFrame(()=>{if(RM){d.remove();return}const o=d.animate([{opacity:1},{opacity:0}],{duration:520,easing:'ease-out',fill:'forwards'});o.onfinish=()=>d.remove()}))}};
+    out(){clearTimeout(lt);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(RM){d.remove();return}const o=d.animate([{opacity:1},{opacity:0}],{duration:520,easing:'ease-out',fill:'forwards'});o.onfinish=()=>d.remove()}))}};
 }
 function bmAnim(on){
   const sv=$('bmToggle').querySelector('svg');if(RM||!sv)return;
