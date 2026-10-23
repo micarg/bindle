@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Δοκιμή φωνής</title>
+<style>
+:root{--paper:#ebe9e3;--ink:#1d1c1a;--soft:#5d5b56;--rule:#d2cfc7;--chip:#dfdcd5}
+@media (prefers-color-scheme: dark){:root{--paper:#121211;--ink:#d9d6cf;--soft:#8f8c85;--rule:#2b2a28;--chip:#22211f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif;padding:calc(env(safe-area-inset-top) + 24px) 20px 40px}
+h1{font-size:24px;margin:0 0 6px}
+p{margin:0 0 14px;color:var(--soft);font-size:14px}
+.card{background:var(--chip);border-radius:18px;padding:16px;margin:14px 0}
+.card h2{font-size:16px;margin:0 0 4px}
+.txt{font:18px/1.6 "Times New Roman",serif;color:var(--ink);margin:12px 0 18px}
+button{font:600 15px -apple-system,system-ui,sans-serif;border:0;border-radius:999px;padding:12px 20px;background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.5}
+.st{font-size:13px;color:var(--soft);margin-top:10px;min-height:20px}
+.bar{height:4px;background:var(--rule);border-radius:2px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .2s}
+audio{width:100%;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>Δοκιμή φωνής</h1>
+<p>Άκουσε το ίδιο κείμενο με δύο δωρεάν φωνές χωρίς όριο. Η σελίδα δεν αλλάζει τίποτα στο Bindle.</p>
+<div class="txt" id="t">Το πρωί που έφτασε η Ελένη στο νησί, ο αέρας μύριζε αλάτι και πεύκο. Το καράβι έδεσε αργά, σαν να μην ήθελε να ταράξει τους ψαράδες που μάζευαν τα δίχτυα τους στην άκρη του μόλου. «Άργησες δέκα χρόνια», της είπε η θεία της, και την αγκάλιασε πριν προλάβει να απαντήσει.</div>
+
+<div class="card">
+  <h2>1. Piper (Rapunzelina)</h2>
+  <p>Ανοιχτή φωνή που φτιάχνεται μέσα στο κινητό. Την πρώτη φορά κατεβάζει περίπου 60 MB, οπότε καλύτερα με Wi‑Fi.</p>
+  <button id="pb">Άκουσε το Piper</button>
+  <div class="bar"><i id="pbar"></i></div>
+  <div class="st" id="ps"></div>
+  <audio id="pa" controls hidden></audio>
+</div>
+
+<div class="card">
+  <h2>2. Φωνή του iPhone</h2>
+  <p>Η φωνή που δίνει το Safari στις εφαρμογές. Δουλεύει και χωρίς ίντερνετ.</p>
+  <button id="ib">Άκουσε το iPhone</button>
+  <div class="st" id="is"></div>
+</div>
+
+<script type="module">
+const $=id=>document.getElementById(id);
+const text=$('t').textContent.trim();
+const SOURCES=['https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.4/+esm','https://cdn.jsdelivr.net/npm/@diffusionstudio/vits-web@1.0.3/+esm'];
+const VOICE='el_GR-rapunzelina-low';
+let lib=null;
+async function load(){for(const u of SOURCES){try{const m=await import(u);if(m&&m.predict)return m}catch(e){console.warn(u,e)}}throw new Error('Δεν φόρτωσε η βιβλιοθήκη της φωνής.')}
+$('pb').onclick=async()=>{
+  $('pb').disabled=true;$('ps').textContent='Φορτώνω τη φωνή…';const t0=performance.now();
+  try{
+    lib=lib||await load();
+    const wav=await lib.predict({text,voiceId:VOICE},p=>{if(p&&p.total){const k=p.loaded/p.total;$('pbar').style.width=(k*100).toFixed(0)+'%';$('ps').textContent=`Κατεβάζω τη φωνή… ${Math.round(k*100)}%`}});
+    const sec=((performance.now()-t0)/1000).toFixed(1);
+    const a=$('pa');a.src=URL.createObjectURL(wav);a.hidden=false;$('pbar').style.width='100%';
+    $('ps').textContent=`Έτοιμο σε ${sec}″. Πάτα ξανά για να δεις πόσο γρήγορα βγαίνει τη δεύτερη φορά.`;
+    try{await a.play()}catch(e){}
+  }catch(e){$('ps').textContent='Κάτι δεν πήγε καλά: '+(e&&e.message||e)}
+  $('pb').disabled=false;
+};
+$('ib').onclick=()=>{
+  if(!('speechSynthesis' in window)){$('is').textContent='Αυτή η συσκευή δεν έχει φωνή για εφαρμογές.';return}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='el-GR';
+  const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test(v.lang));if(vs.length){u.voice=vs[0];$('is').textContent='Φωνή: '+vs[0].name}
+  u.rate=1;speechSynthesis.speak(u);
+};
+</script>
+</body>
+</html>
