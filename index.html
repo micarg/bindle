@@ -320,6 +320,21 @@ body.selmode .zone{pointer-events:none}
 .tscrub .tsl span{font:400 12.5px var(--font-ui);color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .tscrub input{width:100%;accent-color:var(--ink);height:32px;margin:0}
 .tscrub .tsh{font:400 11.5px var(--font-ui);color:var(--ink-soft)}
+
+/* read aloud */
+::highlight(rd){background-color:rgba(61,139,253,.22)}
+#rdBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);z-index:40;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--rule);border-radius:22px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);animation:rise .22s ease-out;max-width:520px;margin:0 auto}
+#rdBar button{min-height:0;border:0;border-radius:999px;padding:0}
+#rdBar .rp{width:40px;height:40px;justify-content:center;background:var(--ink);color:var(--paper);flex:none}
+#rdBar .rt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+#rdBar .rt b{font:500 13.5px var(--font-ui);color:var(--ink)}
+#rdBar .rt span{font:400 11.5px var(--font-ui);color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#rdBar .rr{height:32px;padding:0 10px;background:var(--chip);font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums}
+#rdBar .rx{width:32px;height:32px;justify-content:center;background:var(--chip);font-size:13px}
+
+body.rdon .foot{display:none}
+body.rdon .stage{margin-bottom:76px}
+body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 </style>
 </head>
 <body>
@@ -344,6 +359,7 @@ body.selmode .zone{pointer-events:none}
       <button id="hlBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Υπογραμμίσεις και σημειώσεις</button>
       <button id="peopleBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Πρόσωπα</button>
       <button id="askBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M10 9.3a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6 1v.3M12 14.3v.01"/></svg>Ρώτα το βιβλίο</button>
+      <button id="rdBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Ακρόαση βιβλίου</button>
       <button id="soundsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>Ήχοι συγκέντρωσης</button>
       <button id="statsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M10 20V6M15 20v-10M20 20v-4"/></svg>Η ανάγνωσή μου</button>
       <button id="setBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Ρυθμίσεις</button>
@@ -889,10 +905,11 @@ $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
 
 
 /* ---------- navigation ---------- */
-function next(){onTurn();if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
-function prev(){if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
+function next(){onTurn();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
+function prev(){if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
 
 function openBook(b){
+  if(typeof RA!=='undefined'&&RA&&RA.on)rdStop();
   book=b;if(store.get('st:'+b.id,null)===null){const p0=store.get('pos:'+b.id,null);store.set('st:'+b.id,p0&&p0.read>0?0:Date.now())}$('title').textContent=b.title;page.lang=b.lang||'el';
   store.set('lastId',b.id);
   const lib=getLib(),e=lib.find(x=>x.id===b.id);if(e){e.opened=Date.now();setLib(lib)}
@@ -1912,6 +1929,129 @@ function dragHandle(ev,isStart){
   h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
 }
 $('wSel').onclick=startSelect;
+
+/* ---------- read the book aloud: Gemini's natural voice while the daily limit lasts, then the iPhone voice ---------- */
+let RA=null;
+const RDRATES=[1,1.15,1.3,0.9];
+function rdSentences(){
+  const tn=textNodes(page),start=new Map();let pos=0;for(const n of tn){start.set(n,pos);pos+=n.nodeValue.length}
+  const blocks=[...page.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote,dd,dt,pre,div')].filter(el=>!el.querySelector('h1,h2,h3,h4,h5,h6,p,li,blockquote,dd,dt,pre,div'));
+  const out=[];
+  for(const el of blocks){const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);const f=w.nextNode();if(!f||!start.has(f))continue;
+    const o=start.get(f),txt=chText.slice(o,o+el.textContent.length);const head=/^H\d$/.test(el.tagName)||el.classList.contains('hd');
+    const re=/[^.!?;…]+(?:[.!?;…]+[»"”’)\]]*)?/g;let m,first=true;
+    while((m=re.exec(txt))){let a=m.index,b=a+m[0].length;while(a<b&&/\s/.test(txt[a]))a++;while(b>a&&/\s/.test(txt[b-1]))b--;if(b-a<1)continue;
+      const prev=out[out.length-1];
+      if(!first&&prev&&(b-a<3||prev.e-prev.s<3)){prev.e=o+b;continue}
+      out.push({s:o+a,e:o+b,head,nb:first});first=false}}
+  return out;
+}
+function rdText(list){return list.map((x,i)=>(x.nb&&i?'\n':'')+chText.slice(x.s,x.e).replace(/\s+/g,' ')+(x.head&&!/[.!?;…:]$/.test(chText.slice(x.s,x.e).trim())?'.':'')).join(' ')}
+function pageOfOff(off){const r=rangeOf(off,Math.min(chText.length,off+1));if(!r)return null;const q=r.getClientRects()[0]||r.getBoundingClientRect();if(!q||(!q.width&&!q.height))return null;
+  const pr=page.getBoundingClientRect(),{step}=geom();return Math.max(0,Math.floor((q.left-pr.left+2)/step))}
+function rdFirstOnPage(){const L=RA.sents;let lo=0,hi=L.length-1,ans=L.length?0:-1;
+  while(lo<=hi){const mid=(lo+hi)>>1,p=pageOfOff(L[mid].s);if(p!=null&&p>=pi){ans=mid;hi=mid-1}else lo=mid+1}
+  if(ans>0){const p=pageOfOff(L[ans-1].e-1);if(p!=null&&p>=pi)ans--}return ans}
+function rdMark(i){
+  RA.cur=i;const x=RA.sents[i];if(!x)return;
+  try{if(window.CSS&&CSS.highlights){const r=rangeOf(x.s,x.e);if(r)CSS.highlights.set('rd',new Highlight(r))}}catch(e){}
+  rdFollow(x.s);
+}
+function rdFollow(off){const p=pageOfOff(off);if(p!=null&&p!==pi&&p<pages){RA.auto=true;pi=p;layout(0,1);RA.auto=false}}
+function rdClearMark(){try{if(window.CSS&&CSS.highlights)CSS.highlights.delete('rd')}catch(e){}}
+function rdUI(){
+  let b=$('rdBar');
+  if(!RA||!RA.on){if(b){b.remove();rdRoom(false)}return}
+  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">✕</button>`;document.body.append(b);
+    b.querySelector('.rp').onclick=rdToggle;b.querySelector('.rx').onclick=rdStop;
+    b.querySelector('.rr').onclick=()=>{const k=(RDRATES.indexOf(+S.rdRate||1)+1)%RDRATES.length;S.rdRate=RDRATES[k];store.set('settings',S);if(RA.audio)RA.audio.playbackRate=S.rdRate;if(RA.mode==='iphone'&&!RA.paused){rdIphone(RA.cur)}rdUI()}}
+  b.querySelector('.rp').innerHTML=RA.paused?'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>':'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+  b.querySelector('.rt b').textContent=RA.loading?'Ετοιμάζεται η φωνή…':RA.paused?'Σε παύση':'Ακρόαση';
+  b.querySelector('.rt span').textContent=RA.note||(RA.mode==='gemini'?'Φωνή Gemini':'Φωνή iPhone');
+  b.querySelector('.rr').textContent=(+S.rdRate||1).toString().replace('.',',')+'×';
+}
+/* make room for the player under the text, and keep the same sentence on screen */
+function rdRoom(on){const x=RA&&RA.sents&&RA.sents[Math.max(0,RA.cur)],off=x?x.s:null;
+  document.body.classList.toggle('rdon',on);layout();
+  if(off!=null){const p=pageOfOff(off);if(p!=null&&p!==pi){pi=p;layout()}}}
+function rdGeminiOK(){return S.voice==='gemini'&&!!store.get('gkey','')&&store.get('rdOut','')!==dayKey()}
+async function rdVoice(text,signal){
+  const id='rd:'+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
+  const blob=await geminiVoice(text,signal);
+  try{idbDel('tts','v2:'+hash(text));idbPut('tts',id,blob);const l=store.get('rdCache',[]).filter(x=>x!==id);l.push(id);while(l.length>10)idbDel('tts',l.shift());store.set('rdCache',l)}catch(e){}
+  return blob;
+}
+function rdChunk(from,first){const L=RA.sents,max=first?450:2400;let e=from,n=0;while(e<L.length&&(n<max||e===from)){n+=L[e].e-L[e].s+1;e++}return {a:from,b:e}}
+function rdNeed(ch){if(!ch.p){const ctl=new AbortController();ch.ctl=ctl;ch.p=rdVoice(rdText(RA.sents.slice(ch.a,ch.b)),ctl.signal);ch.p.catch(()=>{})}return ch.p}
+async function rdPlayFrom(i,first){
+  if(!RA||!RA.on)return;const gen=RA.gen;
+  if(i>=RA.sents.length){rdNextChapter();return}
+  if(!rdGeminiOK()){rdIphone(i);return}
+  RA.mode='gemini';const ch=RA.next&&RA.next.a===i?RA.next:rdChunk(i,first);RA.next=null;RA.chunk=ch;
+  RA.loading=true;rdUI();rdMark(i);
+  let blob;try{blob=await rdNeed(ch)}catch(e){if(!RA||RA.gen!==gen)return;
+    if(e&&e.code==='cancelled')return;
+    if(e&&(e.code==='quota_day'||(e.code==='rate_limited'&&/per ?day|daily|PerDay|limit:\s*0\b/i.test(e.message||''))))store.set('rdOut',dayKey());
+    RA.note=e&&e.code==='rate_limited'?'Το όριο του Gemini τελείωσε, συνεχίζει η φωνή iPhone':'Συνεχίζει η φωνή iPhone';rdIphone(i);return}
+  if(!RA||RA.gen!==gen)return;
+  RA.loading=false;const a=RA.audio;a.src=URL.createObjectURL(blob);a.playbackRate=+S.rdRate||1;a.dataset.real='1';
+  const L=RA.sents,ws=[];let tot=0;for(let k=ch.a;k<ch.b;k++){tot+=(L[k].e-L[k].s)+18;ws.push(tot)}ch.ws=ws;ch.tot=tot;
+  try{await a.play()}catch(e){RA.paused=true}
+  rdUI();
+  const nx=rdChunk(ch.b,false);if(ch.b<L.length){RA.next=nx;rdNeed(nx)}
+}
+function rdTick(){
+  if(!RA||!RA.on||RA.mode!=='gemini'||!RA.chunk||!RA.chunk.ws)return;const a=RA.audio,ch=RA.chunk;if(!a.duration||!isFinite(a.duration))return;
+  const w=a.currentTime/a.duration*ch.tot;let k=0;while(k<ch.ws.length-1&&ch.ws[k]<w)k++;const i=ch.a+k;
+  if(i!==RA.cur)rdMark(i);
+  else{const x=RA.sents[i],w0=k?ch.ws[k-1]:0,f=Math.min(1,(w-w0)/Math.max(1,ch.ws[k]-w0));rdFollow(Math.floor(x.s+f*(x.e-x.s)))}
+}
+function rdIphone(i){
+  if(!RA||!RA.on)return;if(!('speechSynthesis' in window)){RA.note='Δεν υπάρχει φωνή σε αυτή τη συσκευή';rdUI();return}
+  RA.mode='iphone';RA.loading=false;if(RA.audio){RA.audio.dataset.real='';RA.audio.pause()}
+  const gen=++RA.gen;speechSynthesis.cancel();const v=elVoice();
+  const say=k=>{if(!RA||!RA.on||RA.gen!==gen)return;if(k>=RA.sents.length){rdNextChapter();return}
+    rdMark(k);const x=RA.sents[k],u=new SpeechSynthesisUtterance(chText.slice(x.s,x.e));u.lang='el-GR';if(v)u.voice=v;u.rate=0.92*(+S.rdRate||1);
+    u.onboundary=ev=>{if(RA&&RA.gen===gen&&ev.charIndex!=null)rdFollow(x.s+ev.charIndex)};
+    u.onend=()=>{if(RA&&RA.gen===gen&&!RA.paused)say(k+1)};
+    u.onerror=ev=>{if(!RA||RA.gen!==gen||ev.error==='interrupted'||ev.error==='canceled')return;RA.paused=true;RA.note='Η φωνή του iPhone δεν μπόρεσε να διαβάσει';rdUI()};
+    speechSynthesis.speak(u)};
+  rdUI();say(i);
+}
+function rdNextChapter(){
+  if(!RA||!RA.on)return;
+  if(ci>=book.chapters.length-1){rdStop();toast('Τέλος του βιβλίου');return}
+  ci++;pi=0;renderChapter(0,1);RA.f=page.firstElementChild;RA.sents=rdSentences();RA.next=null;RA.gen++;
+  if(RA.mode==='iphone')rdIphone(0);else rdPlayFrom(0,true);
+}
+function rdStart(){
+  if(!book)return;closeAll();
+  if(RA&&RA.on){rdStop()}
+  RA={on:true,paused:false,gen:0,mode:'',note:'',f:page.firstElementChild,sents:rdSentences(),cur:-1,next:null,chunk:null,audio:RA&&RA.audio||null};
+  if(!RA.sents.length){RA.on=false;toast('Δεν βρέθηκε κείμενο σε αυτή τη σελίδα');return}
+  if(!RA.audio){RA.audio=new Audio();RA.audio.addEventListener('timeupdate',rdTick);
+    RA.audio.addEventListener('ended',()=>{if(RA&&RA.on&&RA.mode==='gemini'&&RA.audio.dataset.real&&RA.chunk){const nx=RA.chunk.b;RA.gen++;rdPlayFrom(nx,false)}})}
+  /* unlock audio playback while we are still inside the tap */
+  RA.audio.dataset.real='';RA.audio.src=URL.createObjectURL(silentWav());RA.audio.play().catch(()=>{});
+  if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:book.title,artist:book.chapters[ci].title||'',album:'Bindle',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
+    navigator.mediaSession.setActionHandler('play',()=>{if(RA&&RA.paused)rdToggle()});navigator.mediaSession.setActionHandler('pause',()=>{if(RA&&!RA.paused)rdToggle()})}catch(e){}}
+  const i=Math.max(0,rdFirstOnPage());
+  if(rdGeminiOK())rdPlayFrom(i,true);else rdIphone(i);
+}
+function rdFromPage(){
+  if(!RA||!RA.on||RA.auto)return;
+  if(page.firstElementChild!==RA.f){RA.f=page.firstElementChild;RA.sents=rdSentences()}
+  RA.gen++;RA.next=null;if(RA.audio){RA.audio.dataset.real='';RA.audio.pause()}try{speechSynthesis.cancel()}catch(e){}
+  RA.paused=false;const i=Math.max(0,rdFirstOnPage());if(RA.mode==='iphone'||!rdGeminiOK())rdIphone(i);else rdPlayFrom(i,false);
+}
+function rdToggle(){
+  if(!RA||!RA.on)return;RA.paused=!RA.paused;
+  if(RA.mode==='gemini'){if(RA.paused)RA.audio.pause();else RA.audio.play().catch(()=>{})}
+  else{if(RA.paused){RA.gen++;speechSynthesis.cancel()}else rdIphone(Math.max(0,RA.cur))}
+  rdUI();
+}
+function rdStop(){if(!RA)return;RA.on=false;RA.gen++;if(RA.next&&RA.next.ctl)RA.next.ctl.abort();if(RA.chunk&&RA.chunk.ctl)RA.chunk.ctl.abort();if(RA.audio){RA.audio.dataset.real='';RA.audio.pause()}try{speechSynthesis.cancel()}catch(e){}rdClearMark();rdUI()}
+$('rdBtn').onclick=()=>{if(RA&&RA.on){closeAll();return}rdStart()};
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
