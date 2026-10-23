@@ -252,15 +252,6 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
 #dimmer{position:fixed;inset:-50px;background:#000;opacity:0;pointer-events:none;z-index:70;transition:opacity .25s ease}
 .rng{width:100%;accent-color:var(--ink);margin:-4px 0 0;height:28px}
 .dimv{font-variant-numeric:tabular-nums;color:var(--ink-soft)}
-/* scrubbing the progress bar */
-.prog{touch-action:none;cursor:pointer}
-.prog::before{content:"";position:absolute;left:-10px;right:-10px;top:-18px;bottom:-14px}
-.prog i{transition:width .15s ease}
-.foot.scrub .prog{max-width:none;height:4px;border-radius:2px;transition:none}
-.foot.scrub .prog i{transition:none;border-radius:2px}
-.foot.scrub #chap,.foot.scrub #radioDot{display:none}
-#scrubTip{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 52px);transform:translateX(-50%);background:var(--ink);color:var(--paper);font:500 13px/1.35 var(--font-ui);padding:9px 16px;border-radius:14px;text-align:center;pointer-events:none;z-index:61;width:max-content;max-width:calc(100% - 48px);box-sizing:border-box;box-shadow:0 8px 24px rgba(0,0,0,.25)}
-#scrubTip b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:600;text-wrap:balance;overflow-wrap:anywhere}
 
 /* library: long-press menu and arranging */
 #bkPop{position:fixed;inset:0;z-index:65}
@@ -286,8 +277,6 @@ details.grp{border-radius:18px;background:var(--chip);border-bottom:0!important;
 .lib.arr .rm.sure{width:auto;padding:0 10px;background:#c0392b;color:#fff}
 
 /* animations */
-#fadeBlack{position:fixed;inset:-50px;background:#000;z-index:95;opacity:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
-#fadeBlack span{color:#8f8c85;font:400 14px var(--font-ui);letter-spacing:.04em;animation:fadein .4s ease,pulse 1.6s ease-in-out .4s infinite}
 .hero{position:fixed;z-index:90;margin:0;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);pointer-events:none;transform-origin:center center;will-change:transform}
 .hero img{width:100%;height:100%;object-fit:cover}
 #menu:not([hidden])>.mi{animation:miIn .26s cubic-bezier(.3,.7,.2,1) both}
@@ -323,6 +312,14 @@ body.selmode .zone{pointer-events:none}
 #selBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:31;background:var(--paper);border:1px solid var(--rule);border-radius:18px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 12px 30px -8px rgba(0,0,0,.4);font:400 12.5px/1.3 var(--font-ui);color:var(--ink-soft);animation:rise .2s ease-out}
 #selBar div{display:flex;gap:8px;flex:none}
 #selBar .sok{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* table of contents slider */
+.tscrub{display:grid;gap:6px;padding:4px 2px 14px;margin-bottom:6px;border-bottom:1px solid var(--rule)}
+.tscrub .tsl{display:flex;flex-direction:column;gap:2px;min-height:40px}
+.tscrub .tsl b{font:500 14px/1.3 var(--font-ui);color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tscrub .tsl span{font:400 12.5px var(--font-ui);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.tscrub input{width:100%;accent-color:var(--ink);height:32px;margin:0}
+.tscrub .tsh{font:400 11.5px var(--font-ui);color:var(--ink-soft)}
 </style>
 </head>
 <body>
@@ -910,7 +907,7 @@ function openBook(b){
 }
 
 function buildToc(){
-  const t=$('toc');t.innerHTML='';
+  const t=$('toc');t.innerHTML='';t.append(tocScrub());
   book.chapters.forEach((c,i)=>{const a=document.createElement('a');a.href='#';a.textContent=c.title;a.setAttribute('aria-current',i===ci);
     a.onclick=e=>{e.preventDefault();ci=i;pi=0;renderChapter();t.hidden=true;buildToc()};t.append(a)});
   if(typeof addX==='function')addX('toc','Περιεχόμενα');
@@ -1055,7 +1052,7 @@ async function buildLib(){
     card.addEventListener('touchmove',ev=>{if(editing)ev.preventDefault()},{passive:false});
     card.addEventListener('pointermove',ev=>{if(!editing&&Math.hypot(ev.clientX-x0,ev.clientY-y0)>8)clearTimeout(lp)});
     ['pointerup','pointerleave','pointercancel'].forEach(n=>card.addEventListener(n,()=>clearTimeout(lp)));
-    card.onclick=async()=>{if(editing||fired||Date.now()-(card._lp||0)<700)return;const fx=fadeBlack();await fx.shown;try{await openFromLib(e.id);closeAll();fx.out()}catch(err){fx.out();showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
+    card.onclick=async()=>{if(editing||fired||Date.now()-(card._lp||0)<700)return;try{await openFromLib(e.id);closeAll()}catch(err){showLibErr('Δεν βρέθηκε το αρχείο αυτού του βιβλίου σε αυτή τη συσκευή. Πρόσθεσέ το ξανά.')}};
     g.append(card);
     if(e.cover){idbGet('books',e.id).then(r=>{if(r&&r.cover){const u=URL.createObjectURL(r.cover);coverUrls.push(u);const im=document.createElement('img');im.alt='';im.src=u;im.onload=()=>{cv.innerHTML='';cv.append(im)}}})}
   }
@@ -1831,34 +1828,23 @@ function toast(msg,ms=1800,onTap){let t=$('toast');if(!t){t=document.createEleme
  $('dimR').addEventListener('input',e=>{S.dim=+e.target.value;show()});
  $('dimR').addEventListener('change',()=>store.set('settings',S));show()}
 
-/* ---------- drag along the progress bar to jump anywhere in the book ---------- */
-{const bar=document.querySelector('.foot .prog'),foot=$('foot');let sc=null;
- const target=x=>{const r=bar.getBoundingClientRect(),f=Math.min(1,Math.max(0,(x-r.left)/r.width)),tot=sum(book.chars)||1;let t=f*tot,c=0;
-   while(c<book.chars.length-1&&t>book.chars[c]){t-=book.chars[c];c++}
-   return {f,c,cf:book.chars[c]?Math.min(1,t/book.chars[c]):0,pg:Math.max(1,Math.ceil(f*tot/PRINT)),T:totalPages(book.chars)}};
- const show=x=>{const g=target(x);sc.g=g;$('pbar').style.width=(g.f*100).toFixed(1)+'%';$('pct').textContent=Math.round(g.f*100)+'%';
-   let tip=$('scrubTip');if(!tip){tip=document.createElement('div');tip.id='scrubTip';document.body.append(tip)}
-   const ch=book.chapters[g.c]&&book.chapters[g.c].title||('Κεφάλαιο '+(g.c+1));tip.innerHTML='';const b=document.createElement('b');b.textContent=ch;tip.append(b,`σελ. ${g.pg} από ${g.T}`)};
- const end=go=>{if(!sc)return;const g=sc.g,from={ci,frac:pages>1?pi/(pages-1):0};foot.classList.remove('scrub');const tip=$('scrubTip');if(tip)tip.remove();sc=null;
-   if(!go||!g){updateFoot();return}
-   ci=g.c;renderChapter(0,1);pi=Math.round(g.cf*(pages-1));layout();
-   toast(`Σελίδα ${g.pg}. Πάτα εδώ για επιστροφή.`,4000,()=>{ci=from.ci;renderChapter(0,1);pi=Math.round(from.frac*(pages-1));layout();toast('Γύρισες εκεί που ήσουν',1500)})};
- bar.addEventListener('pointerdown',e=>{if(!book||document.body.classList.contains('dim'))return;e.preventDefault();e.stopPropagation();try{bar.setPointerCapture(e.pointerId)}catch(_){}
-   sc={x0:e.clientX,moved:false};foot.classList.add('scrub');show(e.clientX)});
- bar.addEventListener('pointermove',e=>{if(!sc)return;if(Math.abs(e.clientX-sc.x0)>4)sc.moved=true;show(e.clientX)});
- bar.addEventListener('pointerup',e=>{if(sc){show(e.clientX);end(true)}});
- bar.addEventListener('pointercancel',()=>end(false));
- bar.addEventListener('click',e=>e.stopPropagation())}
+/* ---------- slider in the table of contents to jump anywhere in the book ---------- */
+function scrubTarget(f){const tot=sum(book.chars)||1;let t=f*tot,c=0;
+  while(c<book.chars.length-1&&t>book.chars[c]){t-=book.chars[c];c++}
+  return {f,c,cf:book.chars[c]?Math.min(1,t/book.chars[c]):0,pg:Math.max(1,Math.ceil(f*tot/PRINT)),T:totalPages(book.chars)}}
+function tocScrub(){
+  const w=document.createElement('div');w.className='tscrub';
+  w.innerHTML='<div class="tsl"><b></b><span></span></div><input type="range" min="0" max="1000" step="1" aria-label="Μετακίνηση στο βιβλίο"><div class="tsh">Σύρε για να πας οπουδήποτε στο βιβλίο</div>';
+  const R=w.querySelector('input'),tot=sum(book.chars)||1;R.value=Math.round(readChars()/tot*1000);
+  const show=()=>{const g=scrubTarget(R.value/1000);w.querySelector('b').textContent=book.chapters[g.c]&&book.chapters[g.c].title||('Κεφάλαιο '+(g.c+1));w.querySelector('span').textContent=`σελ. ${g.pg} από ${g.T} · ${Math.round(g.f*100)}%`;return g};
+  show();R.addEventListener('input',show);
+  R.addEventListener('change',()=>{const g=show(),from={ci,frac:pages>1?pi/(pages-1):0};
+    closeAll();ci=g.c;renderChapter(0,1);pi=Math.round(g.cf*(pages-1));layout();
+    toast(`Σελίδα ${g.pg}. Πάτα εδώ για επιστροφή.`,4000,()=>{ci=from.ci;renderChapter(0,1);pi=Math.round(from.frac*(pages-1));layout();toast('Γύρισες εκεί που ήσουν',1500)})});
+  return w;
+}
 
 /* ---------- animations ---------- */
-function fadeBlack(){
-  const d=document.createElement('div');d.id='fadeBlack';document.body.append(d);
-  const inA=RM?null:d.animate([{opacity:0},{opacity:1}],{duration:280,easing:'ease-in',fill:'forwards'});
-  const lt=setTimeout(()=>{d.innerHTML='<span>Άνοιγμα…</span>'},700);
-  if(RM)d.style.opacity=1;
-  return {shown:inA?inA.finished.catch(()=>{}):Promise.resolve(),
-    out(){clearTimeout(lt);requestAnimationFrame(()=>requestAnimationFrame(()=>{if(RM){d.remove();return}const o=d.animate([{opacity:1},{opacity:0}],{duration:520,easing:'ease-out',fill:'forwards'});o.onfinish=()=>d.remove()}))}};
-}
 function bmAnim(on){
   const sv=$('bmToggle').querySelector('svg');if(RM||!sv)return;
   if(on)sv.animate([{transform:'translateY(-16px)',opacity:0},{transform:'translateY(3px)',opacity:1,offset:.6},{transform:'translateY(-1px)',offset:.8},{transform:'translateY(0)'}],{duration:520,easing:'ease-out'});
