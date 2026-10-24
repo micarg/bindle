@@ -336,6 +336,19 @@ body.selmode .zone{pointer-events:none}
 body.rdon .foot{display:none}
 body.rdon .stage{margin-bottom:76px}
 body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+
+/* chapter opening */
+#page .kick{display:block;font:600 .42em/1.4 var(--font-ui);letter-spacing:.32em;color:var(--ink-soft);margin:0 auto .9em;text-indent:.32em}
+#page .kick .kn::before{content:"ΚΕΦΑΛΑΙΟ "}
+#page .kick .kd{display:none}
+#page p.dropcap{text-indent:0}
+#page p.dropcap::first-letter{float:left;font-size:calc(var(--lh)*2.05em);line-height:.8;margin:.09em .1em -.1em 0;font-weight:500;color:var(--ink)}
+/* opening quotes sit just outside the text edge, like in printed books */
+#page p{hanging-punctuation:first}
+/* a barely visible paper grain on the light "Χαρτί" background */
+:root{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .31 0 0 0 0 .22 0 0 0 .075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+:root[data-theme="light"] body{background-image:var(--grain)}
+@media (prefers-color-scheme: light){:root:not([data-theme]) body{background-image:var(--grain)}}
 </style>
 </head>
 <body>
@@ -636,6 +649,19 @@ function klIdle(){
   const np=Math.max(1,Math.ceil((page.scrollWidth+colGap-2)/step));if(np!==pages){pages=np;updateFoot()}
   if(KL.i<KL.blocks.length)klTimer=setTimeout(klIdle,60);
 }
+
+/* ---------- chapter opening like a printed book: small "ΚΕΦΑΛΑΙΟ" line above the title and a large first letter ---------- */
+function bookOpening(root){
+  const head=[...root.querySelectorAll('h1,h2,h3,.hd')].find(el=>!el.classList.contains('h-num')&&!el.classList.contains('h-sep'));
+  if(head&&!head.querySelector('.kick')&&!root.querySelector('.h-num')){
+    const w=document.createTreeWalker(head,NodeFilter.SHOW_TEXT);const t=w.nextNode();
+    if(t){const m=t.nodeValue.match(/^(\s*)([Α-Ωα-ω]{1,3}[΄'ʹ]|\d{1,3}|[IVXLC]{1,6})([.):·]?)(\s+)(?=\S)/);
+      if(m&&t.nodeValue.length>m[0].length){const k=document.createElement('span');k.className='kick';
+        const n=document.createElement('span');n.className='kn';n.textContent=m[1]+m[2];const d=document.createElement('span');d.className='kd';d.textContent=m[3]+m[4];
+        k.append(n,d);t.nodeValue=t.nodeValue.slice(m[0].length);head.insertBefore(k,head.firstChild);head.classList.add('haskick')}}}
+  const ps=[...root.querySelectorAll('p')].filter(p=>!p.classList.contains('hd')&&p.textContent.trim().length>=120);
+  const first=ps[0];if(first&&(!head||head.compareDocumentPosition(first)&Node.DOCUMENT_POSITION_FOLLOWING)&&/^[«"“]?[\p{L}]/u.test(first.textContent.trim()))first.classList.add('dropcap');
+}
 function markHeads(root){
   const blocks=[...root.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,blockquote,li')].filter(el=>!el.querySelector('p,div,h1,h2,h3,h4,h5,h6,blockquote,li'));
   const marked=[];let titles=0;
@@ -659,6 +685,7 @@ function renderChapter(keep,fade){
   const ch=book.chapters[ci];
   page.innerHTML=ch.html;
   markHeads(page);
+  bookOpening(page);
   applyHls();
   chText=page.textContent;
   if(S.bionic)bionic(page);
