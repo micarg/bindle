@@ -393,9 +393,11 @@ body.pbook #page p.hd{text-indent:0}
 .bmx .bms{font:400 13px/1.35 var(--font-read);color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* the back arrow and ✕ stay at the top of every panel while you scroll */
-.sheet>.xrow{position:sticky;top:-16px;z-index:4;background:var(--paper);margin-top:-16px;padding-top:16px;box-shadow:0 10px 12px -10px color-mix(in srgb,var(--paper) 100%,transparent)}
+.sheet>.xrow{position:sticky;top:-16px;z-index:4;background:var(--paper);margin-top:-16px;padding-top:16px}
 .sheet:not(.menu)>.xrow{margin-inline:-16px;padding-inline:16px}
-.sheet>.xrow::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(var(--paper),transparent);pointer-events:none}
+.sheet>.xrow::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(var(--paper),transparent);pointer-events:none;opacity:0;transition:opacity .15s}
+.sheet.scrolled>.xrow::after{opacity:1}
+body.dim #ribbon{opacity:0 !important;transition:opacity .2s}
 
 /* bookmark ribbon */
 .app{position:relative}
@@ -1002,7 +1004,7 @@ const STOP=new Set(('ο η το οι τα του της των τον την τ�
 const isCapL=c=>!!c&&/\p{Lu}/u.test(c);
 function splitSentences(t){return t.match(/[^.!?;…]+(?:[.!?;…]+[»"”’)]*|$)/g)||[]}
 function words(t){return (fold(t).match(/[\p{L}\p{N}]{3,}/gu)||[]).filter(w=>!STOP.has(w))}
-function shortSent(s){s=s.replace(/\s+/g,' ').trim();const w=s.split(' ');if(w.length<=30)return s;let cut=w.slice(0,26).join(' ');const k=cut.lastIndexOf(',');if(k>cut.length*0.55)cut=cut.slice(0,k);return cut.replace(/[,;:·—–-]+$/,'')+'…'}
+function shortSent(s){s=s.replace(/([a-zα-ωάέήίόύώϊϋΐΰ.!?;…»])([Α-ΩΆΈΉΊΌΎΏ])/g,'$1 $2').replace(/\s+/g,' ').trim();const w=s.split(' ');if(w.length<=30)return s;let cut=w.slice(0,26).join(' ');const k=cut.lastIndexOf(',');if(k>cut.length*0.55)cut=cut.slice(0,k);return cut.replace(/[,;:·—–-]+$/,'')+'…'}
 const META=/isbn|©|copyright|εκδοσει|εκδοτικ|εκδοτησ|τιτλοσ πρωτοτυπου|πρωτοτυπο|μεταφραση|μεταφρασ|επιμελεια|διορθωσ|σελιδοποιηση|τυπογραφ|εκτυπωση|βιβλιοδεσ|εξωφυλλο|www\.|https?:|@|τηλ\.|fax|all rights|πνευματικ|απαγορευεται|2121\/1993|δικαιωματ|πρωτη εκδοση|ανατυπωση|ηλεκτρονικη εκδοση|e-?book/;
 function frontMatterEnd(b){if(b._fs!=null)return b._fs;let fs=0;
   for(let c=0;c<b.chapters.length;c++){const t=chapTxt(c),sents=splitSentences(t),meta=sents.filter(x=>META.test(fold(x))).length;
@@ -1669,7 +1671,7 @@ function localNotesRange(a,b){const L=localDigest(book),fs=frontMatterEnd(book),
   const out=[];for(const s of segmentBook(book)){if(s.ci<fs)continue;const ratio=chapTxt(s.ci).length/Math.max(1,htmlText(book.chapters[s.ci].html).length),end=base[s.ci]+s.end*ratio;
     if(end>a&&end<=b&&L.segs[s.id])out.push(L.segs[s.id])}
   return thin(out,30,30)}
-function cleanText(t){return t.split(/\n\n/).map(p=>splitSentences(p).filter(x=>!META.test(fold(x))).join('').trim()).filter(Boolean).join('\n\n')}
+function cleanText(t){t=t.replace(/([a-zα-ωάέήίόύώϊϋΐΰ])([Α-ΩΆΈΉΊΌΎΏ])/g,'$1\n\n$2');return t.split(/\n\n/).map(p=>splitSentences(p).filter(x=>!META.test(fold(x))).join('').trim()).filter(Boolean).join('\n\n')}
 function rollPrompt(prev,notes,text){
   const P=[];
   P.push(`Βοηθάς έναν αναγνώστη με δυσκολία συγκέντρωσης να θυμάται την πλοκή του βιβλίου «${book.title}»${book.author?' ('+book.author+')':''}, που διαβάζει για προσωπική χρήση. Γράψε στα ελληνικά, με δικά σου απλά λόγια, χωρίς να αντιγράφεις φράσεις του κειμένου. Μην αναφέρεις τίποτα που δεν υπάρχει στο υλικό παρακάτω και μη μαντεύεις τη συνέχεια.`);
@@ -2365,6 +2367,9 @@ setTimeout(()=>{try{
 let tcvUrl=null;
 function titleCover(b){const el=$('tcv');if(!el)return;el.innerHTML='';el.style.background=coverTint(b.title);if(tcvUrl){URL.revokeObjectURL(tcvUrl);tcvUrl=null}
   if(b.id&&b.id!=='sample')idbGet('books',b.id).then(r=>{if(r&&r.cover&&book&&book.id===b.id){tcvUrl=URL.createObjectURL(r.cover);const im=document.createElement('img');im.alt='';im.src=tcvUrl;el.append(im)}})}
+
+/* the soft edge under a panel's header only shows once the panel is scrolled */
+document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('sheet'))t.classList.toggle('scrolled',t.scrollTop>4)},true);
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
