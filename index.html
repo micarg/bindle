@@ -353,12 +353,23 @@ body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 /* full immersion */
 .bar,.foot{transition:opacity .35s ease}
 body.immersive .bar,body.immersive .foot{opacity:0;pointer-events:none}
+
+/* quick actions, Aa button, note tabs */
+#menu .qrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:4px 4px 8px}
+#menu .qa{width:100%;flex-direction:column;justify-content:center;gap:6px;min-height:0;height:68px;padding:6px 2px;border:0;border-radius:14px;background:var(--chip);font:400 11.5px var(--font-ui);color:var(--ink)}
+#menu .qa svg{width:22px;height:22px;color:var(--ink)}
+.aa{position:absolute;left:-6px;top:2px;border:0;min-height:36px;padding:6px 10px;color:var(--ink-soft);font:500 15px var(--font-read);letter-spacing:.02em}
+.ntabs{display:flex;gap:6px;margin:-2px 0 4px}
+.ntabs button{flex:1;justify-content:center}
+#quick .qall{justify-self:start;border:0;padding:6px 0;min-height:0;color:var(--ink-soft);font:400 13px var(--font-ui);text-decoration:underline;text-underline-offset:3px}
+#quick .rng{margin-top:-6px}
 </style>
 </head>
 <body>
 <div id="splash" aria-hidden="true"><div class="spc" id="spCover"></div><div class="spt" id="spTitle"></div></div>
 <div class="app">
   <header class="bar" id="bar">
+    <button id="aaBtn" class="aa" aria-label="Εμφάνιση κειμένου">Aa</button>
     <button id="titleBtn" class="tbtn" aria-expanded="false" aria-controls="menu"><span class="t" id="title">Bindle</span><span class="car" aria-hidden="true">▾</span></button>
     <button id="bmToggle" class="bm" aria-pressed="false" aria-label="Σελιδοδείκτης"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
   </header>
@@ -370,15 +381,13 @@ body.immersive .bar,body.immersive .foot{opacity:0;pointer-events:none}
     <div class="zone c" id="zc" aria-hidden="true"></div>
     <div class="zone r" id="zr" aria-hidden="true"></div>
     <div class="sheet menu" id="menu" hidden>
+      <div class="qrow"><button id="rdBtn" class="qa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span>Ακρόαση</span></button><button id="soundsBtn" class="qa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg><span>Ήχοι</span></button><button id="qSum" class="qa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 10h14M5 14h9M5 18h6"/></svg><span>Περίληψη</span></button><button id="searchBtn" class="qa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg><span>Αναζήτηση</span></button></div>
       <button id="libBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3v16H5zM10 4h3v16h-3z"/><path d="M15.4 5.3l2.9-.8 3.5 15.1-2.9.8z"/></svg>Βιβλιοθήκη</button>
       <button id="tocBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".9"/><circle cx="4.5" cy="12" r=".9"/><circle cx="4.5" cy="18" r=".9"/></svg>Περιεχόμενα</button>
-      <button id="searchBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>Αναζήτηση</button>
-      <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σελιδοδείκτης</button>
-      <button id="hlBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Υπογραμμίσεις και σημειώσεις</button>
+      <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σημειώσεις</button>
+      <button id="hlBtn" class="mi" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>Υπογραμμίσεις και σημειώσεις</button>
       <button id="peopleBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Πρόσωπα</button>
       <button id="askBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M10 9.3a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6 1v.3M12 14.3v.01"/></svg>Ρώτα το βιβλίο</button>
-      <button id="rdBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>Ακρόαση βιβλίου</button>
-      <button id="soundsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>Ήχοι συγκέντρωσης</button>
       <button id="statsBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M10 20V6M15 20v-10M20 20v-4"/></svg>Η ανάγνωσή μου</button>
       <button id="setBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Ρυθμίσεις</button>
       <input id="file" type="file" accept=".epub,application/epub+zip" hidden>
@@ -437,7 +446,15 @@ body.immersive .bar,body.immersive .foot{opacity:0;pointer-events:none}
       <p class="summeta" id="sInfo"></p>
       <div class="list sres" id="sRes"></div>
     </div>
-    <div class="sheet full" id="hls" hidden><div class="list" id="hlList"></div></div>
+    <div class="sheet" id="quick" hidden>
+      <div class="row"><span>Μέγεθος</span><div class="seg"><button id="qFsD" aria-label="Μικρότερα">A−</button><span id="qFs" class="fsval">18</span><button id="qFsU" aria-label="Μεγαλύτερα">A+</button></div></div>
+      <div class="row"><span>Φόντο</span><div class="seg" id="qTh"><button data-v="">Αυτόματο</button><button data-v="light">Χαρτί</button><button data-v="dark">Νύχτα</button><button data-v="warm">Ζεστό</button></div></div>
+      <div class="row"><span>Bionic</span><div class="seg" id="qBn"><button data-v="off">Όχι</button><button data-v="0.4">Ήπια</button><button data-v="0.5">Μέτρια</button><button data-v="0.6">Δυνατή</button></div></div>
+      <div class="row"><span>Σκοτείνιασμα</span><span class="dimv" id="qDimV">Όχι</span></div>
+      <input type="range" id="qDim" class="rng" min="0" max="70" step="5" aria-label="Επιπλέον σκοτείνιασμα">
+      <button id="qAll" class="qall">Όλες οι ρυθμίσεις</button>
+    </div>
+    <div class="sheet full" id="hls" hidden><div class="ntabs"><button data-t="bms">Σελιδοδείκτης</button><button data-t="hls">Υπογραμμίσεις</button></div><div class="list" id="hlList"></div></div>
     <div class="sheet full" id="people" hidden><div id="peopleBody" class="list"></div></div>
     <div class="sheet full" id="stats" hidden><div id="statsBody" style="display:grid;gap:16px"></div></div>
     <div class="sheet" id="timer" hidden><div id="timerBody" style="display:grid;gap:12px"></div></div>
@@ -717,7 +734,7 @@ const onThis=b=>b.ci===ci&&Math.round(b.frac*(pages-1))===pi;
 function updBm(){const on=getBms().some(onThis);$('bmToggle').setAttribute('aria-pressed',on);$('bmToggle').setAttribute('aria-label',on?'Αφαίρεση σελιδοδείκτη':'Προσθήκη σελιδοδείκτη')}
 function pageSnippet(){const W=stage.clientWidth;for(const el of page.querySelectorAll('p,h1,h2,h3')){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.right>s.left+4&&r.left<s.left+W-4)return el.textContent.trim().slice(0,70)}return ''}
 function toggleBm(){let l=getBms();if(l.some(onThis))l=[];else l=[{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()}];store.set('bm:'+book.id,l);updBm();bmAnim(!!l.length);toast(l.length?'Ο σελιδοδείκτης μπήκε σε αυτή τη σελίδα':'Ο σελιδοδείκτης αφαιρέθηκε')}
-function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σελιδοδείκτης');
+function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σημειώσεις');t.insertAdjacentHTML('beforeend','<div class="ntabs"><button data-t="bms">Σελιδοδείκτης</button><button data-t="hls">Υπογραμμίσεις</button></div>');noteTabs(t,'bms');
   if(!l.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις βάλει σελιδοδείκτη σε αυτό το βιβλίο. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις τη σελίδα. Κάθε βιβλίο έχει έναν σελιδοδείκτη, όπως ένα κανονικό βιβλίο.</p>');return}
   l.forEach((b,i)=>{const row=document.createElement('div');row.className='bml';const a=document.createElement('a');a.href='#';
     a.innerHTML=`<span style="display:block;font-size:13px;color:var(--ink-soft);font-family:var(--font-ui)"></span><span></span>`;a.children[0].textContent=b.title+' · '+b.pct;a.children[1].textContent=b.snip?b.snip+'…':'';
@@ -933,7 +950,8 @@ function localPeople(pt){
 }
 function para(lab,text){const p=document.createElement('p');if(lab){const s=document.createElement('span');s.className='lab';s.textContent=lab;p.append(s)}p.append(text);return p}
 
-function openSummary(i){sumIdx=i;closeAll();$('sum').hidden=false;showSumSheet()}
+let sumHere=null;
+function openSummary(i){sumIdx=i;sumHere=i===-2?{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()}:null;closeAll();$('sum').hidden=false;showSumSheet()}
 $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
 
 
@@ -1179,9 +1197,9 @@ $('file').addEventListener('change',handleFile);
 $('file2').addEventListener('change',handleFile);
 
 /* ---------- controls ---------- */
-const sheets=['menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
+const sheets=['quick','menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
 function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';if(!['menu','wpop','recap','tdone'].includes(id)){const bk=document.createElement('button');bk.className='back';bk.setAttribute('aria-label','Πίσω');bk.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';bk.onclick=e=>{e.stopPropagation();goBack(id)};r.append(bk)}const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
-addX('menu','Μενού');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις και σημειώσεις');addX('people','Πρόσωπα');addX('stats','Η ανάγνωσή μου');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
+addX('menu','Μενού');addX('quick','Εμφάνιση κειμένου');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Σημειώσεις');noteTabs($('hls'),'hls');addX('people','Πρόσωπα');addX('stats','Η ανάγνωσή μου');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
 $('lib').querySelector('.xrow span').replaceWith(libDD);
 const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
@@ -1584,8 +1602,8 @@ function renderLocal(body,p){
   body.append(now.length?bullets(now):para('','Μόλις ξεκίνησες αυτό το κεφάλαιο.'));
 }
 function showSumSheet(msg){
-  if(sumIdx<0||!book)return;
-  const b=getBms()[sumIdx];if(!b)return;
+  if(sumIdx===-1||!book)return;
+  const b=sumIdx===-2?(sumHere||{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()}):getBms()[sumIdx];if(!b)return;
   const body=$('sumBody'),again=$('sumAgain'),stop=$('sumStop');
   body.innerHTML='';again.hidden=true;stop.hidden=true;$('sumSpeak').hidden=true;
   $('sumMeta').textContent=`Μέχρι: ${(book.chapters[b.ci]||{}).title||b.title} · ${b.pct}`;
@@ -2134,6 +2152,37 @@ $('imSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',S
 /* panels open: keep the bars; panels closed: hide them again a moment later */
 new MutationObserver(ms=>{if(!ms.some(m=>sheets.includes(m.target.id)&&m.oldValue!==m.target.getAttribute('hidden')))return;if(sheets.some(x=>!$(x).hidden))chromeShow();else chromeShow(1800)}).observe(stage,{attributes:true,attributeOldValue:true,attributeFilter:['hidden'],subtree:true});
 setTimeout(()=>chromeShow(2500),300);
+
+/* ---------- quick text panel ---------- */
+function qSync(){$('qFs').textContent=S.fs;
+  $('qTh').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S.theme||'')));
+  $('qBn').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==='off'?String(!S.bionic):String(!!S.bionic&&String(b.dataset.v)===String(S.lvl))));
+  const v=+S.dim||0;$('qDim').value=v;$('qDimV').textContent=v?v+'%':'Όχι'}
+$('aaBtn').onclick=()=>{closeAll();qSync();$('quick').hidden=false};
+$('qFsD').onclick=()=>{$('fsDown').click();qSync()};$('qFsU').onclick=()=>{$('fsUp').click();qSync()};
+$('qTh').querySelectorAll('button').forEach(b=>b.onclick=()=>{const t=$('thSeg').querySelector(`[data-v="${b.dataset.v}"]`);if(t)t.click();qSync()});
+$('qBn').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.v==='off'){if(S.bionic)$('bnBtn').click()}
+  else{if(!S.bionic)$('bnBtn').click();const t=$('bnLvl').querySelector(`[data-v="${b.dataset.v}"]`);if(t)t.click()}qSync()});
+$('qDim').addEventListener('input',e=>{const r=$('dimR');r.value=e.target.value;r.dispatchEvent(new Event('input'));qSync()});
+$('qDim').addEventListener('change',()=>$('dimR').dispatchEvent(new Event('change')));
+$('qAll').onclick=()=>{closeAll();$('settings').hidden=false};
+$('qSum').onclick=()=>{if(!book)return;openSummary(-2)};
+/* ---------- notes: bookmark and highlights in one place, with tabs ---------- */
+function noteTabs(root,cur){root.querySelectorAll('.ntabs button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.t===cur);
+  b.onclick=()=>{if(b.dataset.t===cur)return;closeAll();if(b.dataset.t==='bms'){buildBms();$('bms').hidden=false}else{buildHls();$('hls').hidden=false}}})}
+/* ---------- pull a panel down to close it ---------- */
+{let sw=null;
+ document.addEventListener('touchstart',e=>{const sh=e.target.closest&&e.target.closest('.sheet');if(!sh||sh.hidden||e.touches.length>1||e.target.closest('input,textarea,.selh,#libGrid.arr'))return;
+   sw={sh,y:e.touches[0].clientY,x:e.touches[0].clientX,dy:0,on:false,top:sh.scrollTop<=0}},{passive:true});
+ document.addEventListener('touchmove',e=>{if(!sw)return;const t=e.touches[0],dy=t.clientY-sw.y,dx=t.clientX-sw.x;
+   if(!sw.on){if(!sw.top||dy<10||Math.abs(dx)>dy){if(Math.abs(dy)>10||Math.abs(dx)>10)sw=sw.on?sw:null;return}sw.on=true;sw.sh.style.transition='none'}
+   sw.dy=Math.max(0,dy);sw.sh.style.transform=`translateY(${sw.dy*0.85}px)`;sw.sh.style.opacity=String(Math.max(.4,1-sw.dy/600));if(e.cancelable)e.preventDefault()},{passive:false});
+ const end=()=>{if(!sw)return;const {sh,dy,on}=sw;sw=null;if(!on)return;
+   sh.style.transition='transform .22s ease, opacity .22s ease';
+   if(dy>90){sh.style.transform='translateY(110%)';sh.style.opacity='0';setTimeout(()=>{closeAll();sh.style.transition='';sh.style.transform='';sh.style.opacity=''},200)}
+   else{sh.style.transform='';sh.style.opacity='';setTimeout(()=>{sh.style.transition=''},230)}};
+ document.addEventListener('touchend',end);document.addEventListener('touchcancel',end)}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
