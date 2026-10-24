@@ -435,7 +435,7 @@ body.hic #page .bnr,body.hic .sumtext .bnr{font-weight:400;color:color-mix(in sr
 body.hic #page{font-weight:400}
 
 /* in-app clock while reading */
-#clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px var(--font-ui);letter-spacing:.03em;font-variant-numeric:tabular-nums;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
+#clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 22px);transform:translateX(-50%);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px var(--font-ui);letter-spacing:.03em;font-variant-numeric:tabular-nums;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
 body.immersive.ckon #clock{opacity:.5}
 </style>
 </head>
@@ -2380,7 +2380,7 @@ document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&t.cla
 
 /* ---------- running head: the chapter title, quietly at the top while reading, like in a printed book ---------- */
 {const c=document.createElement('div');c.id='clock';c.setAttribute('aria-hidden','true');document.querySelector('.app').append(c)}
-function runHead(){const c=$('clock');if(!c||!book)return;const rem=(book.chars[ci]||0)*(1-(pi+1)/Math.max(1,pages));c.textContent=pi>=pages-1?'Τέλος κεφαλαίου':`${fmtMin(rem/cpm)} ως το τέλος του κεφαλαίου`}
+function runHead(){const c=$('clock');if(!c||!book)return;const rem=(book.chars[ci]||0)*(1-(pi+1)/Math.max(1,pages));c.textContent=pi>=pages-1?'—':fmtMin(rem/cpm)}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
