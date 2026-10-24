@@ -447,7 +447,8 @@ body.hic.immersive.ckon #clock,body.immersive.pnpage.hic #pnum{color:var(--ink);
 body.hic.immersive:not(.pnpage) #pct{color:var(--ink);opacity:.92}
 /* liquid glass style (Ρυθμίσεις → Εμφάνιση → Στιλ) */
 :root{--gl-bg:rgba(255,255,255,.45);--gl-hi:rgba(255,255,255,.9);--gl-edge:rgba(255,255,255,.65);--gl-sh:rgba(0,0,0,.14);--gl-sel:rgba(255,255,255,.8)}
-@media (prefers-color-scheme: dark){:root{--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22)}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22)}}
+:root[data-theme="dark"],:root[data-theme="warm"]{--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22)}
 body.glass .sheet{background:color-mix(in srgb,var(--paper) 52%,transparent)!important;-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:.5px solid var(--gl-edge)!important;box-shadow:inset 0 1px 0 var(--gl-hi),0 24px 60px -12px var(--gl-sh)!important;border-radius:30px!important}
 body.glass .sheet>.xrow{background:transparent!important}
 body.glass .veil{background:color-mix(in srgb,var(--paper) 18%,transparent)!important;backdrop-filter:blur(3px)!important;-webkit-backdrop-filter:blur(3px)!important}
@@ -492,6 +493,12 @@ body.glass.glint .bm,body.glass.glint .aa,body.glass.glint .tbtn{box-shadow:inse
 body.glass.glint .xrow button{box-shadow:inset var(--sx) var(--sy) 0 var(--gl-hi)!important}
 body.glass.glint .sheet button:not(.mi):not(.bk):not(.back):not(.bpi):not(.xrow button),body.glass.glint details.grp{background:radial-gradient(140% 120% at var(--lx) var(--ly),rgba(255,255,255,.13),rgba(255,255,255,0) 55%),var(--gl-bg)!important}
 body.glass.glint .sheet{background-image:radial-gradient(90% 50% at var(--lx) var(--ly),rgba(255,255,255,.05),rgba(255,255,255,0) 70%)}
+
+body.glass .sheet:not(.scrolled)>.xrow{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* panels and menus always use the dark look, whatever colour the page is */
+.sheet,.ddmenu,#bkPop .bpm,#selBar{--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22);color-scheme:dark;color:var(--ink)}
+:root[data-theme="light"] body.glass .sheet,:root[data-theme="light"] body.glass #selBar{background:color-mix(in srgb,#121211 86%,transparent)!important}
+@media (prefers-color-scheme: light){:root:not([data-theme]) body.glass .sheet,:root:not([data-theme]) body.glass #selBar{background:color-mix(in srgb,#121211 86%,transparent)!important}}
 </style>
 </head>
 <body>
