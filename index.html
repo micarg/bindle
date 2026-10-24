@@ -322,7 +322,7 @@ body.selmode .zone{pointer-events:none}
 .tscrub .tsh{font:400 11.5px var(--font-ui);color:var(--ink-soft)}
 
 /* read aloud */
-::highlight(rd){background-color:rgba(61,139,253,.22)}
+#page mark.rdm{background:rgba(61,139,253,.24);color:inherit;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .2s}
 #rdBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);z-index:40;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);border-radius:22px;padding:8px 10px;box-shadow:0 12px 30px -10px rgba(0,0,0,.45);animation:rise .22s ease-out;max-width:520px;margin:0 auto}
 #rdBar button{min-height:0;border:0;border-radius:999px;padding:0}
 #rdBar .rp{width:40px;height:40px;justify-content:center;background:var(--ink);color:var(--paper);flex:none}
@@ -1960,11 +1960,19 @@ function rdCount(i){const x=RA.sents[i];if(!x)return false;const g=sum(book.char
 function rdMark(i){
   if(RA.cur!==i&&rdCount(i))return;
   RA.cur=i;const x=RA.sents[i];if(!x)return;
-  try{if(window.CSS&&CSS.highlights){const r=rangeOf(x.s,x.e);if(r)CSS.highlights.set('rd',new Highlight(r))}}catch(e){}
+  rdWrap(x.s,x.e);
   rdFollow(x.s);
 }
 function rdFollow(off){const p=pageOfOff(off);if(p!=null&&p!==pi&&p<pages){RA.auto=true;pi=p;layout(0,1);RA.auto=false}}
-function rdClearMark(){try{if(window.CSS&&CSS.highlights)CSS.highlights.delete('rd')}catch(e){}}
+/* mark the sentence being read with a real element, so it shows on every iPhone */
+function rdUnwrap(){page.querySelectorAll('mark.rdm').forEach(m=>{const p=m.parentNode;while(m.firstChild)p.insertBefore(m.firstChild,m);m.remove()})}
+function rdWrap(a,b){
+  rdUnwrap();let pos=0;
+  for(const n of textNodes(page)){const L=n.nodeValue.length,x=Math.max(a,pos),y=Math.min(b,pos+L);
+    if(x<y){let t=n;if(x>pos)t=t.splitText(x-pos);if(y<pos+L)t.splitText(y-x);const m=document.createElement('mark');m.className='rdm';t.replaceWith(m);m.append(t)}
+    pos+=L;if(pos>=b)break}
+}
+function rdClearMark(){rdUnwrap();try{if(window.CSS&&CSS.highlights)CSS.highlights.delete('rd')}catch(e){}}
 function rdUI(){
   let b=$('rdBar');
   if(!RA||!RA.on){if(b){b.remove();rdRoom(false)}return}
@@ -2015,9 +2023,10 @@ async function rdAlign(blob,ch){
   for(let i=12;i+8<=Math.min(buf.byteLength,512);){const id=String.fromCharCode(v.getUint8(i),v.getUint8(i+1),v.getUint8(i+2),v.getUint8(i+3)),sz=v.getUint32(i+4,true);if(id==='data'){off=i+8;break}i+=8+sz+(sz&1)}
   const n=(buf.byteLength-off)>>1,F=Math.max(1,Math.round(rate*0.02)),frames=Math.floor(n/F);if(frames<10)return null;
   const e=new Float32Array(frames);for(let f=0;f<frames;f++){let q=0,c=0;for(let k=0;k<F;k+=3){const x=v.getInt16(off+2*(f*F+k),true);q+=x*x;c++}e[f]=Math.sqrt(q/c)}
-  const so=Float32Array.from(e).sort(),loud=so[Math.floor(frames*0.75)]||1,thr=Math.max(loud*0.1,so[Math.floor(frames*0.04)]*2,30);
+  const so=Float32Array.from(e).sort(),loud=so[Math.floor(frames*0.75)]||1,thr=Math.max(30,Math.min(loud*0.25,Math.max(loud*0.08,so[Math.floor(frames*0.04)]*2)));
   let f0=0;while(f0<frames&&e[f0]<thr)f0++;let f1=frames-1;while(f1>f0&&e[f1]<thr)f1--;
   const gaps=[];for(let f=f0;f<=f1;){if(e[f]<thr){let g=f;while(g<=f1&&e[g]<thr)g++;if(g-f>=5)gaps.push({t:g*0.02-0.06,len:(g-f)*0.02});f=g}else f++}
+  if((f1-f0)<frames*0.5)return null;
   const t0=f0*0.02,t1=(f1+1)*0.02,L=RA.sents,w=[];let tot=0;for(let k=ch.a;k<ch.b;k++){tot+=(L[k].e-L[k].s)+4;w.push(tot)}
   const bt=[t0],used=new Set(),span=t1-t0;let prev=t0;
   for(let j=0;j<w.length-1;j++){const exp=t0+span*w[j]/tot,win=Math.max(0.8,span*0.12);let best=null,bs=1e9;
