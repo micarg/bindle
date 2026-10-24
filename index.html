@@ -461,6 +461,16 @@ body.glass #rdBar,body.glass #toast,body.glass #selBar{background:color-mix(in s
 body.glass #rdBar .rp{background:var(--ink)!important}
 body.glass #quick .qall{background:var(--gl-bg)!important;border:.5px solid var(--gl-edge)!important;box-shadow:inset 0 1px 0 var(--gl-hi)!important;border-radius:999px!important;padding:8px 16px!important;text-decoration:none}
 
+
+/* panel header spacing: same breathing room on every panel, buttons never clipped by the rounded corners */
+.sheet>.xrow{min-height:0;padding-top:16px;padding-bottom:2px;margin-bottom:-3px}
+.sheet:not(.menu)>.xrow{padding-inline:14px}
+.xrow .back{margin-left:0}
+#menu.menu>.xrow{position:static;margin:0 0 4px;padding:8px 8px 6px 16px;min-height:0}
+#settings>.xrow{margin-bottom:11px}
+.sheet.full{grid-auto-rows:max-content}
+body.glass .xrow button.libdd.tbtn{-webkit-backdrop-filter:none;backdrop-filter:none;width:auto!important;height:auto;min-width:0;border-radius:999px!important;background:none!important;border:0!important;box-shadow:none!important;padding:0 6px!important}
+body.glass .sheet:not(.menu)>.xrow{background:color-mix(in srgb,var(--paper) 55%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 </style>
 </head>
 <body>
