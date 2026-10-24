@@ -87,7 +87,7 @@ button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-colo
 #page .bnr{font-weight:var(--rest);color:color-mix(in srgb,var(--ink) 68%,var(--paper))}
 #page b.bn{color:var(--ink)}
 .zone{position:absolute;top:0;bottom:0;z-index:2;cursor:pointer}
-.zone.l{left:0;width:30%}.zone.c{left:30%;width:40%}.zone.r{right:0;width:30%}
+.zone.l{left:0;width:22%}.zone.c{left:22%;width:56%}.zone.r{right:0;width:22%}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:6px 12px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
 .prog{flex:1;max-width:150px;margin-inline:auto;height:2px;background:var(--rule);position:relative}.prog i{position:absolute;inset:0 auto 0 0;background:var(--ink-soft)}
 .sheet{position:absolute;left:0;right:0;top:0;z-index:5;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;gap:14px;align-content:start;max-height:100%;overflow:auto}
@@ -352,7 +352,11 @@ body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 
 /* full immersion */
 .bar,.foot{transition:opacity .35s ease}
-body.immersive .bar,body.immersive .foot{opacity:0;pointer-events:none}
+body.immersive .bar{opacity:0;pointer-events:none}
+body.immersive .foot{pointer-events:none}
+.foot>*{transition:opacity .35s ease}
+body.immersive .foot>*:not(#pct){opacity:0}
+body.immersive #pct{opacity:.55}
 
 /* quick actions, Aa button, note tabs */
 #menu .qrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:4px 4px 8px}
@@ -440,7 +444,7 @@ body.pbook #page p.hd{text-indent:0}
         <p class="hint" id="bkHint" style="margin-top:-6px">Κρατά τα βιβλία, την πρόοδο, τους σελιδοδείκτες, τις υπογραμμίσεις, τις περιλήψεις, τα στατιστικά και τις ρυθμίσεις, όλα σε ένα αρχείο. Αποθήκευσέ το στα Αρχεία ή στο iCloud.</p>
       </div></details>
       <details class="grp" data-g="help"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.8v.01"/></svg><span>Οδηγίες</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
-        <p class="hint">Πάτα δεξιά για την επόμενη σελίδα, αριστερά για την προηγούμενη και στη μέση για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
+        <p class="hint">Πάτα στην άκρη δεξιά για την επόμενη σελίδα και στην άκρη αριστερά για την προηγούμενη. Πάτα στη μέση για να εμφανιστούν ή να κρυφτούν ο τίτλος και η κάτω μπάρα, και πάτα τον τίτλο για το μενού. Κράτα πατημένη μια λέξη για ορισμό, υπογράμμιση ή σημείωση. Πάτα την ένδειξη κάτω αριστερά για να δεις σελίδες ή χρόνο που απομένει.</p>
       </div></details>
     </div>
     <div class="sheet toc" id="toc" hidden></div>
@@ -1228,7 +1232,7 @@ const closeAll=()=>{if(typeof closeBookMenu==='function')closeBookMenu();lastOpe
 const openMenu=()=>{const was=!$('menu').hidden;closeAll();if(!was){$('menu').hidden=false;$('titleBtn').setAttribute('aria-expanded','true')}};
 $('titleBtn').onclick=openMenu;
 $('zr').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guideNext():next()};$('zl').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(!closeAll())S.guide?guidePrev():prev()};
-$('zc').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(closeAll())return;if(document.body.classList.contains('immersive')){chromeShow(4000);return}openMenu()};
+$('zc').onclick=()=>{if(dragMoved)return;if(lpFired){lpFired=false;return}if(closeAll())return;if(!immOn())return;if(document.body.classList.contains('immersive'))chromeShow(4000);else chromeHide()};
 document.addEventListener('keydown',e=>{if(sheets.some(s=>!$(s).hidden)){if(e.key==='Escape')closeAll();return}if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next()}if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}});
 /* ---------- drag to turn: the page follows your finger ---------- */
 let drag=null,dragMoved=false,dragOv=null;
