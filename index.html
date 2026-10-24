@@ -813,7 +813,7 @@ setInterval(()=>{if(dgRun)updDgStat()},1000);
 const sleep=(ms,signal)=>new Promise((r,j)=>{const t=setTimeout(r,ms);if(signal)signal.addEventListener('abort',()=>{clearTimeout(t);j({code:'cancelled'})},{once:true})});
 const GMODELS=['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash-lite','gemini-flash-latest','gemini-3.1-flash-lite','gemini-flash-lite-latest','gemini-2.5-flash','gemini-2.5-flash-lite'];
 async function callGemini(prompt,signal,maxTok=8192,json=false){
-  const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null;
+  const key=store.get('gkey','');const models=[store.get('gmodel',''),...GMODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);let lastErr=null,refusals=0;
   for(const model of models){
     for(let attempt=0;attempt<4;attempt++){
       let res,timedOut=false;const ac=new AbortController(),onAb=()=>ac.abort();if(signal){if(signal.aborted)throw {code:'cancelled'};signal.addEventListener('abort',onAb,{once:true})}
@@ -824,7 +824,8 @@ async function callGemini(prompt,signal,maxTok=8192,json=false){
       catch(e){clearTimeout(to);if(timedOut&&attempt<3){dgNote('Το '+aiName()+' αργεί να απαντήσει. Ξαναδοκιμάζω.');continue}throw {code:timedOut?'upstream_error':e&&e.name==='AbortError'?'cancelled':'offline'}}
       clearTimeout(to);if(signal)signal.removeEventListener('abort',onAb);
       if(res.ok){const j=await res.json(),c=j.candidates&&j.candidates[0],t=c&&c.content?(c.content.parts||[]).map(p=>p.text||'').join(''):'';
-        if(!t.trim())throw {code:(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion'};
+        if(!t.trim()){const code=(j.promptFeedback&&j.promptFeedback.blockReason)||(c&&/SAFETY|RECITATION|PROHIBITED|BLOCK|OTHER/.test(c.finishReason||''))?'refused':'empty_completion';
+          if(code==='refused'&&!(j.promptFeedback&&j.promptFeedback.blockReason)&&++refusals<2){lastErr={code};dgNote('Δοκιμάζω άλλο μοντέλο του Gemini…');break}throw {code}}
         store.set('gmodel',model);dgNote('');return t}
       let m='',delay=0,qinfo='';try{const j=await res.json();m=(j.error&&j.error.message)||'';const det=(j.error&&j.error.details)||[];const ri=det.find(d=>d&&d.retryDelay);if(ri)delay=parseFloat(ri.retryDelay)||0;qinfo=JSON.stringify(det)}catch(e){}
       if(res.status===400&&/thinking/i.test(m)&&store.get('gthink',true)){store.set('gthink',false);attempt--;continue}
@@ -1616,7 +1617,11 @@ async function rollSummary(p,signal){
     if(!['refused','empty_completion','invalid_json'].includes(e&&e.code)||text.length<4000)throw e;
     dgNote('Το '+aiName()+' δεν δέχτηκε ένα κομμάτι. Ξαναδοκιμάζω με λιγότερες σελίδες.');
     const cut=text.slice(-12000);notes=notes.concat(localNotesRange(ws,T-12000)).slice(-60);
-    r=await sampleFn.json(rollPrompt(prev,notes,cut),{signal});
+    try{r=await sampleFn.json(rollPrompt(prev,notes,cut),{signal})}
+    catch(e2){if(!e2||e2.code!=='refused')throw e2;
+      /* some books have passages Google will not process at all: summarise from the key sentences picked on the phone instead */
+      dgNote('Δοκιμάζω χωρίς ολόκληρο το κείμενο…');
+      r=await sampleFn.json(rollPrompt(prev,localNotesRange(from,T).slice(-70),'(το πλήρες κείμενο δεν είναι διαθέσιμο, στηρίξου στις σημειώσεις)'),{signal})}
   }
   const arr=x=>Array.isArray(x)?x.filter(y=>typeof y==='string'&&y.trim()).map(y=>y.trim()):[];
   const people=Array.isArray(r&&r.people)?r.people.filter(x=>x&&typeof x.name==='string'&&x.name.trim()).slice(0,25).map(x=>({name:x.name.trim().slice(0,60),desc:typeof x.desc==='string'?x.desc.trim().slice(0,180):''})):[];
@@ -1624,13 +1629,14 @@ async function rollSummary(p,signal){
   if(!v.story.length&&!v.recent.length)throw {code:'empty_completion'};
   setRS(v);return v;
 }
+const rollRefused=new Set();
 async function startRoll(p){
   if(dgRun||!sampleFn||!book)return;
   rollTried.add(book.id+':'+gPos(p));
   dgRun={id:book.id,mode:'roll',at:0,total:1,t0:Date.now(),note:'',ctl:new AbortController()};digestChanged();
   let msg;
   try{const v=await rollSummary(p,dgRun.ctl.signal);if(!v)msg='Δεν έχεις διαβάσει ακόμα αρκετές σελίδες για περίληψη.'}
-  catch(e){const c=e&&e.code;msg=c==='cancelled'?'Η περίληψη σταμάτησε.':(sumErr[c]||'Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο.')}
+  catch(e){const c=e&&e.code;if(c==='refused'){rollRefused.add(book.id);msg=''}else msg=c==='cancelled'?'Η περίληψη σταμάτησε.':(sumErr[c]||'Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο.')}
   dgRun=null;digestChanged(msg);
 }
 function renderRoll(body,v){
@@ -1661,6 +1667,9 @@ function showSumSheet(msg){
   if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();body.append(p);stop.hidden=false;
     if(sampleFn){meta('Συνήθως παίρνει 10–30 δευτερόλεπτα. Μπορείς να κλείσεις το παράθυρο και να διαβάζεις.');return}}
   else if(sampleFn&&!msg&&!rollTried.has(book.id+':'+T)){startRoll(b);return}
+  if(sampleFn&&rollRefused.has(book.id)&&!msg){
+    meta('Το Gemini δεν δέχτηκε να διαβάσει κάποιες σελίδες αυτού του βιβλίου (η Google μπλοκάρει ορισμένο περιεχόμενο), οπότε εδώ είναι η αυτόματη περίληψη από φράσεις του ίδιου του βιβλίου.');
+    renderLocal(body,b);spkReady();again.textContent='Δοκίμασε ξανά με Gemini';again.onclick=()=>{rollRefused.delete(book.id);startRoll(b)};again.hidden=false;return}
   if(sampleFn){
     if(rs&&rs.pos<T){renderRoll(body,rs);spkReady();meta(`Αυτή είναι η προηγούμενη περίληψη, μέχρι ${Math.max(1,Math.ceil((T-rs.pos)/PRINT))} σελίδες πιο πριν.`)}
     again.textContent='Δοκίμασε ξανά';again.onclick=()=>startRoll(b);again.hidden=false;return}
