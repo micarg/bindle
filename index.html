@@ -435,7 +435,7 @@ body.hic #page .bnr,body.hic .sumtext .bnr{font-weight:400;color:color-mix(in sr
 body.hic #page{font-weight:400}
 
 /* in-app clock while reading */
-#clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:italic 400 12.5px var(--font-read);letter-spacing:.03em;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
+#clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px var(--font-ui);letter-spacing:.03em;font-variant-numeric:tabular-nums;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
 body.immersive.ckon #clock{opacity:.5}
 </style>
 </head>
@@ -491,7 +491,7 @@ body.immersive.ckon #clock{opacity:.5}
         <div class="row"><span>Γύρισμα σελίδας</span><div class="seg" id="trSeg"><button data-v="blur">Με θόλωμα</button><button data-v="slide">Απλή ολίσθηση</button></div></div>
         <div class="row"><span>Μπάρες όσο διαβάζεις</span><div class="seg" id="imSeg"><button data-v="1">Κρυφές</button><button data-v="0">Πάντα ορατές</button></div></div>
         <div class="row"><span>Κάτω όσο διαβάζεις</span><div class="seg" id="pnSeg"><button data-v="page">Αριθμός σελίδας</button><button data-v="pct">Ποσοστό</button></div></div>
-        <div class="row"><span>Κεφάλαιο πάνω όσο διαβάζεις</span><div class="seg" id="ckSeg"><button data-v="on">Ναι</button><button data-v="off">Όχι</button></div></div>
+        <div class="row"><span>Χρόνος κεφαλαίου πάνω</span><div class="seg" id="ckSeg"><button data-v="on">Ναι</button><button data-v="off">Όχι</button></div></div>
         <div class="row"><span>Επιπλέον σκοτείνιασμα</span><span class="dimv" id="dimV">Όχι</span></div>
         <input type="range" id="dimR" class="rng" min="0" max="70" step="5" aria-label="Επιπλέον σκοτείνιασμα">
         <p class="hint">Κάνει την οθόνη πιο σκοτεινή ακόμα κι από τη χαμηλότερη φωτεινότητα του iPhone, για διάβασμα στο σκοτάδι.</p>
@@ -2380,7 +2380,7 @@ document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&t.cla
 
 /* ---------- running head: the chapter title, quietly at the top while reading, like in a printed book ---------- */
 {const c=document.createElement('div');c.id='clock';c.setAttribute('aria-hidden','true');document.querySelector('.app').append(c)}
-function runHead(){const c=$('clock');if(!c||!book)return;const t=(book.chapters[ci]&&book.chapters[ci].title||'').replace(/\s+/g,' ').trim();c.textContent=t||book.title}
+function runHead(){const c=$('clock');if(!c||!book)return;const rem=(book.chars[ci]||0)*(1-(pi+1)/Math.max(1,pages));c.textContent=pi>=pages-1?'Τέλος κεφαλαίου':`${fmtMin(rem/cpm)} ως το τέλος του κεφαλαίου`}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
