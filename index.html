@@ -417,6 +417,16 @@ body.immersive.pnpage #pnum{display:block;position:absolute;left:50%;transform:t
 #toast.show{transform:translate(-50%,0) scale(1)}
 #toast .ti{flex:none;display:grid;place-items:center;opacity:.85}
 #toast span:last-child{text-align:left}
+
+/* contents with page numbers */
+.toc a{display:flex;align-items:baseline;gap:6px}
+.toc a .tt{flex:0 1 auto;min-width:0}
+.toc a .dd{flex:1 1 auto;min-width:16px;border-bottom:1.5px dotted color-mix(in srgb,var(--ink-soft) 55%,transparent);transform:translateY(-4px)}
+.toc a .pg{flex:none;font:400 13px var(--font-ui);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+/* small cover beside the title */
+.tbtn{align-items:center}
+.tcv{width:14px;height:20px;flex:none;border-radius:1.5px 3px 3px 1.5px;overflow:hidden;box-shadow:0 2px 4px -1px rgba(0,0,0,.4);margin-right:3px;display:inline-block}
+.tcv img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -424,7 +434,7 @@ body.immersive.pnpage #pnum{display:block;position:absolute;left:50%;transform:t
 <div class="app">
   <header class="bar" id="bar">
     <button id="aaBtn" class="aa" aria-label="Εμφάνιση κειμένου">Aa</button>
-    <button id="titleBtn" class="tbtn" aria-expanded="false" aria-controls="menu"><span class="t" id="title">Bindle</span><span class="car" aria-hidden="true">▾</span></button>
+    <button id="titleBtn" class="tbtn" aria-expanded="false" aria-controls="menu"><span class="tcv" id="tcv"></span><span class="t" id="title">Bindle</span><span class="car" aria-hidden="true">▾</span></button>
     <button id="bmToggle" class="bm" aria-pressed="false" aria-label="Σελιδοδείκτης"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
   </header>
   <main class="stage" id="stage">
@@ -1068,6 +1078,7 @@ function next(){onTurn();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi<page
 function prev(){chromeTurn();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
 
 function openBook(b){
+  titleCover(b);
   if(typeof RA!=='undefined'&&RA&&RA.on)rdStop();
   book=b;if(store.get('st:'+b.id,null)===null){const p0=store.get('pos:'+b.id,null);store.set('st:'+b.id,p0&&p0.read>0?0:Date.now())}$('title').textContent=b.title;page.lang=b.lang||'el';
   store.set('lastId',b.id);
@@ -1084,7 +1095,9 @@ function openBook(b){
 
 function buildToc(){
   const t=$('toc');t.innerHTML='';t.append(tocScrub());
-  book.chapters.forEach((c,i)=>{const a=document.createElement('a');a.href='#';a.textContent=c.title;a.setAttribute('aria-current',i===ci);
+  let acc=0;
+  book.chapters.forEach((c,i)=>{const a=document.createElement('a');a.href='#';a.setAttribute('aria-current',i===ci);
+    {const sp=Math.floor(acc/PRINT)+1;acc+=book.chars[i]||0;const tt=document.createElement('span');tt.className='tt';tt.textContent=c.title;const dd=document.createElement('span');dd.className='dd';const pg=document.createElement('span');pg.className='pg';pg.textContent=sp;a.append(tt,dd,pg)}
     a.onclick=e=>{e.preventDefault();ci=i;pi=0;renderChapter();t.hidden=true;buildToc()};t.append(a)});
   if(typeof addX==='function')addX('toc','Περιεχόμενα');
 }
@@ -1212,7 +1225,7 @@ async function buildLib(){
     const cv=document.createElement('div');cv.className='cv';
     const ph=document.createElement('div');ph.className='ph';ph.textContent=e.title;cv.append(ph);cv.style.background=coverTint(e.title);
     const t=document.createElement('div');t.className='bt';t.textContent=e.title;
-    const p=document.createElement('div');p.className='bp';p.textContent=pct>=99.5?'Διαβάστηκε · 100%':Xp?`${Math.max(1,Math.round(pct))}% διαβασμένο`:'Αδιάβαστο · 0%';
+    const p=document.createElement('div');p.className='bp';p.textContent=(pct>=99.5?'Διαβάστηκε':Xp?`${Math.max(1,Math.round(pct))}%`:'Αδιάβαστο')+` · ${T} σελ.`;
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
     card.append(cv,t,p,bar);
     card.dataset.id=e.id;card.addEventListener('contextmenu',ev=>ev.preventDefault());
@@ -2333,6 +2346,11 @@ setTimeout(()=>{try{
    if(tdy>35){t._swiped=Date.now();t.classList.remove('show');clearTimeout(t._h)}
    t.style.transform='';t.style.opacity=''});
  document.addEventListener('click',e=>{const t=$('toast');if(t&&t._swiped&&Date.now()-t._swiped<400&&t.contains(e.target)){e.stopPropagation();e.preventDefault()}},true)}
+
+/* ---------- small cover next to the book title ---------- */
+let tcvUrl=null;
+function titleCover(b){const el=$('tcv');if(!el)return;el.innerHTML='';el.style.background=coverTint(b.title);if(tcvUrl){URL.revokeObjectURL(tcvUrl);tcvUrl=null}
+  if(b.id&&b.id!=='sample')idbGet('books',b.id).then(r=>{if(r&&r.cover&&book&&book.id===b.id){tcvUrl=URL.createObjectURL(r.cover);const im=document.createElement('img');im.alt='';im.src=tcvUrl;el.append(im)}})}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
