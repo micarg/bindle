@@ -449,7 +449,7 @@ body.hic.immersive:not(.pnpage) #pct{color:var(--ink);opacity:.92}
 :root{--gl-bg:rgba(255,255,255,.45);--gl-hi:rgba(255,255,255,.9);--gl-edge:rgba(255,255,255,.65);--gl-sh:rgba(0,0,0,.14);--gl-sel:rgba(255,255,255,.8)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22)}}
 :root[data-theme="dark"],:root[data-theme="warm"]{--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22)}
-body.glass .sheet{background:color-mix(in srgb,var(--paper) 52%,transparent)!important;-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:.5px solid var(--gl-edge)!important;box-shadow:inset 0 1px 0 var(--gl-hi),0 24px 60px -12px var(--gl-sh)!important;border-radius:30px!important}
+body.glass .sheet{background:color-mix(in srgb,var(--paper) 52%,transparent)!important;-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:.5px solid var(--gl-edge)!important;box-shadow:inset 0 1px 0 var(--gl-hi),0 14px 26px -16px var(--gl-sh)!important;border-radius:30px!important}
 body.glass .sheet>.xrow{background:transparent!important}
 body.glass .veil{background:color-mix(in srgb,var(--paper) 18%,transparent)!important;backdrop-filter:blur(3px)!important;-webkit-backdrop-filter:blur(3px)!important}
 body.glass .sheet button:not(.mi):not(.bk):not(.back):not(.bpi),body.glass .sheet .filebtn{background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.02)),var(--gl-bg)!important;border:.5px solid var(--gl-edge)!important;-webkit-backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);box-shadow:inset 0 1px 0 var(--gl-hi),inset 0 -8px 14px -10px rgba(255,255,255,.14),0 4px 14px -6px var(--gl-sh);border-radius:999px!important;color:var(--ink)!important}
@@ -495,6 +495,9 @@ body.glass.glint .sheet button:not(.mi):not(.bk):not(.back):not(.bpi):not(.xrow 
 body.glass.glint .sheet{background-image:radial-gradient(90% 50% at var(--lx) var(--ly),rgba(255,255,255,.05),rgba(255,255,255,0) 70%)}
 
 body.glass .sheet:not(.scrolled)>.xrow{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* the soft blur behind panels covers the whole screen, so no edge shows at the sides */
+.veil{position:fixed!important;inset:0!important}
+.bar{z-index:6}
 /* panels and menus always use the dark look, whatever colour the page is */
 .sheet,.ddmenu,#bkPop .bpm,#selBar{--paper:#121211;--ink:#d9d6cf;--ink-soft:#8f8c85;--rule:#2b2a28;--chip:#22211f;--accent:#9fb8c6;--gl-bg:rgba(255,255,255,.075);--gl-hi:rgba(255,255,255,.24);--gl-edge:rgba(255,255,255,.15);--gl-sh:rgba(0,0,0,.55);--gl-sel:rgba(255,255,255,.22);color-scheme:dark;color:var(--ink)}
 :root[data-theme="light"] body.glass .sheet,:root[data-theme="light"] body.glass #selBar{background:color-mix(in srgb,#121211 86%,transparent)!important}
