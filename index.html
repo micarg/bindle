@@ -388,6 +388,11 @@ body.pbook #page p.hd{text-indent:0}
 .bmx a b{font:500 14.5px/1.3 var(--font-ui)}
 .bmx .bmm{font:400 12px var(--font-ui);color:var(--ink-soft)}
 .bmx .bms{font:400 13px/1.35 var(--font-read);color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* the back arrow and ✕ stay at the top of every panel while you scroll */
+.sheet>.xrow{position:sticky;top:-16px;z-index:4;background:var(--paper);margin-top:-16px;padding-top:16px;box-shadow:0 10px 12px -10px color-mix(in srgb,var(--paper) 100%,transparent)}
+.sheet:not(.menu)>.xrow{margin-inline:-16px;padding-inline:16px}
+.sheet>.xrow::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(var(--paper),transparent);pointer-events:none}
 </style>
 </head>
 <body>
