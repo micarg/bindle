@@ -477,6 +477,10 @@ body.glass #quick .qall{background:var(--gl-bg)!important;border:.5px solid var(
 .sheet.full{grid-auto-rows:max-content}
 body.glass .xrow button.libdd.tbtn{-webkit-backdrop-filter:none;backdrop-filter:none;width:auto!important;height:auto;min-width:0;border-radius:999px!important;background:none!important;border:0!important;box-shadow:none!important;padding:0 6px!important}
 body.glass .sheet:not(.menu)>.xrow{background:color-mix(in srgb,var(--paper) 55%,transparent)!important;-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.xi{display:block;flex:none}
+.rm .xi{width:12px;height:12px}
+.xrow .addbk{margin-left:auto}
+.xrow button:has(>.xi){padding:0;display:inline-flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -560,7 +564,7 @@ body.glass .sheet:not(.menu)>.xrow{background:color-mix(in srgb,var(--paper) 55%
     <div class="sheet toc" id="toc" hidden></div>
     <div class="sheet full" id="lib" hidden>
       <div class="ddmenu" id="libMenu" hidden>
-        <label class="mi">Προσθήκη EPUB<input id="file2" type="file" accept=".epub,application/epub+zip"></label>
+        <input id="file2" type="file" accept=".epub,application/epub+zip" hidden>
         <button id="editLib" class="mi">Τακτοποίηση βιβλίων</button>
       </div>
       <p class="err" id="libErr" hidden></p>
@@ -618,6 +622,7 @@ body.glass .sheet:not(.menu)>.xrow{background:color-mix(in srgb,var(--paper) 55%
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
+const XI='<svg class="xi" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const $=id=>document.getElementById(id);
 const page=$('page'),stage=$('stage');
 const store={get(k,d){try{const v=localStorage.getItem('xr:'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('xr:'+k,JSON.stringify(v))}catch(e){}}};
@@ -921,7 +926,7 @@ function buildBms(){const t=$('bms');t.innerHTML='';addX('bms','Σελιδοδε
     const col=document.createElement('div');col.className='bmcol';col.append(a);
     const acts=document.createElement('div');acts.className='acts';
     if(here){const sb=document.createElement('button');sb.className='sumbtn';sb.textContent='Περίληψη ως εδώ';sb.onclick=()=>openSummary(getBms().length-1);col.append(sb)}
-    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Αφαίρεση σελιδοδείκτη');
+    const x=document.createElement('button');x.innerHTML=XI;x.setAttribute('aria-label','Αφαίρεση σελιδοδείκτη');
     x.onclick=()=>{if(!x.dataset.sure){x.dataset.sure=1;x.textContent='Σίγουρα;';return}store.set('bm:'+e.id,[]);if(here)updBm();buildBms()};
     acts.append(x);row.append(cv,col,acts);t.append(row)}}
 
@@ -1293,9 +1298,9 @@ async function buildLib(){
     const bar=document.createElement('div');bar.className='bbar';bar.innerHTML=`<i style="width:${pct.toFixed(1)}%"></i>`;
     card.append(cv,t,p,bar);
     card.dataset.id=e.id;card.addEventListener('contextmenu',ev=>ev.preventDefault());
-    const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.setAttribute('aria-label','Διαγραφή');rm.textContent='✕';
+    const rm=document.createElement('span');rm.className='rm';rm.setAttribute('role','button');rm.setAttribute('aria-label','Διαγραφή');rm.innerHTML=XI;
     rm.addEventListener('pointerdown',ev=>ev.stopPropagation());
-    rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){removeAnimated(card,e.id)}else{g.querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.textContent='✕'});rm.dataset.sure=1;rm.classList.add('sure');rm.textContent='Διαγραφή;'}};
+    rm.onclick=ev=>{ev.stopPropagation();if(rm.dataset.sure){removeAnimated(card,e.id)}else{g.querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.innerHTML=XI});rm.dataset.sure=1;rm.classList.add('sure');rm.textContent='Διαγραφή;'}};
     card.append(rm);
     let lp=null,x0=0,y0=0,fired=false;
     card.addEventListener('pointerdown',ev=>{
@@ -1318,14 +1323,14 @@ async function deleteBook(id){
   buildLib();
 }
 function setArrange(on){editing=on;$('editLib').textContent=on?'Τέλος τακτοποίησης':'Τακτοποίηση βιβλίων';$('libGrid').classList.toggle('arr',on);$('libHint').hidden=!on;
-  if(!on)$('libGrid').querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.textContent='✕'})}
+  if(!on)$('libGrid').querySelectorAll('.rm.sure').forEach(o=>{o.dataset.sure='';o.classList.remove('sure');o.innerHTML=XI})}
 function setEditing(on){setLibMenu(false);closeBookMenu();setArrange(on)}
 /* long-press menu on a book: move or delete, closes with ✕ or a tap outside */
 let libLp=()=>{};$('lib').addEventListener('scroll',()=>libLp(),{passive:true});
 function closeBookMenu(){const p=$('bkPop');if(p)p.remove()}
 function bookMenu(card,e){
   closeBookMenu();const r=card.querySelector('.cv').getBoundingClientRect();
-  const w=document.createElement('div');w.id='bkPop';w.innerHTML=`<div class="bpbg"></div><div class="bpm" role="menu"><div class="bph"><span></span><button class="bpx" aria-label="Κλείσιμο">✕</button></div><button class="bpi" data-a="move"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg><span>Μετακίνηση</span></button><button class="bpi del" data-a="del"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Διαγραφή</span></button></div>`;
+  const w=document.createElement('div');w.id='bkPop';w.innerHTML=`<div class="bpbg"></div><div class="bpm" role="menu"><div class="bph"><span></span><button class="bpx" aria-label="Κλείσιμο">${XI}</button></div><button class="bpi" data-a="move"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg><span>Μετακίνηση</span></button><button class="bpi del" data-a="del"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg><span>Διαγραφή</span></button></div>`;
   w.querySelector('.bph span').textContent=e.title;document.body.append(w);
   const m=w.querySelector('.bpm'),mh=m.offsetHeight,mw=m.offsetWidth,vw=innerWidth,vh=innerHeight;
   let top=r.bottom+10;if(top+mh>vh-20)top=Math.max(20,r.top-mh-10);
@@ -1383,10 +1388,10 @@ $('file2').addEventListener('change',handleFile);
 
 /* ---------- controls ---------- */
 const sheets=['quick','menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
-function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';if(!['menu','wpop','recap','tdone'].includes(id)){const bk=document.createElement('button');bk.className='back';bk.setAttribute('aria-label','Πίσω');bk.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';bk.onclick=e=>{e.stopPropagation();goBack(id)};r.append(bk)}const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
+function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';if(!['menu','wpop','recap','tdone'].includes(id)){const bk=document.createElement('button');bk.className='back';bk.setAttribute('aria-label','Πίσω');bk.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';bk.onclick=e=>{e.stopPropagation();goBack(id)};r.append(bk)}const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.innerHTML=XI;b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
 addX('menu','Μενού');addX('quick','Εμφάνιση κειμένου');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις');noteTabs($('hls'),'hls');addX('people','Πρόσωπα');addX('stats','Η ανάγνωσή μου');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
-$('lib').querySelector('.xrow span').replaceWith(libDD);
+{const xr=$('lib').querySelector('.xrow'),sp=xr.querySelector('span');sp.textContent='';const add=document.createElement('button');add.className='addbk';add.setAttribute('aria-label','Προσθήκη βιβλίου');add.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';add.onclick=e=>{e.stopPropagation();$('file2').click()};xr.lastElementChild.before(add)}
 const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
 libDD.onclick=()=>setLibMenu($('libMenu').hidden);
 $('file2').addEventListener('click',()=>setLibMenu(false));
@@ -1595,7 +1600,7 @@ function buildHls(){const el=$('hlList');el.innerHTML='';const l=getHls().slice(
     if(h.note){const n=document.createElement('span');n.className='nt';n.textContent=h.note;go.append(n)}
     go.onclick=()=>{closeAll();goTo(h.ci,h.s,h.e)};
     const cp=document.createElement('button');cp.setAttribute('aria-label','Αντιγραφή');cp.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';cp.onclick=()=>copyQuote(h.text,h.note);it.append(go,cp);
-    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Διαγραφή');
+    const x=document.createElement('button');x.innerHTML=XI;x.setAttribute('aria-label','Διαγραφή');
     x.onclick=()=>{if(!x.dataset.sure){x.dataset.sure=1;x.textContent='Σίγουρα;';return}setHls(getHls().filter(z=>z.id!==h.id));if(h.ci===ci)rerenderKeep();buildHls()};
     it.append(x);el.append(it)}}
 function copyQuote(text,note){const t=`«${text.trim()}»\n— ${book.title}${book.author?', '+book.author:''}`+(note?`\n\n${note}`:'');
@@ -2232,7 +2237,7 @@ function rdClearMark(){rdUnwrap();try{if(window.CSS&&CSS.highlights)CSS.highligh
 function rdUI(){
   let b=$('rdBar');
   if(!RA||!RA.on){if(b){b.remove();rdRoom(false)}return}
-  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rl" aria-label="Πόσες σελίδες"></button><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">✕</button>`;document.body.append(b);
+  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rl" aria-label="Πόσες σελίδες"></button><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">${XI}</button>`;document.body.append(b);
     b.querySelector('.rp').onclick=rdToggle;b.querySelector('.rx').onclick=rdStop;
     b.querySelector('.rl').onclick=()=>{const L=[0,5,10,15,25,35],k=(L.indexOf(+S.rdLimit||0)+1)%L.length;S.rdLimit=L[k];store.set('settings',S);RA.base=null;if(RA.cur>=0)rdCount(RA.cur);rdUI();if(S.rdLimit)toast(`Θα διαβάσει ${S.rdLimit} σελίδες και θα σταματήσει`,1800);else toast('Θα διαβάζει χωρίς όριο',1500)};
     b.querySelector('.rr').onclick=()=>{const k=(RDRATES.indexOf(+S.rdRate||1)+1)%RDRATES.length;S.rdRate=RDRATES[k];store.set('settings',S);if(RA.audio)RA.audio.playbackRate=S.rdRate;if(RA.mode==='iphone'&&!RA.paused){rdIphone(RA.cur)}rdUI()}}
