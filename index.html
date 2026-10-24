@@ -352,7 +352,9 @@ body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 
 /* full immersion */
 .bar,.foot{transition:opacity .35s ease}
-body.immersive .bar{opacity:0;pointer-events:none}
+body.immersive .bar{opacity:0}
+body.immersive .bar>*{pointer-events:none}
+.bar{min-height:44px}
 body.immersive .foot{pointer-events:none}
 .foot>*{transition:opacity .35s ease}
 body.immersive .foot>*:not(#pct){opacity:0}
@@ -2207,6 +2209,8 @@ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted(
 let chromeT=null;
 const immOn=()=>S.immersive!==0&&S.immersive!=='0';
 function chromeHide(){clearTimeout(chromeT);if(immOn()&&book&&!sheets.some(x=>!$(x).hidden))document.body.classList.add('immersive')}
+/* while the bars are hidden, a tap anywhere along the top (where the title is) opens the menu */
+$('bar').addEventListener('click',e=>{if(document.body.classList.contains('immersive')&&e.target===$('bar')){chromeShow();openMenu()}});
 /* turning pages while the bars are showing keeps them up; they fade once you stop and read */
 function chromeTurn(){if(!immOn())return;if(document.body.classList.contains('immersive'))return;chromeShow(4000)}
 function chromeShow(ms){clearTimeout(chromeT);document.body.classList.remove('immersive');if(ms&&immOn())chromeT=setTimeout(chromeHide,ms)}
