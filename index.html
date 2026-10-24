@@ -974,7 +974,7 @@ $('sumStop').onclick=()=>{if(dgRun)dgRun.ctl.abort()};
 
 /* ---------- navigation ---------- */
 function next(){onTurn();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi<pages-1){pi++;layout(0,1)}else if(ci<book.chapters.length-1){ci++;pi=0;renderChapter(0,1)}}
-function prev(){chromeHide();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
+function prev(){chromeTurn();if(RA&&RA.on)setTimeout(()=>rdFromPage(),30);if(pi>0){pi--;layout(0,1)}else if(ci>0){ci--;renderChapter('end',1)}}
 
 function openBook(b){
   if(typeof RA!=='undefined'&&RA&&RA.on)rdStop();
@@ -1334,7 +1334,7 @@ function flash(r){const sr=stage.getBoundingClientRect();for(const q of r.getCli
 let lastTurn=Date.now(),cpm=store.get('cpm',1000);
 const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 function onTurn(){
-  chromeHide();
+  chromeTurn();
   const now=Date.now(),dt=(now-lastTurn)/1000;lastTurn=now;if(!book)return;
   const pc=(book.chars[ci]||0)/Math.max(1,pages);
   if(dt>=3&&dt<=300&&pc>80){const c=pc/(dt/60);cpm=Math.round(Math.min(4000,Math.max(250,cpm*0.85+c*0.15)));store.set('cpm',cpm)}
@@ -2163,6 +2163,8 @@ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted(
 let chromeT=null;
 const immOn=()=>S.immersive!==0&&S.immersive!=='0';
 function chromeHide(){clearTimeout(chromeT);if(immOn()&&book&&!sheets.some(x=>!$(x).hidden))document.body.classList.add('immersive')}
+/* turning pages while the bars are showing keeps them up; they fade once you stop and read */
+function chromeTurn(){if(!immOn())return;if(document.body.classList.contains('immersive'))return;chromeShow(4000)}
 function chromeShow(ms){clearTimeout(chromeT);document.body.classList.remove('immersive');if(ms&&immOn())chromeT=setTimeout(chromeHide,ms)}
 $('imSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.immersive=+b.dataset.v;store.set('settings',S);$('imSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));if(!immOn())chromeShow()});
 $('imSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(+x.dataset.v)===String(immOn()?1:0)));
