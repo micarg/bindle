@@ -437,6 +437,10 @@ body.hic #page{font-weight:400}
 /* in-app clock while reading */
 #clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 22px);transform:translateX(-50%);max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px var(--font-ui);letter-spacing:.03em;font-variant-numeric:tabular-nums;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
 body.immersive.ckon #clock{opacity:.5}
+
+/* at night the page number and minutes are as bright as the text */
+body.hic.immersive.ckon #clock,body.immersive.pnpage.hic #pnum{color:var(--ink);opacity:.92}
+body.hic.immersive #pct{color:var(--ink);opacity:.92}
 </style>
 </head>
 <body>
