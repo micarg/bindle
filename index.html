@@ -433,6 +433,10 @@ body.immersive.pnpage #pnum{display:block;position:absolute;left:50%;transform:t
 /* higher contrast for the lighter part of each word at night */
 body.hic #page .bnr,body.hic .sumtext .bnr{font-weight:400;color:color-mix(in srgb,var(--ink) 93%,var(--paper))}
 body.hic #page{font-weight:400}
+
+/* in-app clock while reading */
+#clock{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);font:400 12px var(--font-read);letter-spacing:.06em;font-variant-numeric:tabular-nums;color:var(--ink-soft);opacity:0;pointer-events:none;transition:opacity .35s ease;z-index:2}
+body.immersive.ckon #clock{opacity:.5}
 </style>
 </head>
 <body>
@@ -487,6 +491,7 @@ body.hic #page{font-weight:400}
         <div class="row"><span>Γύρισμα σελίδας</span><div class="seg" id="trSeg"><button data-v="blur">Με θόλωμα</button><button data-v="slide">Απλή ολίσθηση</button></div></div>
         <div class="row"><span>Μπάρες όσο διαβάζεις</span><div class="seg" id="imSeg"><button data-v="1">Κρυφές</button><button data-v="0">Πάντα ορατές</button></div></div>
         <div class="row"><span>Κάτω όσο διαβάζεις</span><div class="seg" id="pnSeg"><button data-v="page">Αριθμός σελίδας</button><button data-v="pct">Ποσοστό</button></div></div>
+        <div class="row"><span>Ώρα πάνω όσο διαβάζεις</span><div class="seg" id="ckSeg"><button data-v="on">Ναι</button><button data-v="off">Όχι</button></div></div>
         <div class="row"><span>Επιπλέον σκοτείνιασμα</span><span class="dimv" id="dimV">Όχι</span></div>
         <input type="range" id="dimR" class="rng" min="0" max="70" step="5" aria-label="Επιπλέον σκοτείνιασμα">
         <p class="hint">Κάνει την οθόνη πιο σκοτεινή ακόμα κι από τη χαμηλότερη φωτεινότητα του iPhone, για διάβασμα στο σκοτάδι.</p>
@@ -594,6 +599,7 @@ function applyVars(){
   const r=document.documentElement.style;
   if(window._varsReady&&typeof book!=='undefined'&&book&&!RM){try{page.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'})}catch(e){}}
   if(!S.contrast)S.contrast='auto';applyContrast();
+  if(!S.clock)S.clock='on';document.body.classList.toggle('ckon',S.clock==='on');
   if(!S.para)S.para='book';if(!S.pnum)S.pnum='page';document.body.classList.toggle('pnpage',S.pnum==='page');document.body.classList.toggle('pbook',S.para==='book');
   r.setProperty('--fs',S.fs+'px');r.setProperty('--lh',S.lh);r.setProperty('--align',S.align);
   r.setProperty('--font-read',S.font==='Futura'?'Futura, "Futura PT", "Didact Gothic", sans-serif':S.font==='Times'?'"Times New Roman", Times, Tinos, serif':S.font==='System'?'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif':`"${S.font}", ${S.font==='Open Sans'?'system-ui, sans-serif':'Georgia, serif'}`);
@@ -601,7 +607,7 @@ function applyVars(){
   $('bnBtn').setAttribute('aria-pressed',S.bionic);$('bnBtn').textContent=S.bionic?'Ενεργή':'Ανενεργή';
   $('fsVal').textContent=S.fs;
   $('guideBtn').setAttribute('aria-pressed',!!S.guide);$('guideBtn').textContent=S.guide?'Ενεργός':'Ανενεργός';
-  for(const [seg,key] of [['trSeg','turn'],['vcSeg','voice'],['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['paSeg','para'],['ctSeg','contrast'],['pnSeg','pnum'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
+  for(const [seg,key] of [['trSeg','turn'],['vcSeg','voice'],['aiSeg','ai'],['wdSeg','narrow'],['wkSeg','wake'],['bnLvl','lvl'],['lhSeg','lh'],['paSeg','para'],['ckSeg','clock'],['ctSeg','contrast'],['pnSeg','pnum'],['thSeg','theme'],['ffSeg','font'],['alSeg','align']])
     $(seg).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(S[key])));
   store.set('settings',S);
 }
@@ -1392,7 +1398,7 @@ $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
-for(const [seg,key,num] of [['trSeg','turn',0],['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['paSeg','para',0],['ctSeg','contrast',0],['pnSeg','pnum',0],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
+for(const [seg,key,num] of [['trSeg','turn',0],['vcSeg','voice',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['paSeg','para',0],['ckSeg','clock',0],['ctSeg','contrast',0],['pnSeg','pnum',0],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
 /* iOS home-screen apps can be left shorter or scrolled after the keyboard or a rotation: put the page back */
 function fixViewport(){if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0}}
@@ -2370,6 +2376,11 @@ function titleCover(b){const el=$('tcv');if(!el)return;el.innerHTML='';el.style.
 
 /* the soft edge under a panel's header only shows once the panel is scrolled */
 document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('sheet'))t.classList.toggle('scrolled',t.scrollTop>4)},true);
+
+/* ---------- a quiet clock at the top while reading (the iPhone's own status bar cannot be hidden by a web app) ---------- */
+{const c=document.createElement('div');c.id='clock';c.setAttribute('aria-hidden','true');document.querySelector('.app').append(c);
+ const tick=()=>{const d=new Date();c.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+ tick();setInterval(tick,15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()})}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
