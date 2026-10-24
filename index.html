@@ -1696,6 +1696,7 @@ function buildPeople(msg){
   if(running){const p=document.createElement('p');p.className='thinking dgstat';p.style.whiteSpace='pre-line';p.textContent=dgText();el.append(p)}
   const fresh=rs&&rs.people&&rs.people.length&&rs.pos<=C+400;
   if(fresh){note(`Από την τελευταία περίληψη του ${rs.by}. Πάτα ένα όνομα για να το βρεις στο βιβλίο.`);rs.people.forEach(p=>person(p.name,p.desc))}
+  else if(sampleFn&&rollRefused.has(book.id)&&!running){const list=localPeople(bmPoint(cur));note('Το Gemini δεν δέχτηκε να διαβάσει κάποιες σελίδες αυτού του βιβλίου, οπότε εδώ είναι τα ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα σου.');list.forEach(p=>person(p.name,p.desc))}
   else if(sampleFn){if(!running)note(`Πάτα το κουμπί για να γράψει το ${aiName()} ποια είναι τα πρόσωπα μέχρι τη σελίδα σου.`)}
   else{const list=localPeople(bmPoint(cur));
     note(list.length?'Ονόματα που εμφανίζονται συχνά μέχρι τη σελίδα σου, με την πρώτη φράση όπου εμφανίστηκαν.':'Δεν έχουν εμφανιστεί ακόμα ονόματα που επαναλαμβάνονται μέχρι το σημείο που διαβάζεις.');
@@ -1725,14 +1726,15 @@ $('recapGo').onclick=()=>closeAll();
 /* ---------- backup ---------- */
 const b2d=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)});
 $('bkExp').onclick=async()=>{
-  const hint=$('bkHint'),old=hint.textContent;hint.textContent='Ετοιμάζω το αντίγραφο με τα βιβλία σου…';
+  const hint=$('bkHint'),old=hint.textContent;store.set('bkAsked',Date.now());hint.textContent='Ετοιμάζω το αντίγραφο με τα βιβλία σου…';
   try{
     const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('xr:')&&k!=='xr:apikey')data[k]=localStorage.getItem(k)}
     const books=[];for(const e of getLib()){const rec=await idbGet('books',e.id);if(rec&&rec.buf)books.push({id:e.id,epub:await b2d(new Blob([rec.buf],{type:'application/epub+zip'}))})}
     const json=JSON.stringify({app:'bindle',v:2,date:new Date().toISOString(),data,books}),name=`bindle-${dayKey()}.json`;
     let file;try{file=new File([json],name,{type:'application/json'})}catch(e){file=new Blob([json],{type:'application/json'})}
     hint.textContent=old;
-    try{if(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Αντίγραφο Bindle'});return}}catch(e){if(e&&e.name==='AbortError')return}
+    try{if(navigator.canShare&&file instanceof File&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Αντίγραφο Bindle'});store.set('lastBackup',Date.now());toast('Το αντίγραφο ασφαλείας έγινε',2000);return}}catch(e){if(e&&e.name==='AbortError')return}
+    store.set('lastBackup',Date.now());
     const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
   }catch(e){hint.textContent='Δεν έγινε το αντίγραφο. Δοκίμασε ξανά.'}
 };
@@ -1744,7 +1746,7 @@ $('bkImp').addEventListener('change',async e=>{const f=e.target.files[0];e.targe
       const buf=await (await fetch(bk.epub)).arrayBuffer(),b=await parseEpub(buf);
       await idbPut('books',b.id,{buf,cover:b.cover});saveParsed(b);
       if(!getLib().some(x=>x.id===b.id)){const l=getLib();l.push({id:b.id,title:b.title,author:b.author,chars:b.chars,cover:!!b.cover,opened:0});setLib(l)}}catch(err){}}
-    hint.textContent='Η επαναφορά έγινε. Η εφαρμογή ξαναφορτώνει…';setTimeout(()=>location.reload(),900)}
+    store.set('lastBackup',Date.now());    hint.textContent='Η επαναφορά έγινε. Η εφαρμογή ξαναφορτώνει…';setTimeout(()=>location.reload(),900)}
   catch(err){hint.textContent='Αυτό το αρχείο δεν είναι αντίγραφο ασφαλείας του Bindle.'}});
 
 /* ---------- keep the screen on while reading ---------- */
@@ -1877,7 +1879,15 @@ async function askQ(q){
   if(prev.length)P.push('ΠΡΟΗΓΟΥΜΕΝΕΣ ΕΡΩΤΗΣΕΙΣ ΤΟΥ:\n'+prev.map(x=>`Ερώτηση: ${x.q}\nΑπάντηση: ${x.a}`).join('\n'));
   P.push('ΕΡΩΤΗΣΗ: '+q);
   askCtl=new AbortController();
-  try{let a=(await callAI(P.join('\n\n'),askCtl.signal,1500)).replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+  const ask=async prompt=>(await callAI(prompt,askCtl.signal,1500)).replace(/\*\*/g,'').replace(/^#+\s*/gm,'').trim();
+  try{let a;
+    try{a=await ask(P.join('\n\n'))}
+    catch(e1){if(!e1||e1.code!=='refused')throw e1;
+      /* Google blocks some passages: ask again from key sentences picked on the phone instead of the full pages */
+      const kn=localNotesRange(Math.max(0,C-120000),C).slice(-90);
+      const P2=P.filter(x=>!x.startsWith('ΟΙ ΠΙΟ ΠΡΟΣΦΑΤΕΣ ΣΕΛΙΔΕΣ')&&!x.startsWith('ΦΡΑΣΕΙΣ ΑΠΟ ΠΙΟ ΠΑΛΙΕΣ'));
+      P2.splice(P2.length-1,0,'ΦΡΑΣΕΙΣ ΑΠΟ ΤΙΣ ΣΕΛΙΔΕΣ ΠΟΥ ΔΙΑΒΑΣΕ (διαλεγμένες αυτόματα, το πλήρες κείμενο δεν είναι διαθέσιμο):\n'+kn.map(x=>'- '+x).join('\n'));
+      a=await ask(P2.join('\n\n'))}
     const pg=Math.max(1,Math.ceil(readChars()/PRINT));const l=getQA();l.push({q,a,p:pg,t:Date.now()});setQA(l)}
   catch(e){const c=e&&e.code;if(c!=='cancelled'){const l=getQA();ad.className='qa err';ad.textContent=sumErr[c]||'Κάτι πήγε στραβά. Δοκίμασε ξανά σε λίγο.';askCtl=null;return}}
   askCtl=null;buildAsk();
@@ -2250,6 +2260,15 @@ function noteTabs(root,cur){root.querySelectorAll('.ntabs button').forEach(b=>{b
    if(dy>90){sh.style.transform='translateY(110%)';sh.style.opacity='0';setTimeout(()=>{closeAll();sh.style.transition='';sh.style.transform='';sh.style.opacity=''},200)}
    else{sh.style.transform='';sh.style.opacity='';setTimeout(()=>{sh.style.transition=''},230)}};
  document.addEventListener('touchend',end);document.addEventListener('touchcancel',end)}
+
+/* ---------- once a week: a gentle reminder to save a backup ---------- */
+setTimeout(()=>{try{
+  const last=store.get('lastBackup',0),asked=store.get('bkAsked',0),now=Date.now(),day=864e5;
+  const hasData=getLib().length>0||Object.keys(localStorage).some(k=>k.startsWith('xr:pos:'));
+  if(!hasData||now-last<7*day||now-asked<2*day)return;
+  store.set('bkAsked',now);
+  toast(last?`Έχεις ${Math.floor((now-last)/day)} μέρες χωρίς αντίγραφο ασφαλείας. Πάτα εδώ για να το κάνεις τώρα.`:'Δεν έχεις κάνει ακόμα αντίγραφο ασφαλείας. Πάτα εδώ για να κρατήσεις βιβλία και πρόοδο.',9000,()=>{$('toast').classList.remove('show');$('bkExp').click()});
+}catch(e){}},6000);
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
