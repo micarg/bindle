@@ -472,7 +472,9 @@ body.glass #quick .qall{background:var(--gl-bg)!important;border:.5px solid var(
 .sheet>.xrow{min-height:0;padding-top:16px;padding-bottom:2px;margin-bottom:-3px}
 .sheet:not(.menu)>.xrow{padding-inline:14px}
 .xrow .back{margin-left:0}
-#menu.menu>.xrow{position:static;margin:0 0 4px;padding:8px 8px 6px 16px;min-height:0}
+#menu.menu{padding-top:10px}
+#menu.menu>.xrow{position:absolute;top:14px;right:14px;margin:0;padding:0;min-height:0;z-index:5;background:none!important}
+#menu.menu>.xrow>span{display:none}
 #settings>.xrow{margin-bottom:11px}
 .sheet.full{grid-auto-rows:max-content}
 body.glass .xrow button.libdd.tbtn{-webkit-backdrop-filter:none;backdrop-filter:none;width:auto!important;height:auto;min-width:0;border-radius:999px!important;background:none!important;border:0!important;box-shadow:none!important;padding:0 6px!important}
