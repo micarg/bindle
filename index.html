@@ -379,6 +379,15 @@ body.pbook #page p.hd{text-indent:0}
 #menu.menu:not([hidden]){animation:sheetIn .24s cubic-bezier(.2,.8,.2,1)}
 #wpop:not([hidden]){animation:rise .2s ease-out}
 .veil{transition:opacity .24s ease}
+
+/* bookmarks from all books */
+.bmx{display:flex;align-items:center;gap:12px}
+.bmx .bcv{width:38px;height:56px;flex:none;border-radius:3px 6px 6px 3px;overflow:hidden;box-shadow:0 6px 12px -6px rgba(0,0,0,.5)}
+.bmx .bcv img{width:100%;height:100%;object-fit:cover}
+.bmx a{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink)}
+.bmx a b{font:500 14.5px/1.3 var(--font-ui)}
+.bmx .bmm{font:400 12px var(--font-ui);color:var(--ink-soft)}
+.bmx .bms{font:400 13px/1.35 var(--font-read);color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 </style>
 </head>
 <body>
@@ -400,7 +409,7 @@ body.pbook #page p.hd{text-indent:0}
       <button id="libBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h3v16H5zM10 4h3v16h-3z"/><path d="M15.4 5.3l2.9-.8 3.5 15.1-2.9.8z"/></svg>Βιβλιοθήκη</button>
       <button id="tocBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".9"/><circle cx="4.5" cy="12" r=".9"/><circle cx="4.5" cy="18" r=".9"/></svg>Περιεχόμενα</button>
       <button id="searchBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>Αναζήτηση</button>
-      <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σημειώσεις</button>
+      <button id="bmBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>Σελιδοδείκτες</button>
       <div class="msep"></div>
       <button id="qSum" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 10h14M5 14h9M5 18h6"/></svg>Περίληψη ως εδώ</button>
       <button id="peopleBtn" class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Πρόσωπα</button>
@@ -477,7 +486,7 @@ body.pbook #page p.hd{text-indent:0}
       <input type="range" id="qDim" class="rng" min="0" max="70" step="5" aria-label="Επιπλέον σκοτείνιασμα">
       <button id="qAll" class="qall">Όλες οι ρυθμίσεις</button>
     </div>
-    <div class="sheet full" id="hls" hidden><div class="ntabs"><button data-t="bms">Σελιδοδείκτης</button><button data-t="hls">Υπογραμμίσεις</button></div><div class="list" id="hlList"></div></div>
+    <div class="sheet full" id="hls" hidden><div class="ntabs"><button data-t="bms">Σελιδοδείκτες</button><button data-t="hls">Υπογραμμίσεις</button></div><div class="list" id="hlList"></div></div>
     <div class="sheet full" id="people" hidden><div id="peopleBody" class="list"></div></div>
     <div class="sheet full" id="stats" hidden><div id="statsBody" style="display:grid;gap:16px"></div></div>
     <div class="sheet" id="timer" hidden><div id="timerBody" style="display:grid;gap:12px"></div></div>
@@ -757,16 +766,30 @@ const getBms=()=>{const l=store.get('bm:'+book.id,[]);return l.length>1?l.slice(
 const onThis=b=>b.ci===ci&&Math.round(b.frac*(pages-1))===pi;
 function updBm(){const on=getBms().some(onThis);$('bmToggle').setAttribute('aria-pressed',on);$('bmToggle').setAttribute('aria-label',on?'Αφαίρεση σελιδοδείκτη':'Προσθήκη σελιδοδείκτη')}
 function pageSnippet(){const W=stage.clientWidth;for(const el of page.querySelectorAll('p,h1,h2,h3')){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.right>s.left+4&&r.left<s.left+W-4)return el.textContent.trim().slice(0,70)}return ''}
-function toggleBm(){let l=getBms();if(l.some(onThis))l=[];else l=[{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet()}];store.set('bm:'+book.id,l);updBm();bmAnim(!!l.length);toast(l.length?'Ο σελιδοδείκτης μπήκε σε αυτή τη σελίδα':'Ο σελιδοδείκτης αφαιρέθηκε')}
-function buildBms(){const t=$('bms');t.innerHTML='';const l=getBms();addX('bms','Σημειώσεις');t.insertAdjacentHTML('beforeend','<div class="ntabs"><button data-t="bms">Σελιδοδείκτης</button><button data-t="hls">Υπογραμμίσεις</button></div>');noteTabs(t,'bms');
-  if(!l.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις βάλει σελιδοδείκτη σε αυτό το βιβλίο. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις τη σελίδα. Κάθε βιβλίο έχει έναν σελιδοδείκτη, όπως ένα κανονικό βιβλίο.</p>');return}
-  l.forEach((b,i)=>{const row=document.createElement('div');row.className='bml';const a=document.createElement('a');a.href='#';
-    a.innerHTML=`<span style="display:block;font-size:13px;color:var(--ink-soft);font-family:var(--font-ui)"></span><span></span>`;a.children[0].textContent=b.title+' · '+b.pct;a.children[1].textContent=b.snip?b.snip+'…':'';
-    a.onclick=e=>{e.preventDefault();ci=b.ci;renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout();t.hidden=true};
+function toggleBm(){let l=getBms();if(l.some(onThis))l=[];else l=[{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet(),t:Date.now()}];store.set('bm:'+book.id,l);updBm();bmAnim(!!l.length);toast(l.length?'Ο σελιδοδείκτης μπήκε σε αυτή τη σελίδα':'Ο σελιδοδείκτης αφαιρέθηκε')}
+/* bookmarks from every book: each book keeps only its latest one, newest first */
+function buildBms(){const t=$('bms');t.innerHTML='';addX('bms','Σελιδοδείκτες');t.insertAdjacentHTML('beforeend','<div class="ntabs"><button data-t="bms">Σελιδοδείκτες</button><button data-t="hls">Υπογραμμίσεις</button></div>');noteTabs(t,'bms');
+  const books=[...getLib(),...(store.get('hideSample',false)?[]:[{id:'sample',title:SAMPLE.title,cover:false}])];
+  const all=[];for(const e of books){const l=store.get('bm:'+e.id,[]);const b=l[l.length-1];if(b)all.push({e,b})}
+  all.sort((x,y)=>(y.b.t||0)-(x.b.t||0)||(y.e.id===(book&&book.id))-(x.e.id===(book&&book.id)));
+  if(!all.length){t.insertAdjacentHTML('beforeend','<p class="empty">Δεν έχεις σελιδοδείκτες ακόμα. Πάτα το εικονίδιο πάνω δεξιά για να κρατήσεις τη σελίδα. Κάθε βιβλίο κρατά τον πιο πρόσφατο σελιδοδείκτη του.</p>');return}
+  for(const {e,b} of all){const here=book&&book.id===e.id;
+    const row=document.createElement('div');row.className='bml bmx';
+    const cv=document.createElement('div');cv.className='bcv';cv.style.background=coverTint(e.title);
+    if(e.cover)idbGet('books',e.id).then(r=>{if(r&&r.cover){const im=document.createElement('img');im.alt='';im.src=URL.createObjectURL(r.cover);cv.append(im)}});
+    const a=document.createElement('a');a.href='#';
+    a.innerHTML='<b></b><span class="bmm"></span><span class="bms"></span>';
+    a.querySelector('b').textContent=e.title;
+    a.querySelector('.bmm').textContent=[b.title,b.pct,b.t?new Date(b.t).toLocaleDateString('el-GR',{day:'numeric',month:'short'}):''].filter(Boolean).join(' · ');
+    a.querySelector('.bms').textContent=b.snip?b.snip+'…':'';
+    a.onclick=async ev=>{ev.preventDefault();
+      try{if(!here)await openFromLib(e.id)}catch(err){toast('Δεν βρέθηκε το αρχείο αυτού του βιβλίου');return}
+      closeAll();ci=Math.min(b.ci,book.chapters.length-1);renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout()};
     const acts=document.createElement('div');acts.className='acts';
-    {const s=document.createElement('button');s.className='sumbtn';s.textContent='Περίληψη';s.onclick=()=>openSummary(i);acts.append(s)}
-    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Διαγραφή');x.onclick=()=>{const n=getBms();n.splice(i,1);store.set('bm:'+book.id,n);updBm();buildBms()};
-    acts.append(x);row.append(a,acts);t.append(row)})}
+    if(here){const sb=document.createElement('button');sb.className='sumbtn';sb.textContent='Περίληψη';sb.onclick=()=>openSummary(getBms().length-1);acts.append(sb)}
+    const x=document.createElement('button');x.textContent='✕';x.setAttribute('aria-label','Αφαίρεση σελιδοδείκτη');
+    x.onclick=()=>{if(!x.dataset.sure){x.dataset.sure=1;x.textContent='Σίγουρα;';return}store.set('bm:'+e.id,[]);if(here)updBm();buildBms()};
+    acts.append(x);row.append(cv,a,acts);t.append(row)}}
 
 /* ---------- summaries: Claude reads the book once, then every bookmark summary is built locally ---------- */
 let sampleFn=null,sumCtl=null,sumIdx=-1,dgRun=null;
@@ -1223,7 +1246,7 @@ $('file2').addEventListener('change',handleFile);
 /* ---------- controls ---------- */
 const sheets=['quick','menu','settings','toc','bms','lib','sum','search','hls','people','stats','timer','tdone','recap','wpop','sounds','ask'];
 function addX(id,label){const el=$(id);const r=document.createElement('div');r.className='xrow';if(!['menu','wpop','recap','tdone'].includes(id)){const bk=document.createElement('button');bk.className='back';bk.setAttribute('aria-label','Πίσω');bk.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';bk.onclick=e=>{e.stopPropagation();goBack(id)};r.append(bk)}const s=document.createElement('span');s.textContent=label;const b=document.createElement('button');b.textContent='✕';b.setAttribute('aria-label','Κλείσιμο');b.onclick=()=>closeAll();r.append(s,b);el.prepend(r)}
-addX('menu','Μενού');addX('quick','Εμφάνιση κειμένου');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Σημειώσεις');noteTabs($('hls'),'hls');addX('people','Πρόσωπα');addX('stats','Η ανάγνωσή μου');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
+addX('menu','Μενού');addX('quick','Εμφάνιση κειμένου');addX('settings','Ρυθμίσεις');addX('lib','Βιβλιοθήκη');addX('sum','Περίληψη');addX('search','Αναζήτηση');addX('hls','Υπογραμμίσεις');noteTabs($('hls'),'hls');addX('people','Πρόσωπα');addX('stats','Η ανάγνωσή μου');addX('timer','Χρονόμετρο ανάγνωσης');addX('tdone','Τέλος χρόνου');addX('recap','Πού είχες μείνει');addX('wpop','Λέξη');addX('sounds','Ήχοι συγκέντρωσης');addX('ask','Ρώτα το βιβλίο');
 const libDD=document.createElement('button');libDD.className='tbtn libdd';libDD.setAttribute('aria-expanded','false');libDD.setAttribute('aria-controls','libMenu');libDD.innerHTML='<span class="t">Βιβλιοθήκη</span><span class="car" aria-hidden="true">▾</span>';
 $('lib').querySelector('.xrow span').replaceWith(libDD);
 const setLibMenu=open=>{$('libMenu').hidden=!open;libDD.setAttribute('aria-expanded',open)};
