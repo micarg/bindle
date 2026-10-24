@@ -1960,7 +1960,7 @@ function rdCount(i){const x=RA.sents[i];if(!x)return false;const g=sum(book.char
 function rdMark(i){
   if(RA.cur!==i&&rdCount(i))return;
   RA.cur=i;const x=RA.sents[i];if(!x)return;
-  rdWrap(x.s,x.e);
+
   rdFollow(x.s);
 }
 function rdFollow(off){const p=pageOfOff(off);if(p!=null&&p!==pi&&p<pages){RA.auto=true;pi=p;layout(0,1);RA.auto=false}}
