@@ -681,10 +681,11 @@ function glint(want){document.body.classList.toggle('glint',want);GL.want=want;
   if(GL.on)return;
   const D=window.DeviceOrientationEvent;
   if(D&&typeof D.requestPermission==='function'){
-    /* iPhone asks for permission only from a tap: try at once, and if nothing arrives, ask when a menu is first opened (not while reading) */
-    glListen();setTimeout(()=>{if(GL.got||!GL.want)return;const btns=['aaBtn','titleBtn'].map(i=>document.getElementById(i)).filter(Boolean);const once=()=>{btns.forEach(x=>x.removeEventListener('click',once));if(GL.want&&!GL.got)glAsk()};btns.forEach(x=>x.addEventListener('click',once))},800)
+    /* iPhone asks for permission only from a tap, so this only starts after tapping «Ναι» in the settings */
+    glListen();
   }else glListen()}
 let S=Object.assign({turn:'blur',loud:0,voice:'gemini',ai:null,narrow:0,guide:false,foot:1,wake:5,bionic:true,lvl:0.5,fs:18,lh:1.75,theme:'',font:'Times',align:'left'},store.get('settings',{}));
+S.glint='off'; /* the moving light starts off each time; iPhone forgets the motion permission when the app is closed */
 if(!store.get('v5',false)){S.fs=18;S.align='left';S.lvl=0.5;S.lh=1.75;S.font='System';store.set('v5',true)}
 if(![0.4,0.5,0.6].includes(S.lvl))S.lvl=0.5;
 if(!store.get('v6',false)){S.font='Times';store.set('v6',true)}
