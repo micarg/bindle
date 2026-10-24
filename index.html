@@ -1986,7 +1986,7 @@ function rdGeminiOK(){return S.voice==='gemini'&&!!store.get('gkey','')&&store.g
 async function rdVoice(text,signal){
   const id='rd:'+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
   const blob=await geminiVoice(text,signal);
-  try{idbDel('tts','v2:'+hash(text));idbPut('tts',id,blob);const l=store.get('rdCache',[]).filter(x=>x!==id);l.push(id);while(l.length>10)idbDel('tts',l.shift());store.set('rdCache',l)}catch(e){}
+  try{idbDel('tts','v2:'+hash(text));idbPut('tts',id,blob);const l=store.get('rdCache',[]).filter(x=>x!==id);l.push(id);while(l.length>4)idbDel('tts',l.shift());store.set('rdCache',l)}catch(e){}
   return blob;
 }
 function rdChunk(from,first){const L=RA.sents,max=first?450:2400;let e=from,n=0;while(e<L.length&&(n<max||e===from)){n+=L[e].e-L[e].s+1;e++}return {a:from,b:e}}
@@ -2079,6 +2079,8 @@ function rdToggle(){
 function rdLoop(){if(!RA||!RA.on)return;if(RA.mode==='gemini'&&!RA.paused&&!RA.audio.paused)rdTick();RA.loop=setTimeout(rdLoop,100)}
 function rdStop(){if(!RA)return;clearTimeout(RA.loop);RA.on=false;RA.gen++;if(RA.next&&RA.next.ctl)RA.next.ctl.abort();if(RA.chunk&&RA.chunk.ctl)RA.chunk.ctl.abort();if(RA.audio){RA.audio.dataset.real='';RA.audio.pause()}try{speechSynthesis.cancel()}catch(e){}rdClearMark();rdUI()}
 $('rdBtn').onclick=()=>{if(RA&&RA.on){closeAll();return}rdStart()};
+/* ---------- ask the iPhone to keep the app's data even when storage runs low ---------- */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persisted().then(p=>{if(!p)navigator.storage.persist()}).catch(()=>{})}catch(e){}
 /* ---------- start ---------- */
 async function splashFor(id){
   const e=id==='sample'?{title:SAMPLE.title,author:SAMPLE.author}:getLib().find(x=>x.id===id);
