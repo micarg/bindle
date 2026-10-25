@@ -589,8 +589,8 @@ body.glass .sheet .item button.go:not(#_){border-bottom:0!important}
         <div class="row"><span>Περιλήψεις με τεχνητή νοημοσύνη</span><div class="seg" id="aiSeg"><button data-v="">Όχι</button><button data-v="gemini">Gemini (δωρεάν)</button><button data-v="claude">Claude</button></div></div>
         <div class="row keyrow" id="keyRow"><input id="apiKey" type="password" autocomplete="off" spellcheck="false"><button id="apiSave">Αποθήκευση</button></div>
         <p class="hint" id="apiHint"></p>
-        <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini (φυσική)</button><button data-v="iphone">iPhone</button></div></div>
-        <div class="row"><span>Όταν τελειώσει το Gemini</span><div class="seg" id="msSeg"><button data-v="athina">Αθηνά</button><button data-v="nestoras">Νέστορας</button></div></div>
+        <div class="row"><span>Φωνή ακρόασης</span><div class="seg" id="vcSeg"><button data-v="gemini">Gemini</button><button data-v="athina">Αθηνά</button><button data-v="nestoras">Νέστορας</button><button data-v="iphone">iPhone</button></div></div>
+        <div class="row" id="msRow"><span>Όταν τελειώσει το Gemini</span><div class="seg" id="msSeg"><button data-v="athina">Αθηνά</button><button data-v="nestoras">Νέστορας</button></div></div>
       </div></details>
       <details class="grp" data-g="backup"><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.6-7.95A5.5 5.5 0 0 1 17 9a3.5 3.5 0 0 1 .5 7"/><path d="M12 12v8M9 15l3-3 3 3"/></svg><span>Αντίγραφο ασφαλείας</span><svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div class="gbody">
         <div class="row"><span>Αντίγραφο ασφαλείας</span><div class="seg"><button id="bkExp">Εξαγωγή</button><label class="filebtn">Επαναφορά<input id="bkImp" type="file" accept=".json,application/json"></label></div></div>
@@ -710,7 +710,7 @@ function applyVars(){
   if(window._varsReady&&typeof book!=='undefined'&&book&&!RM){try{page.animate([{opacity:0},{opacity:1}],{duration:320,easing:'ease-out'})}catch(e){}}
   if(!S.contrast)S.contrast='auto';applyContrast();
   if(!S.clock)S.clock='on';document.body.classList.toggle('ckon',S.clock==='on');
-  if(!S.style)S.style='glass';document.body.classList.toggle('glass',S.style==='glass');if(!S.glint)S.glint='off';glint(S.style==='glass'&&S.glint==='on'&&!matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if(!S.style)S.style='glass';document.body.classList.toggle('glass',S.style==='glass');{const mr=document.getElementById('msRow');if(mr)mr.hidden=S.voice!=='gemini'}if(!S.glint)S.glint='off';glint(S.style==='glass'&&S.glint==='on'&&!matchMedia('(prefers-reduced-motion: reduce)').matches);
   if(!S.para)S.para='book';if(!S.pnum)S.pnum='page';document.body.classList.toggle('pnpage',S.pnum==='page');document.body.classList.toggle('pbook',S.para==='book');
   r.setProperty('--fs',S.fs+'px');r.setProperty('--lh',S.lh);r.setProperty('--align',S.align);
   r.setProperty('--font-read',S.font==='Futura'?'Futura, "Futura PT", "Didact Gothic", sans-serif':S.font==='Times'?'"Times New Roman", Times, Tinos, serif':S.font==='System'?'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif':`"${S.font}", ${S.font==='Open Sans'?'system-ui, sans-serif':'Georgia, serif'}`);
@@ -2156,7 +2156,7 @@ $('sumSpeak').onclick=async()=>{
   if(!ttsAudio){ttsAudio=new Audio();ttsAudio.addEventListener('ended',()=>{if(ttsAudio.dataset.real)setSpk(false)});ttsAudio.addEventListener('pause',()=>{if(ttsAudio.dataset.real)setSpk(false)})}
   ttsAudio.dataset.real='';ttsAudio.src=URL.createObjectURL(silentWav());ttsAudio.play().catch(()=>{});
   setSpk(true);$('spkLbl').textContent='Ετοιμάζεται η φωνή…';ttsCtl=new AbortController();
-  try{const blob=await geminiVoice(parts.map(t=>/[.!?;…:]$/.test(t)?t:t+'.').join('\n'),ttsCtl.signal);
+  try{const txt=parts.map(t=>/[.!?;…:]$/.test(t)?t:t+'.').join('\n');const blob=S.voice==='gemini'&&store.get('gkey','')?await geminiVoice(txt,ttsCtl.signal):await msVoice(txt,ttsCtl.signal,parts);
     if(!speaking)return;ttsAudio.src=URL.createObjectURL(blob);ttsAudio.dataset.real='1';$('spkLbl').textContent='Σταμάτημα';await ttsAudio.play()}
   catch(e){if(e&&e.code==='cancelled'){setSpk(false);return}
     if(msOK()){try{const b2=await msVoice(parts.map(t=>/[.!?;…:]$/.test(t)?t:t+'.').join('\n'),ttsCtl.signal);if(!speaking)return;ttsAudio.src=URL.createObjectURL(b2);ttsAudio.dataset.real='1';$('spkLbl').textContent='Σταμάτημα';await ttsAudio.play();return}catch(e2){if(e2&&e2.code==='cancelled'){setSpk(false);return}}}
@@ -2329,16 +2329,17 @@ function rdRoom(on){const x=RA&&RA.sents&&RA.sents[Math.max(0,RA.cur)],off=x?x.s
   if(off!=null){const p=pageOfOff(off);if(p!=null&&p!==pi){pi=p;layout()}}}
 /* Microsoft voices (Athina / Nestoras) through our own small relay: free, no daily limit */
 const MSRELAY='https://bindle-tts.argyroumichael.workers.dev';let msDown=0;
-function msName(){return S.msv==='nestoras'?'Νέστορας':'Αθηνά'}
+function msPick(){return S.voice==='athina'||S.voice==='nestoras'?S.voice:(S.msv||'athina')}
+function msName(){return msPick()==='nestoras'?'Νέστορας':'Αθηνά'}
 function msOK(){return S.voice!=='iphone'&&navigator.onLine!==false&&Date.now()-msDown>5*60*1000}
 async function msVoice(text,signal,parts){
-  let r;try{r=await fetch(MSRELAY,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text,parts,voice:S.msv==='nestoras'?'el-GR-NestorasNeural':'el-GR-AthinaNeural'}),signal})}
+  let r;try{r=await fetch(MSRELAY,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text,parts,voice:msPick()==='nestoras'?'el-GR-NestorasNeural':'el-GR-AthinaNeural'}),signal})}
   catch(e){if(e&&e.name==='AbortError'){const x=new Error('cancelled');x.code='cancelled';throw x}msDown=Date.now();throw e}
   if(!r.ok){msDown=Date.now();throw new Error('ms '+r.status)}
   const b=await r.blob();return b.type?b:new Blob([b],{type:'audio/mpeg'})}
 function rdGeminiOK(){return S.voice==='gemini'&&!!store.get('gkey','')&&store.get('rdOut','')!==dayKey()&&!(RA&&RA.gemOff)}
 async function rdVoice(text,signal,eng,parts){
-  const id='rd:'+(eng==='ms'?'ms'+(S.msv||'athina')+':':'')+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
+  const id='rd:'+(eng==='ms'?'ms'+msPick()+':':'')+hash(text),hit=await idbGet('tts',id);if(hit)return hit;
   const blob=eng==='ms'?await msVoice(text,signal,parts):await geminiVoice(text,signal);
   try{idbDel('tts','v2:'+hash(text));idbPut('tts',id,blob);const l=store.get('rdCache',[]).filter(x=>x!==id);l.push(id);while(l.length>4)idbDel('tts',l.shift());store.set('rdCache',l)}catch(e){}
   return blob;
