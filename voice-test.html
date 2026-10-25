@@ -44,6 +44,23 @@ audio{width:100%;margin-top:10px}
   <div id="vl" class="st">Ψάχνω…</div>
 </div>
 
+
+<div class="card">
+  <h2>3. Microsoft Αθηνά (Edge)</h2>
+  <p>Η φυσική φωνή του Microsoft Edge. Δωρεάν και χωρίς όριο, αλλά ανεπίσημα: μπορεί κάποια μέρα να σταματήσει.</p>
+  <button id="eb">Άκουσε την Αθηνά</button> <button id="eb2" style="margin-top:8px">Άκουσε τον Νέστορα</button>
+  <div class="st" id="es"></div>
+  <audio id="ea" controls hidden></audio>
+</div>
+
+<div class="card">
+  <h2>4. Φωνή Google Translate</h2>
+  <p>Η φωνή του Google Μετάφραση. Δωρεάν, ανεπίσημα.</p>
+  <button id="gb">Άκουσε το Google</button>
+  <div class="st" id="gs"></div>
+  <audio id="ga" hidden></audio>
+</div>
+
 <script type="module">
 const $=id=>document.getElementById(id);
 const text=$('t').textContent.trim();
@@ -76,6 +93,34 @@ function listVoices(){const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test
     b.onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='el-GR';u.voice=v;speechSynthesis.speak(u)};el.append(b)})}
 try{speechSynthesis.addEventListener('voiceschanged',listVoices)}catch(e){}
 setTimeout(listVoices,300);setTimeout(listVoices,1500);
+
+/* ---- Microsoft Edge read-aloud voices ---- */
+const TOK='6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+async function gec(){const t=Math.floor(Date.now()/1000)+11644473600;const r=t-(t%300);const ticks=BigInt(r)*10000000n;
+  const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ticks.toString()+TOK));return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase()}
+const uid=()=>crypto.randomUUID().replace(/-/g,'');
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+async function edgeSpeak(txt,voice){
+  const url=`wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${TOK}&Sec-MS-GEC=${await gec()}&Sec-MS-GEC-Version=1-140.0.3485.14&ConnectionId=${uid()}`;
+  return new Promise((res,rej)=>{const ws=new WebSocket(url);ws.binaryType='arraybuffer';const parts=[];const ts=new Date().toString();
+    const to=setTimeout(()=>{ws.close();rej(new Error('Δεν απάντησε σε 20″'))},20000);
+    ws.onopen=()=>{ws.send(`X-Timestamp:${ts}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
+      ws.send(`X-RequestId:${uid()}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${ts}Z\r\nPath:ssml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='el-GR'><voice name='${voice}'><prosody pitch='+0Hz' rate='+0%' volume='+0%'>${esc(txt)}</prosody></voice></speak>`)};
+    ws.onmessage=e=>{if(typeof e.data==='string'){if(e.data.includes('Path:turn.end')){clearTimeout(to);ws.close();res(new Blob(parts,{type:'audio/mpeg'}))}return}
+      const v=new DataView(e.data),hl=v.getUint16(0);const head=new TextDecoder().decode(new Uint8Array(e.data,2,hl));if(head.includes('Path:audio'))parts.push(e.data.slice(2+hl))};
+    ws.onerror=()=>{clearTimeout(to);rej(new Error('Η σύνδεση απορρίφθηκε'))};
+    ws.onclose=ev=>{if(!parts.length){clearTimeout(to);rej(new Error('Έκλεισε η σύνδεση ('+ev.code+')'))}}})}
+async function playEdge(voice,label){$('es').textContent='Φτιάχνω τη φωνή…';const t0=performance.now();
+  try{const b=await edgeSpeak(text,voice);const a=$('ea');a.src=URL.createObjectURL(b);a.hidden=false;$('es').textContent=`${label}: έτοιμο σε ${((performance.now()-t0)/1000).toFixed(1)}″`;try{await a.play()}catch(e){}}
+  catch(e){$('es').textContent='Δεν δούλεψε: '+e.message}}
+$('eb').onclick=()=>playEdge('el-GR-AthinaNeural','Αθηνά');
+$('eb2').onclick=()=>playEdge('el-GR-NestorasNeural','Νέστορας');
+
+/* ---- Google Translate voice, in pieces of up to ~190 characters ---- */
+function chunks(t){const out=[];let cur='';for(const w of t.split(/(?<=[.;!;·,»])\s+|\s+/)){if((cur+' '+w).trim().length>190){out.push(cur.trim());cur=w}else cur+=' '+w}if(cur.trim())out.push(cur.trim());return out}
+$('gb').onclick=async()=>{const a=$('ga'),parts=chunks(text);let i=0;$('gs').textContent='Παίζει…';
+  const next=()=>{if(i>=parts.length){$('gs').textContent='Τέλος';return}a.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=el&client=tw-ob&q='+encodeURIComponent(parts[i++]);a.play().catch(e=>{$('gs').textContent='Δεν δούλεψε: '+e.message})};
+  a.onended=next;a.onerror=()=>{$('gs').textContent='Δεν δούλεψε (η Google το μπλόκαρε)'};next()};
 </script>
 </body>
 </html>
