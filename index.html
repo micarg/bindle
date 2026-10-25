@@ -2102,7 +2102,7 @@ $('askClear').onclick=()=>{if(!book)return;if(!$('askClear').dataset.sure){$('as
 /* ---------- read the summary aloud ---------- */
 let speaking=false;
 function elVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test(v.lang));
-  const sc=v=>(/melina/i.test(v.name)?4:0)+(/premium|enhanced|βελτιωμ|natural|neural/i.test(v.name)?3:0)+(/female|γυναικ/i.test(v.name)?1:0)-(/nikos|male|άνδρ/i.test(v.name)?3:0)+(v.localService?1:0);
+  const sc=v=>(/melina/i.test(v.name)?4:0)+(/premium/i.test(v.name+' '+v.voiceURI)?5:/enhanced|βελτιωμ|natural|neural/i.test(v.name+' '+v.voiceURI)?3:0)+(/female|γυναικ/i.test(v.name)?1:0)-(/nikos|male|άνδρ/i.test(v.name)?3:0)+(v.localService?1:0);
   return vs.sort((a,b)=>sc(b)-sc(a))[0]||null}catch(e){return null}}
 try{speechSynthesis.getVoices();speechSynthesis.addEventListener('voiceschanged',()=>{})}catch(e){}
 function setSpk(on){speaking=on;$('spkLbl').textContent=on?'Σταμάτημα':'Ακρόαση';$('sumSpeak').setAttribute('aria-pressed',on)}
