@@ -333,6 +333,7 @@ body.selmode .zone{pointer-events:none}
 #rdBar .rl{height:32px;padding:0 10px;background:var(--chip);font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums;white-space:nowrap}
 #rdBar .rr{height:32px;padding:0 10px;background:var(--chip);font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums}
 #rdBar .rx{width:32px;height:32px;justify-content:center;background:var(--chip);font-size:13px}
+#rdBar .rb{width:32px;height:32px;justify-content:center;background:var(--chip);color:var(--ink);flex:none}
 
 body.rdon .foot{display:none}
 body.rdon .stage{margin-bottom:76px}
@@ -965,10 +966,19 @@ function updateFoot(){
 
 /* ---------- bookmarks ---------- */
 const getBms=()=>{const l=store.get('bm:'+book.id,[]);return l.length>1?l.slice(-1):l};
-const onThis=b=>b.ci===ci&&Math.round(b.frac*(pages-1))===pi;
+/* bookmarks remember the first letter of the page, so they stay on the same text when the size or layout changes */
+function firstOffOnPage(){try{return firstOffOnPage0()}catch(e){return null}}
+function firstOffOnPage0(){if(!chText.length)return null;
+  const P=o=>{for(let k=0;k<80&&o<chText.length;k++,o++){if(/\S/.test(chText[o])){const p=pageOfOff(o);if(p!=null)return [p,o]}}return [null,o]};
+  let lo=0,hi=chText.length-1,ans=null;while(lo<=hi){const mid=(lo+hi)>>1,[p,o]=P(mid);if(p==null){lo=mid+1;continue}if(p>=pi){ans=o;hi=mid-1}else lo=o+1}return ans}
+function gotoOff(off){for(let k=0;k<4;k++){const p=pageOfOff(off);if(p==null)break;if(p===pi&&k)break;pi=p;layout()}}
+const onThis=b=>b.ci===ci&&(b.off!=null?pageOfOff(b.off)===pi:Math.round(b.frac*(pages-1))===pi);
+function bmAt(off,quiet){const p=off!=null?pageOfOff(off):null,pp=p!=null?p:pi;
+  const l=[{ci,off,frac:pages>1?pp/(pages-1):0,cf:(pp+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:off!=null?chText.slice(off,off+90).replace(/\s+/g,' ').trim():pageSnippet(),t:Date.now()}];
+  store.set('bm:'+book.id,l);updBm();bmAnim(true);if(!quiet)toast('Ο σελιδοδείκτης μπήκε σε αυτή τη σελίδα')}
 function updBm(){const on=getBms().some(onThis);ribbon(on);$('bmToggle').setAttribute('aria-pressed',on);$('bmToggle').setAttribute('aria-label',on?'Αφαίρεση σελιδοδείκτη':'Προσθήκη σελιδοδείκτη')}
 function pageSnippet(){const W=stage.clientWidth;for(const el of page.querySelectorAll('p,h1,h2,h3')){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();if(r.right>s.left+4&&r.left<s.left+W-4)return el.textContent.trim().slice(0,70)}return ''}
-function toggleBm(){let l=getBms();if(l.some(onThis))l=[];else l=[{ci,frac:pages>1?pi/(pages-1):0,cf:(pi+1)/pages,pct:$('pct').textContent,title:book.chapters[ci].title,snip:pageSnippet(),t:Date.now()}];store.set('bm:'+book.id,l);updBm();bmAnim(!!l.length);toast(l.length?'Ο σελιδοδείκτης μπήκε σε αυτή τη σελίδα':'Ο σελιδοδείκτης αφαιρέθηκε')}
+function toggleBm(){if(getBms().some(onThis)){store.set('bm:'+book.id,[]);updBm();bmAnim(false);toast('Ο σελιδοδείκτης αφαιρέθηκε');return}bmAt(firstOffOnPage())}
 /* bookmarks from every book: each book keeps only its latest one, newest first */
 function buildBms(){const t=$('bms');t.innerHTML='';addX('bms','Σελιδοδείκτες');t.insertAdjacentHTML('beforeend','<div class="ntabs"><button data-t="bms">Σελιδοδείκτες</button><button data-t="hls">Υπογραμμίσεις</button></div>');noteTabs(t,'bms');
   const books=[...getLib(),...(store.get('hideSample',false)?[]:[{id:'sample',title:SAMPLE.title,cover:false}])];
@@ -986,7 +996,7 @@ function buildBms(){const t=$('bms');t.innerHTML='';addX('bms','Σελιδοδε
     a.querySelector('.bms').textContent=b.snip?b.snip+'…':'';
     a.onclick=async ev=>{ev.preventDefault();
       try{if(!here)await openFromLib(e.id)}catch(err){toast('Δεν βρέθηκε το αρχείο αυτού του βιβλίου');return}
-      closeAll();ci=Math.min(b.ci,book.chapters.length-1);renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout()};
+      closeAll();ci=Math.min(b.ci,book.chapters.length-1);renderChapter(0,1);pi=Math.round(b.frac*(pages-1));layout();if(b.off!=null&&b.ci===ci)gotoOff(b.off)};
     const col=document.createElement('div');col.className='bmcol';col.append(a);
     const acts=document.createElement('div');acts.className='acts';
     if(here){const sb=document.createElement('button');sb.className='sumbtn';sb.textContent='Περίληψη ως εδώ';sb.onclick=()=>openSummary(getBms().length-1);col.append(sb)}
@@ -1510,7 +1520,7 @@ stage.addEventListener('touchend',()=>{if(!drag)return;const d=drag;drag=null;if
 stage.addEventListener('touchcancel',()=>{if(drag&&drag.on)dragEnd(drag.dx,false);drag=null});
 $('setBtn').onclick=()=>{closeAll();$('settings').hidden=false};
 $('tocBtn').onclick=()=>{closeAll();buildToc();$('toc').hidden=false};
-const refresh=()=>{const f=pages>1?pi/(pages-1):0;applyVars();renderChapter();pi=Math.round(f*(pages-1));layout()};
+const refresh=()=>{const f=pages>1?pi/(pages-1):0,off=firstOffOnPage();applyVars();renderChapter();pi=Math.round(f*(pages-1));layout();if(off!=null)gotoOff(off)};
 $('bnBtn').onclick=()=>{S.bionic=!S.bionic;refresh()};
 $('ffSeg').addEventListener('click',()=>{if(document.fonts)document.fonts.ready.then(()=>layout())});
 $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
@@ -2303,8 +2313,8 @@ function rdClearMark(){rdUnwrap();try{if(window.CSS&&CSS.highlights)CSS.highligh
 function rdUI(){
   let b=$('rdBar');
   if(!RA||!RA.on){if(b){b.remove();rdRoom(false)}return}
-  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rl" aria-label="Πόσες σελίδες"></button><button class="rr" aria-label="Ταχύτητα"></button><button class="rx" aria-label="Σταμάτημα">${XI}</button>`;document.body.append(b);
-    b.querySelector('.rp').onclick=rdToggle;b.querySelector('.rx').onclick=rdStop;
+  if(!b){rdRoom(true);b=document.createElement('div');b.id='rdBar';b.innerHTML=`<button class="rp" aria-label="Παύση"></button><div class="rt"><b></b><span></span></div><button class="rl" aria-label="Πόσες σελίδες"></button><button class="rr" aria-label="Ταχύτητα"></button><button class="rb" aria-label="Σελιδοδείκτης εδώ"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/></svg></button><button class="rx" aria-label="Σταμάτημα">${XI}</button>`;document.body.append(b);
+    b.querySelector('.rp').onclick=rdToggle;b.querySelector('.rb').onclick=()=>{const x=RA&&RA.sents&&RA.sents[Math.max(0,RA.cur)];bmAt(x?x.s:firstOffOnPage(),true);toast('Σελιδοδείκτης στο σημείο που διαβάζει τώρα');const sv=b.querySelector('.rb svg path');sv.style.fill='currentColor';setTimeout(()=>sv.style.fill='none',1500)};b.querySelector('.rx').onclick=rdStop;
     b.querySelector('.rl').onclick=()=>{const L=[0,5,10,15,25,35],k=(L.indexOf(+S.rdLimit||0)+1)%L.length;S.rdLimit=L[k];store.set('settings',S);RA.base=null;if(RA.cur>=0)rdCount(RA.cur);rdUI();if(S.rdLimit)toast(`Θα διαβάσει ${S.rdLimit} σελίδες και θα σταματήσει`,1800);else toast('Θα διαβάζει χωρίς όριο',1500)};
     b.querySelector('.rr').onclick=()=>{const k=(RDRATES.indexOf(+S.rdRate||1)+1)%RDRATES.length;S.rdRate=RDRATES[k];store.set('settings',S);if(RA.audio)RA.audio.playbackRate=S.rdRate;if(RA.mode==='iphone'&&!RA.paused){rdIphone(RA.cur)}rdUI()}}
   b.querySelector('.rp').innerHTML=RA.paused?'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4l13 8-13 8z"/></svg>':'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
