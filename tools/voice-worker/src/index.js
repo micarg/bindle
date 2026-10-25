@@ -52,8 +52,8 @@ async function mtGetEndpoint(force) {
   try { mtExp = JSON.parse(atob(mtEndpoint.t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp; } catch { mtExp = Date.now() / 1000 + 600; }
   return mtEndpoint;
 }
-async function mtSpeak(text, voice, rate) {
-  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="el-GR"><voice name="${voice}"><prosody rate="${rate}">${esc(text)}</prosody></voice></speak>`;
+async function mtSpeak(text, voice, rate, parts) {
+  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="el-GR"><voice name="${voice}"><prosody rate="${rate}">${parts && parts.length ? parts.map(esc).join('<break time="350ms"/>') : esc(text)}</prosody></voice></speak>`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const ep = await mtGetEndpoint(attempt > 0);
     const r = await fetch(`https://${ep.r}.tts.speech.microsoft.com/cognitiveservices/v1`, { method: 'POST', headers: {
@@ -81,10 +81,11 @@ export default {
     const voice = /^[a-z]{2}-[A-Z]{2}-\w+Neural$/.test(body.voice || '') ? body.voice : 'el-GR-AthinaNeural';
     const rate = /^[+-]\d{1,3}%$/.test(body.rate || '') ? body.rate : '+0%';
     if (!text.trim()) return new Response('no text', { status: 400, headers: cors });
+    const parts = Array.isArray(body.parts) ? body.parts.slice(0, 200).map(x => String(x).slice(0, 2000)).filter(x => x.trim()) : null;
 
     let route1 = '';
     try {
-      const buf = await mtSpeak(text, voice, rate);
+      const buf = await mtSpeak(text, voice, rate, parts);
       return new Response(buf, { headers: { ...cors, 'Content-Type': 'audio/mpeg' } });
     } catch (e) { route1 = String(e && e.message || e); }
 
