@@ -49,6 +49,8 @@ audio{width:100%;margin-top:10px}
   <h2>3. Microsoft Αθηνά (Edge)</h2>
   <p>Η φυσική φωνή του Microsoft Edge. Δωρεάν και χωρίς όριο, αλλά ανεπίσημα: μπορεί κάποια μέρα να σταματήσει.</p>
   <button id="eb">Άκουσε την Αθηνά</button> <button id="eb2" style="margin-top:8px">Άκουσε τον Νέστορα</button>
+  <p style="margin-top:12px">Διεύθυνση του Cloudflare worker (μία φορά):</p>
+  <input id="wu" type="url" placeholder="https://bindle-voice.….workers.dev" style="width:100%;font:15px -apple-system,system-ui;padding:12px 14px;border-radius:12px;border:1px solid var(--rule);background:var(--paper);color:var(--ink)">
   <div class="st" id="es"></div>
   <audio id="ea" controls hidden></audio>
 </div>
@@ -110,8 +112,11 @@ async function edgeSpeak(txt,voice){
       const v=new DataView(e.data),hl=v.getUint16(0);const head=new TextDecoder().decode(new Uint8Array(e.data,2,hl));if(head.includes('Path:audio'))parts.push(e.data.slice(2+hl))};
     ws.onerror=()=>{clearTimeout(to);rej(new Error('Η σύνδεση απορρίφθηκε'))};
     ws.onclose=ev=>{if(!parts.length){clearTimeout(to);rej(new Error('Έκλεισε η σύνδεση ('+ev.code+')'))}}})}
+try{$('wu').value=localStorage.getItem('xr:voiceRelay')||''}catch(e){}
+$('wu').addEventListener('change',()=>{try{localStorage.setItem('xr:voiceRelay',$('wu').value.trim())}catch(e){}});
+async function relaySpeak(txt,voice){const u=$('wu').value.trim();const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text:txt,voice})});if(!r.ok)throw new Error(await r.text());return r.blob()}
 async function playEdge(voice,label){$('es').textContent='Φτιάχνω τη φωνή…';const t0=performance.now();
-  try{const b=await edgeSpeak(text,voice);const a=$('ea');a.src=URL.createObjectURL(b);a.hidden=false;$('es').textContent=`${label}: έτοιμο σε ${((performance.now()-t0)/1000).toFixed(1)}″`;try{await a.play()}catch(e){}}
+  try{const b=$('wu').value.trim()?await relaySpeak(text,voice):await edgeSpeak(text,voice);const a=$('ea');a.src=URL.createObjectURL(b);a.hidden=false;$('es').textContent=`${label}: έτοιμο σε ${((performance.now()-t0)/1000).toFixed(1)}″`;try{await a.play()}catch(e){}}
   catch(e){$('es').textContent='Δεν δούλεψε: '+e.message}}
 $('eb').onclick=()=>playEdge('el-GR-AthinaNeural','Αθηνά');
 $('eb2').onclick=()=>playEdge('el-GR-NestorasNeural','Νέστορας');
