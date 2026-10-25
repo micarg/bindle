@@ -27,6 +27,42 @@ const ALLOWED = ['https://micarg.github.io', 'http://localhost:8765'];
 const uid = () => crypto.randomUUID().replace(/-/g, '');
 const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+
+/* ---- Route 1: Microsoft Translator app endpoint (plain HTTP, works from cloud servers) ----
+   Approach adapted from zuoban/tts (MIT licence): https://github.com/zuoban/tts */
+const MT_KEY = 'oik6PdDdMnOXemTbwvMn9de/h9lFnfBaCWbGMMZqqoSaQaqUOqjVGm5NqsmjcBI1x+sS9ugjB55HEJWRiFXYFw==';
+let mtEndpoint = null, mtExp = 0;
+async function mtSign(urlStr) {
+  const id = uid();
+  const date = (new Date().toUTCString().replace(/GMT/, '').trim() + 'GMT').toLowerCase();
+  const msg = `MSTranslatorAndroidApp${encodeURIComponent(urlStr.split('://')[1])}${date}${id}`.toLowerCase();
+  const key = await crypto.subtle.importKey('raw', Uint8Array.from(atob(MT_KEY), c => c.charCodeAt(0)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg)));
+  return `MSTranslatorAndroidApp::${btoa(String.fromCharCode(...sig))}::${date}::${id}`;
+}
+async function mtGetEndpoint(force) {
+  if (!force && mtEndpoint && Date.now() / 1000 < mtExp - 300) return mtEndpoint;
+  const url = 'https://dev.microsofttranslator.com/apps/endpoint?api-version=1.0';
+  const r = await fetch(url, { method: 'POST', headers: {
+    'Accept-Language': 'en-US', 'X-ClientVersion': '4.0.530a 5fe1dc6c', 'X-UserId': uid().slice(0, 16),
+    'X-HomeGeographicRegion': 'en-US', 'X-ClientTraceId': uid(), 'X-MT-Signature': await mtSign(url),
+    'User-Agent': 'okhttp/4.5.0', 'Content-Type': 'application/json', 'Content-Length': '0', 'Accept-Encoding': 'gzip' } });
+  if (!r.ok) throw new Error('endpoint ' + r.status);
+  mtEndpoint = await r.json();
+  try { mtExp = JSON.parse(atob(mtEndpoint.t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp; } catch { mtExp = Date.now() / 1000 + 600; }
+  return mtEndpoint;
+}
+async function mtSpeak(text, voice, rate) {
+  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="el-GR"><voice name="${voice}"><prosody rate="${rate}">${esc(text)}</prosody></voice></speak>`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ep = await mtGetEndpoint(attempt > 0);
+    const r = await fetch(`https://${ep.r}.tts.speech.microsoft.com/cognitiveservices/v1`, { method: 'POST', headers: {
+      Authorization: ep.t, 'Content-Type': 'application/ssml+xml', 'User-Agent': 'okhttp/4.5.0', 'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3' }, body: ssml });
+    if (r.ok) return await r.arrayBuffer();
+    if (attempt) throw new Error('tts ' + r.status + ' ' + (await r.text()).slice(0, 100));
+  }
+}
+
 export default {
   async fetch(req) {
     const origin = req.headers.get('Origin') || '';
@@ -46,6 +82,12 @@ export default {
     const rate = /^[+-]\d{1,3}%$/.test(body.rate || '') ? body.rate : '+0%';
     if (!text.trim()) return new Response('no text', { status: 400, headers: cors });
 
+    let route1 = '';
+    try {
+      const buf = await mtSpeak(text, voice, rate);
+      return new Response(buf, { headers: { ...cors, 'Content-Type': 'audio/mpeg' } });
+    } catch (e) { route1 = String(e && e.message || e); }
+
     let up = await openVoice();
     if (!up.webSocket && up.headers.get('Date')) {
       // clock may be off: line it up with Microsoft's and try once more
@@ -53,7 +95,7 @@ export default {
       if (!isNaN(server)) { skew += server - (Date.now() / 1000 + skew); up = await openVoice(); }
     }
     const ws = up.webSocket;
-    if (!ws) { let why = ''; try { why = (await up.text()).slice(0, 120); } catch {} return new Response('upstream refused: ' + up.status + ' ' + why, { status: 502, headers: cors }); }
+    if (!ws) { let why = ''; try { why = (await up.text()).slice(0, 120); } catch {} return new Response('upstream refused: ' + up.status + ' ' + why + ' / route1: ' + route1, { status: 502, headers: cors }); }
     ws.accept();
 
     const audio = await new Promise((resolve, reject) => {
@@ -75,7 +117,7 @@ export default {
       ws.send(`X-RequestId:${uid()}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${ts}Z\r\nPath:ssml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+0%'>${esc(text)}</prosody></voice></speak>`);
     }).catch(e => e);
 
-    if (audio instanceof Error) return new Response('voice failed: ' + audio.message, { status: 502, headers: cors });
+    if (audio instanceof Error) return new Response('voice failed: ' + audio.message + ' / route1: ' + route1, { status: 502, headers: cors });
     return new Response(new Blob(audio, { type: 'audio/mpeg' }), { headers: { ...cors, 'Content-Type': 'audio/mpeg' } });
   },
 };
