@@ -1,5 +1,5 @@
 {
-  "name": "bindle-voice",
+  "name": "bindle-tts",
   "main": "src/index.js",
   "compatibility_date": "2026-10-01"
 }
