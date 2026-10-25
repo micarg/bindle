@@ -1,14 +1,29 @@
 // Bindle voice relay for Cloudflare Workers (free plan).
 // Turns text into speech with the Microsoft Edge read-aloud voices (e.g. el-GR-AthinaNeural).
+import { secMsGec } from './gec.js';
+
 const TOK = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+const CHROMIUM = '143.0.3650.75';
+const MAJOR = CHROMIUM.split('.')[0];
+let skew = 0; // seconds between this server's clock and Microsoft's
+const muid = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+function openVoice() {
+  const url = `https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${TOK}&ConnectionId=${uid()}&Sec-MS-GEC=${secMsGec(TOK, Date.now() / 1000 + skew)}&Sec-MS-GEC-Version=2-${CHROMIUM}`;
+  return fetch(url, {
+    headers: {
+      Upgrade: 'websocket',
+      Pragma: 'no-cache',
+      'Cache-Control': 'no-cache',
+      Origin: 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
+      'Sec-WebSocket-Version': '13',
+      'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${MAJOR}.0.0.0 Safari/537.36 Edg/${MAJOR}.0.0.0`,
+      'Accept-Language': 'en-US,en;q=0.9',
+      Cookie: `muid=${muid()};`,
+    },
+  });
+}
 const ALLOWED = ['https://micarg.github.io', 'http://localhost:8765'];
 
-async function gec() {
-  const t = Math.floor(Date.now() / 1000) + 11644473600;
-  const ticks = BigInt(t - (t % 300)) * 10000000n;
-  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ticks.toString() + TOK));
-  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-}
 const uid = () => crypto.randomUUID().replace(/-/g, '');
 const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -31,16 +46,14 @@ export default {
     const rate = /^[+-]\d{1,3}%$/.test(body.rate || '') ? body.rate : '+0%';
     if (!text.trim()) return new Response('no text', { status: 400, headers: cors });
 
-    const url = `https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=${TOK}&Sec-MS-GEC=${await gec()}&Sec-MS-GEC-Version=1-140.0.3485.14&ConnectionId=${uid()}`;
-    const up = await fetch(url, {
-      headers: {
-        Upgrade: 'websocket',
-        Origin: 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0',
-      },
-    });
+    let up = await openVoice();
+    if (!up.webSocket && up.headers.get('Date')) {
+      // clock may be off: line it up with Microsoft's and try once more
+      const server = Date.parse(up.headers.get('Date')) / 1000;
+      if (!isNaN(server)) { skew += server - (Date.now() / 1000 + skew); up = await openVoice(); }
+    }
     const ws = up.webSocket;
-    if (!ws) return new Response('upstream refused: ' + up.status, { status: 502, headers: cors });
+    if (!ws) { let why = ''; try { why = (await up.text()).slice(0, 120); } catch {} return new Response('upstream refused: ' + up.status + ' ' + why, { status: 502, headers: cors }); }
     ws.accept();
 
     const audio = await new Promise((resolve, reject) => {
