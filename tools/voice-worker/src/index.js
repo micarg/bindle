@@ -57,10 +57,11 @@ export default {
     ws.accept();
 
     const audio = await new Promise((resolve, reject) => {
-      const parts = [];
+      const parts = []; let lastText = '';
       const timer = setTimeout(() => { try { ws.close(); } catch {} reject(new Error('timeout')); }, 25000);
       ws.addEventListener('message', e => {
         if (typeof e.data === 'string') {
+          lastText = e.data.slice(0, 160);
           if (e.data.includes('Path:turn.end')) { clearTimeout(timer); try { ws.close(); } catch {} resolve(parts); }
           return;
         }
@@ -68,10 +69,10 @@ export default {
         const head = new TextDecoder().decode(new Uint8Array(buf, 2, hl));
         if (head.includes('Path:audio')) parts.push(new Uint8Array(buf, 2 + hl));
       });
-      ws.addEventListener('close', () => { clearTimeout(timer); parts.length ? resolve(parts) : reject(new Error('closed')); });
+      ws.addEventListener('close', ev => { clearTimeout(timer); parts.length ? resolve(parts) : reject(new Error('closed ' + ev.code + ' ' + (ev.reason || '') + ' ' + lastText.replace(/\r\n/g, ' | '))); });
       const ts = new Date().toString();
-      ws.send(`X-Timestamp:${ts}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`);
-      ws.send(`X-RequestId:${uid()}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${ts}Z\r\nPath:ssml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='el-GR'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+0%'>${esc(text)}</prosody></voice></speak>`);
+      ws.send(`X-Timestamp:${ts}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"true","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}\r\n`);
+      ws.send(`X-RequestId:${uid()}\r\nContent-Type:application/ssml+xml\r\nX-Timestamp:${ts}Z\r\nPath:ssml\r\n\r\n<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'><voice name='${voice}'><prosody pitch='+0Hz' rate='${rate}' volume='+0%'>${esc(text)}</prosody></voice></speak>`);
     }).catch(e => e);
 
     if (audio instanceof Error) return new Response('voice failed: ' + audio.message, { status: 502, headers: cors });
