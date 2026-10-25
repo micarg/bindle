@@ -1528,6 +1528,13 @@ $('fsDown').onclick=()=>{S.fs=Math.max(14,S.fs-1);refresh()};
 $('fsUp').onclick=()=>{S.fs=Math.min(30,S.fs+1);refresh()};
 for(const [seg,key,num] of [['trSeg','turn',0],['vcSeg','voice',0],['msSeg','msv',0],['aiSeg','ai',0],['wdSeg','narrow',1],['wkSeg','wake',1],['bnLvl','lvl',1],['lhSeg','lh',1],['paSeg','para',0],['stSeg','style',0],['glSeg','glint',0],['ckSeg','clock',0],['ctSeg','contrast',0],['pnSeg','pnum',0],['thSeg','theme',0],['ffSeg','font',0],['alSeg','align',0]])
   $(seg).querySelectorAll('button').forEach(b=>b.onclick=()=>{S[key]=num?parseFloat(b.dataset.v):b.dataset.v;refresh()});
+/* changing the voice while listening: carry on from the same sentence with the new voice */
+function rdRestart(){if(!RA||!RA.on)return;const x=RA.sents&&RA.sents[Math.max(0,RA.cur)],off=x?x.s:null;
+  RA.gen++;if(RA.next&&RA.next.ctl)RA.next.ctl.abort();if(RA.chunk&&RA.chunk.ctl)RA.chunk.ctl.abort();RA.next=null;RA.chunk=null;
+  if(RA.audio){RA.audio.dataset.real='';RA.audio.pause()}try{speechSynthesis.cancel()}catch(e){}
+  RA.f=page.firstElementChild;RA.sents=rdSentences();let i=0;if(off!=null){i=RA.sents.findIndex(s=>s.s>=off);if(i<0)i=0}
+  RA.note='';RA.gemOff=false;RA.paused=false;RA.mode='';if(rdAudioOK())rdPlayFrom(i,true);else rdIphone(i)}
+['vcSeg','msSeg'].forEach(id=>$(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setTimeout(rdRestart,50))));
 $('glSeg').querySelector('[data-v=on]').addEventListener('click',()=>{glAsk().then(ok=>{if(!ok){S.glint='off';refresh();toast('Χρειάζεται άδεια για την κίνηση του iPhone. Πάτα ξανά «Ναι» και επίτρεψέ την.')}})});
 /* iOS home-screen apps can be left shorter or scrolled after the keyboard or a rotation: put the page back */
 function fixViewport(){if(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName))return;if(window.scrollY||document.documentElement.scrollTop||document.body.scrollTop){window.scrollTo(0,0);document.documentElement.scrollTop=0;document.body.scrollTop=0}}

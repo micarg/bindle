@@ -53,7 +53,7 @@ async function mtGetEndpoint(force) {
   return mtEndpoint;
 }
 async function mtSpeak(text, voice, rate, parts) {
-  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="el-GR"><voice name="${voice}"><prosody rate="${rate}">${parts && parts.length ? parts.map(esc).join('<break time="350ms"/>') : esc(text)}</prosody></voice></speak>`;
+  const ssml = `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="el-GR"><voice name="${voice}"><prosody rate="${rate}">${parts && parts.length ? parts.map(esc).join(' ') : esc(text)}</prosody></voice></speak>`;
   for (let attempt = 0; attempt < 2; attempt++) {
     const ep = await mtGetEndpoint(attempt > 0);
     const r = await fetch(`https://${ep.r}.tts.speech.microsoft.com/cognitiveservices/v1`, { method: 'POST', headers: {
