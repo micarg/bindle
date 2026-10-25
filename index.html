@@ -514,6 +514,9 @@ body.glass .sheet:not(.scrolled)>.xrow{background:transparent!important;-webkit-
 :root:not([data-theme]) body.glass .sheet button[aria-pressed="true"]:not(.mi):not(.bk):not(.back):not(.bpi),:root:not([data-theme]) body.glass .sheet .ntabs button.on:not(.mi){background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 55%),rgba(22,21,19,.86)!important;border:.5px solid rgba(0,0,0,.55)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(255,255,255,.1),0 5px 12px -5px rgba(0,0,0,.5)!important;color:#f6f4ef!important;-webkit-backdrop-filter:blur(10px) saturate(160%)!important;backdrop-filter:blur(10px) saturate(160%)!important}
 :root:not([data-theme]) body.glass.glint .sheet button[aria-pressed="true"]:not(.mi):not(.bk):not(.back):not(.bpi),:root:not([data-theme]) body.glass.glint .sheet .ntabs button.on:not(.mi){background:radial-gradient(120% 90% at var(--lx) var(--ly),rgba(255,255,255,.28),rgba(255,255,255,0) 60%),rgba(22,21,19,.86)!important;box-shadow:inset var(--sx) var(--sy) 0 rgba(255,255,255,.4),0 5px 12px -5px rgba(0,0,0,.5)!important}
 }
+/* list rows inside panels (people, search results, highlights) stay plain rows, not pills */
+body.glass .sheet button.person:not(#_),body.glass .sheet button.go:not(#_){background:transparent!important;border:0!important;border-bottom:1px solid var(--rule)!important;border-radius:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:12px 2px!important;min-height:0!important;height:auto!important;width:100%!important;color:var(--ink)!important}
+body.glass .sheet .item button.go:not(#_){border-bottom:0!important}
 </style>
 </head>
 <body>
