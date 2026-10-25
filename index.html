@@ -336,8 +336,10 @@ body.selmode .zone{pointer-events:none}
 #rdBar .rb{width:32px;height:32px;justify-content:center;background:var(--chip);color:var(--ink);flex:none}
 #rdBar .rb svg path{transition:fill .2s}#rdBar .rb.on svg path{fill:currentColor}
 
-body.rdon .foot{display:none}
-body.rdon .stage{margin-bottom:76px}
+/* the player floats over the bottom bar and hides with the rest while reading; a tap in the middle brings it back */
+body.rdon:not(.immersive) .foot{opacity:0;pointer-events:none}
+#rdBar{transition:opacity .25s ease,transform .25s ease}
+body.immersive #rdBar{opacity:0;transform:translateY(18px);pointer-events:none}
 body.rdon #rdBar{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
 
 /* chapter opening */
