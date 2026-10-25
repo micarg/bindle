@@ -40,6 +40,8 @@ audio{width:100%;margin-top:10px}
   <p>Η φωνή που δίνει το Safari στις εφαρμογές. Δουλεύει και χωρίς ίντερνετ.</p>
   <button id="ib">Άκουσε το iPhone</button>
   <div class="st" id="is"></div>
+  <h2 style="margin-top:16px">Ελληνικές φωνές που βλέπει το Bindle</h2>
+  <div id="vl" class="st">Ψάχνω…</div>
 </div>
 
 <script type="module">
@@ -67,6 +69,13 @@ $('ib').onclick=()=>{
   const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test(v.lang));if(vs.length){u.voice=vs[0];$('is').textContent='Φωνή: '+vs[0].name}
   u.rate=1;speechSynthesis.speak(u);
 };
+
+function listVoices(){const vs=speechSynthesis.getVoices().filter(v=>/^el/i.test(v.lang));const el=$('vl');
+  if(!vs.length){el.textContent='Καμία ακόμα (ξαναπάτα σε λίγο).';return}
+  el.innerHTML='';vs.forEach(v=>{const b=document.createElement('button');b.style.cssText='display:block;margin:8px 0;text-align:left;font-weight:500;padding:10px 16px';b.textContent=v.name+'  ·  '+v.voiceURI;
+    b.onclick=()=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='el-GR';u.voice=v;speechSynthesis.speak(u)};el.append(b)})}
+try{speechSynthesis.addEventListener('voiceschanged',listVoices)}catch(e){}
+setTimeout(listVoices,300);setTimeout(listVoices,1500);
 </script>
 </body>
 </html>
